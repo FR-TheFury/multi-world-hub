@@ -32,6 +32,8 @@ const TasksPanel = () => {
 
   const fetchTasks = async () => {
     try {
+      const { data: userData } = await supabase.auth.getUser();
+      
       const query = supabase
         .from('tasks')
         .select(`
@@ -42,18 +44,28 @@ const TasksPanel = () => {
           priority,
           due_date,
           assigned_to,
-          world:worlds(code, name, theme_colors)
+          world_id,
+          worlds!tasks_world_id_fkey(code, name, theme_colors)
         `)
+        .eq('status', 'todo')
         .order('due_date', { ascending: true, nullsFirst: false });
 
-      if (!isSuperAdmin()) {
-        query.eq('assigned_to', (await supabase.auth.getUser()).data.user?.id);
+      if (!isSuperAdmin() && userData.user) {
+        query.eq('assigned_to', userData.user.id);
       }
 
-      const { data } = await query;
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching tasks:', error);
+        return;
+      }
 
       if (data) {
-        setTasks(data.map(t => ({ ...t, world: (t as any).world })));
+        setTasks(data.map(t => ({ 
+          ...t, 
+          world: (t as any).worlds 
+        })));
       }
     } catch (error) {
       console.error('Error fetching tasks:', error);

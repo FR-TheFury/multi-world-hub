@@ -31,7 +31,9 @@ const AppointmentsPanel = () => {
       const startDate = startOfDay(today).toISOString();
       const endDate = endOfDay(today).toISOString();
 
-      const { data } = await supabase
+      const { data: userData } = await supabase.auth.getUser();
+      
+      const { data, error } = await supabase
         .from('appointments')
         .select(`
           id,
@@ -40,15 +42,26 @@ const AppointmentsPanel = () => {
           start_time,
           end_time,
           status,
-          world:worlds(code, name, theme_colors)
+          user_id,
+          world_id,
+          worlds!appointments_world_id_fkey(code, name, theme_colors)
         `)
+        .eq('user_id', userData.user?.id)
         .gte('start_time', startDate)
         .lte('start_time', endDate)
         .eq('status', 'scheduled')
         .order('start_time', { ascending: true });
 
+      if (error) {
+        console.error('Error fetching appointments:', error);
+        return;
+      }
+
       if (data) {
-        setAppointments(data.map(a => ({ ...a, world: (a as any).world })));
+        setAppointments(data.map(a => ({ 
+          ...a, 
+          world: (a as any).worlds 
+        })));
       }
     } catch (error) {
       console.error('Error fetching appointments:', error);
