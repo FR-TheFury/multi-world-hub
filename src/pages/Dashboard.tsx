@@ -25,7 +25,7 @@ interface Dossier {
 }
 
 const Dashboard = () => {
-  const { accessibleWorlds } = useAuthStore();
+  const { accessibleWorlds, profile } = useAuthStore();
   const [dossiersByWorld, setDossiersByWorld] = useState<Record<string, Dossier[]>>({});
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -142,8 +142,13 @@ const Dashboard = () => {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-bold mb-1 text-foreground">Bienvenue</h2>
+        <h2 className="text-2xl font-bold mb-1 text-foreground">
+          Bienvenue{profile?.display_name ? `, ${profile.display_name}` : ''}
+        </h2>
         <p className="text-sm text-muted-foreground">
+          {profile?.email}
+        </p>
+        <p className="text-sm text-muted-foreground mt-1">
           Accédez à vos espaces de travail et consultez vos derniers dossiers
         </p>
       </div>
