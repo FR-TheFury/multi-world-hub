@@ -13,14 +13,13 @@ import Dossiers from "./pages/world/Dossiers";
 import AllDossiers from "./pages/AllDossiers";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import { useAuth } from "./hooks/useAuth";
 
 const queryClient = new QueryClient();
 
 const AuthBootstrap = () => {
   // Initialize auth globally so session is ready before navigating
   // This prevents the "login twice" issue caused by guards running before state is set
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { useAuth } = require('./hooks/useAuth');
   useAuth();
   return null;
 };
