@@ -25,7 +25,13 @@ interface Dossier {
 }
 
 const Dashboard = () => {
-  const { accessibleWorlds, profile } = useAuthStore();
+  const { accessibleWorlds: unsortedWorlds, profile } = useAuthStore();
+  
+  // Sort worlds in the correct order: JDE, JDMO, DBCS
+  const accessibleWorlds = [...unsortedWorlds].sort((a, b) => {
+    const order = { 'JDE': 1, 'JDMO': 2, 'DBCS': 3 };
+    return order[a.code] - order[b.code];
+  });
   const [dossiersByWorld, setDossiersByWorld] = useState<Record<string, Dossier[]>>({});
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({

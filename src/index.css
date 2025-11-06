@@ -45,8 +45,8 @@ All colors MUST be HSL.
     --input: 220 13% 91%;
     --ring: 243 75% 59%;
 
-    /* Radius - Vuexy uses more rounded corners */
-    --radius: 0.75rem;
+    /* Radius - Much more rounded for modern look */
+    --radius: 1.25rem;
 
     /* Sidebar tokens - Clean white sidebar */
     --sidebar-background: 0 0% 100%;
@@ -68,11 +68,17 @@ All colors MUST be HSL.
     --world-dbcs-accent: 31 93% 58%;
     --world-dbcs-neutral: 60 1% 85%;
 
-    /* Vuexy-inspired shadows - Very subtle and soft */
-    --shadow-sm: 0 2px 4px 0 rgba(0, 0, 0, 0.04);
-    --shadow-md: 0 2px 6px 0 rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 4px 12px 0 rgba(0, 0, 0, 0.08);
-    --shadow-xl: 0 8px 24px 0 rgba(0, 0, 0, 0.10);
+    /* Enhanced 3D shadows */
+    --shadow-sm: 0 2px 8px 0 rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 16px 0 rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 8px 24px 0 rgba(0, 0, 0, 0.12);
+    --shadow-xl: 0 16px 48px 0 rgba(0, 0, 0, 0.16);
+    --shadow-3d: 0 20px 60px -12px rgba(0, 0, 0, 0.25);
+    
+    /* Animation durations */
+    --transition-fast: 0.15s;
+    --transition-base: 0.3s;
+    --transition-slow: 0.5s;
 
     /* Gradient tokens */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary)) 100%);
@@ -162,7 +168,27 @@ All colors MUST be HSL.
 
   /* Smooth transitions */
   .transition-smooth {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all var(--transition-base) cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .transition-slow {
+    transition: all var(--transition-slow) cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* 3D effect shadow */
+  .shadow-3d {
+    box-shadow: var(--shadow-3d);
+  }
+  
+  /* Hover lift effect */
+  .hover-lift {
+    transition: transform var(--transition-base) cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow var(--transition-base) cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-3d);
   }
 
   /* Gradient backgrounds */
