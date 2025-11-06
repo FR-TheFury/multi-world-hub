@@ -11,6 +11,7 @@ import Administration from "./pages/superadmin/Administration";
 import Analytics from "./pages/superadmin/Analytics";
 import Dossiers from "./pages/world/Dossiers";
 import AllDossiers from "./pages/AllDossiers";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/superadmin/users" element={<DashboardLayout><Users /></DashboardLayout>} />
           <Route path="/superadmin/administration" element={<DashboardLayout><Administration /></DashboardLayout>} />
           <Route path="/superadmin/analytics" element={<DashboardLayout><Analytics /></DashboardLayout>} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/:worldCode/dossiers" element={<DashboardLayout><Dossiers /></DashboardLayout>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
