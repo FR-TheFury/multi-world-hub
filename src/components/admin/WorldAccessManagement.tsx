@@ -30,7 +30,7 @@ interface UserAccess {
 }
 
 const WorldAccessManagement = () => {
-  const { accessibleWorlds } = useAuthStore();
+  const [allWorlds, setAllWorlds] = useState<World[]>([]);
   const [users, setUsers] = useState<UserAccess[]>([]);
   const [selectedUser, setSelectedUser] = useState<UserAccess | null>(null);
   const [selectedWorld, setSelectedWorld] = useState('');
@@ -38,8 +38,20 @@ const WorldAccessManagement = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    fetchAllWorlds();
     fetchUsersWithAccess();
   }, []);
+
+  const fetchAllWorlds = async () => {
+    const { data } = await supabase
+      .from('worlds')
+      .select('*')
+      .order('name');
+    
+    if (data) {
+      setAllWorlds(data as unknown as World[]);
+    }
+  };
 
   const fetchUsersWithAccess = async () => {
     const { data } = await supabase
@@ -65,7 +77,7 @@ const WorldAccessManagement = () => {
   const addWorldAccess = async () => {
     if (!selectedUser || !selectedWorld) return;
 
-    const world = accessibleWorlds.find(w => w.id === selectedWorld);
+    const world = allWorlds.find(w => w.id === selectedWorld);
     if (!world) return;
 
     const { error } = await supabase
@@ -191,7 +203,7 @@ const WorldAccessManagement = () => {
                             <SelectValue placeholder="Sélectionner un monde" />
                           </SelectTrigger>
                           <SelectContent>
-                            {accessibleWorlds.map((world) => (
+                            {allWorlds.map((world) => (
                               <SelectItem key={world.id} value={world.id}>
                                 {world.name} ({world.code})
                               </SelectItem>
