@@ -40,6 +40,7 @@ const UserRoleManagement = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedRole, setSelectedRole] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -48,6 +49,7 @@ const UserRoleManagement = () => {
   }, []);
 
   const fetchUsers = async () => {
+    setLoading(true);
     const { data } = await supabase
       .from('profiles')
       .select(`
@@ -66,6 +68,7 @@ const UserRoleManagement = () => {
         roles: (u as any).user_roles.map((ur: any) => ({ role: ur.role.name }))
       })));
     }
+    setLoading(false);
   };
 
   const fetchRoles = async () => {
@@ -166,7 +169,16 @@ const UserRoleManagement = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user) => (
+            {loading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><div className="h-4 bg-muted animate-pulse rounded" /></TableCell>
+                  <TableCell><div className="h-4 bg-muted animate-pulse rounded" /></TableCell>
+                  <TableCell><div className="h-6 w-20 bg-muted animate-pulse rounded" /></TableCell>
+                  <TableCell><div className="h-8 w-24 bg-muted animate-pulse rounded" /></TableCell>
+                </TableRow>
+              ))
+            ) : users.map((user) => (
               <TableRow key={user.id} className="hover:bg-muted/30">
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.display_name || '-'}</TableCell>
@@ -235,6 +247,13 @@ const UserRoleManagement = () => {
                 </TableCell>
               </TableRow>
             ))}
+            {!loading && users.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                  Aucun utilisateur trouvé
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </CardContent>

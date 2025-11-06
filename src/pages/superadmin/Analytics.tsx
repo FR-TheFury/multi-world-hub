@@ -58,104 +58,48 @@ const Analytics = () => {
 
   const fetchAnalytics = async () => {
     try {
-      // Statistiques globales
-      const { count: totalUsers } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
+      // Fetch ALL data in parallel with optimized queries
+      const [
+        profilesCount,
+        dossiersData,
+        tasksData,
+        worldAccessData
+      ] = await Promise.all([
+        supabase.from('profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('dossiers').select('world_id, status'),
+        supabase.from('tasks').select('world_id, status'),
+        supabase.from('user_world_access').select('user_id, world_id')
+      ]);
 
-      const { count: totalDossiers } = await supabase
-        .from('dossiers')
-        .select('*', { count: 'exact', head: true });
-
-      const { count: totalTasks } = await supabase
-        .from('tasks')
-        .select('*', { count: 'exact', head: true });
-
-      // Utilisateurs actifs (avec au moins un accès monde)
-      const { count: activeUsers } = await supabase
-        .from('user_world_access')
-        .select('user_id', { count: 'exact', head: true });
-
+      // Process global stats
       setStats({
-        totalUsers: totalUsers || 0,
-        totalDossiers: totalDossiers || 0,
-        totalTasks: totalTasks || 0,
-        activeUsers: activeUsers || 0
+        totalUsers: profilesCount.count || 0,
+        totalDossiers: dossiersData.data?.length || 0,
+        totalTasks: tasksData.data?.length || 0,
+        activeUsers: new Set(worldAccessData.data?.map(wa => wa.user_id)).size
       });
 
-      // Statistiques par monde
-      const worldStatsData: WorldStats[] = [];
+      // Process stats per world
+      const worldStatsData: WorldStats[] = accessibleWorlds.map(world => {
+        const worldDossiers = dossiersData.data?.filter(d => d.world_id === world.id) || [];
+        const worldTasks = tasksData.data?.filter(t => t.world_id === world.id) || [];
+        const worldUsers = worldAccessData.data?.filter(wa => wa.world_id === world.id) || [];
 
-      for (const world of accessibleWorlds) {
-        // Dossiers par statut
-        const { count: totalDossiers } = await supabase
-          .from('dossiers')
-          .select('*', { count: 'exact', head: true })
-          .eq('world_id', world.id);
-
-        const { count: nouveauDossiers } = await supabase
-          .from('dossiers')
-          .select('*', { count: 'exact', head: true })
-          .eq('world_id', world.id)
-          .eq('status', 'nouveau');
-
-        const { count: enCoursDossiers } = await supabase
-          .from('dossiers')
-          .select('*', { count: 'exact', head: true })
-          .eq('world_id', world.id)
-          .eq('status', 'en_cours');
-
-        const { count: clotureDossiers } = await supabase
-          .from('dossiers')
-          .select('*', { count: 'exact', head: true })
-          .eq('world_id', world.id)
-          .eq('status', 'cloture');
-
-        // Tâches par statut
-        const { count: totalTasks } = await supabase
-          .from('tasks')
-          .select('*', { count: 'exact', head: true })
-          .eq('world_id', world.id);
-
-        const { count: todoTasks } = await supabase
-          .from('tasks')
-          .select('*', { count: 'exact', head: true })
-          .eq('world_id', world.id)
-          .eq('status', 'todo');
-
-        const { count: inProgressTasks } = await supabase
-          .from('tasks')
-          .select('*', { count: 'exact', head: true })
-          .eq('world_id', world.id)
-          .eq('status', 'in_progress');
-
-        const { count: doneTasks } = await supabase
-          .from('tasks')
-          .select('*', { count: 'exact', head: true })
-          .eq('world_id', world.id)
-          .eq('status', 'done');
-
-        // Utilisateurs avec accès
-        const { count: activeUsers } = await supabase
-          .from('user_world_access')
-          .select('*', { count: 'exact', head: true })
-          .eq('world_id', world.id);
-
-        worldStatsData.push({
+        return {
           worldCode: world.code,
           worldName: world.name,
           color: world.theme_colors.primary,
-          totalDossiers: totalDossiers || 0,
-          nouveauDossiers: nouveauDossiers || 0,
-          enCoursDossiers: enCoursDossiers || 0,
-          clotureDossiers: clotureDossiers || 0,
-          totalTasks: totalTasks || 0,
-          todotasks: todoTasks || 0,
-          inProgressTasks: inProgressTasks || 0,
-          doneTasks: doneTasks || 0,
-          activeUsers: activeUsers || 0
-        });
-      }
+          totalDossiers: worldDossiers.length,
+          nouveauDossiers: worldDossiers.filter(d => d.status === 'nouveau').length,
+          enCoursDossiers: worldDossiers.filter(d => d.status === 'en_cours').length,
+          clotureDossiers: worldDossiers.filter(d => d.status === 'cloture').length,
+          totalTasks: worldTasks.length,
+          todotasks: worldTasks.filter(t => t.status === 'todo').length,
+          inProgressTasks: worldTasks.filter(t => t.status === 'in_progress').length,
+          doneTasks: worldTasks.filter(t => t.status === 'done').length,
+          activeUsers: worldUsers.length
+        };
+      });
 
       setWorldStats(worldStatsData);
     } catch (error) {

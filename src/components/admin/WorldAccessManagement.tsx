@@ -35,6 +35,7 @@ const WorldAccessManagement = () => {
   const [selectedUser, setSelectedUser] = useState<UserAccess | null>(null);
   const [selectedWorld, setSelectedWorld] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -54,6 +55,7 @@ const WorldAccessManagement = () => {
   };
 
   const fetchUsersWithAccess = async () => {
+    setLoading(true);
     const { data } = await supabase
       .from('profiles')
       .select(`
@@ -72,6 +74,7 @@ const WorldAccessManagement = () => {
         worlds: (u as any).user_world_access.map((uwa: any) => uwa.world)
       })));
     }
+    setLoading(false);
   };
 
   const addWorldAccess = async () => {
@@ -146,7 +149,16 @@ const WorldAccessManagement = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user) => (
+            {loading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><div className="h-4 bg-muted animate-pulse rounded" /></TableCell>
+                  <TableCell><div className="h-4 bg-muted animate-pulse rounded" /></TableCell>
+                  <TableCell><div className="h-6 w-32 bg-muted animate-pulse rounded" /></TableCell>
+                  <TableCell><div className="h-8 w-24 bg-muted animate-pulse rounded" /></TableCell>
+                </TableRow>
+              ))
+            ) : users.map((user) => (
               <TableRow key={user.id} className="hover:bg-muted/30">
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.display_name || '-'}</TableCell>
@@ -219,6 +231,13 @@ const WorldAccessManagement = () => {
                 </TableCell>
               </TableRow>
             ))}
+            {!loading && users.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                  Aucun utilisateur trouvé
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </CardContent>
