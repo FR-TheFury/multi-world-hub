@@ -1,4 +1,4 @@
-import { Home, FolderOpen, Settings, Shield, LogOut } from 'lucide-react';
+import { Home, FolderOpen, Settings, Shield, LogOut, TrendingUp } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/integrations/supabase/client';
@@ -71,6 +71,15 @@ const AppSidebar = () => {
                   >
                     <Shield className="h-4 w-4" />
                     {!isCollapsed && <span>Administration</span>}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    onClick={() => navigate('/superadmin/analytics')}
+                    className={isActive('/superadmin/analytics') ? 'bg-sidebar-accent font-medium' : ''}
+                  >
+                    <TrendingUp className="h-4 w-4" />
+                    {!isCollapsed && <span>Analytiques</span>}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>

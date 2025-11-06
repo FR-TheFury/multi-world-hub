@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import DashboardLayout from "./components/DashboardLayout";
 import Users from "./pages/superadmin/Users";
 import Administration from "./pages/superadmin/Administration";
+import Analytics from "./pages/superadmin/Analytics";
 import Dossiers from "./pages/world/Dossiers";
 import AllDossiers from "./pages/AllDossiers";
 import NotFound from "./pages/NotFound";
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/dossiers" element={<DashboardLayout><AllDossiers /></DashboardLayout>} />
           <Route path="/superadmin/users" element={<DashboardLayout><Users /></DashboardLayout>} />
           <Route path="/superadmin/administration" element={<DashboardLayout><Administration /></DashboardLayout>} />
+          <Route path="/superadmin/analytics" element={<DashboardLayout><Analytics /></DashboardLayout>} />
           <Route path="/:worldCode/dossiers" element={<DashboardLayout><Dossiers /></DashboardLayout>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
