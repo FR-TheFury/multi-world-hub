@@ -14,16 +14,363 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          target: string
+          user_id: string | null
+          world_code: Database["public"]["Enums"]["world_code"] | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          target: string
+          user_id?: string | null
+          world_code?: Database["public"]["Enums"]["world_code"] | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          target?: string
+          user_id?: string | null
+          world_code?: Database["public"]["Enums"]["world_code"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dossiers: {
+        Row: {
+          created_at: string | null
+          id: string
+          owner_id: string
+          status: Database["public"]["Enums"]["dossier_status"]
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          world_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          owner_id: string
+          status?: Database["public"]["Enums"]["dossier_status"]
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          world_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          owner_id?: string
+          status?: Database["public"]["Enums"]["dossier_status"]
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          world_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dossiers_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dossiers_world_id_fkey"
+            columns: ["world_id"]
+            isOneToOne: false
+            referencedRelation: "worlds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      permissions: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          key: string
+          label: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          key: string
+          label: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          key?: string
+          label?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          display_name: string | null
+          email: string
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_name?: string | null
+          email: string
+          id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_name?: string | null
+          email?: string
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          label: string
+          name: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          label: string
+          name: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          label?: string
+          name?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_world_access: {
+        Row: {
+          created_at: string | null
+          id: string
+          user_id: string
+          world_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          user_id: string
+          world_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          user_id?: string
+          world_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_world_access_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_world_access_world_id_fkey"
+            columns: ["world_id"]
+            isOneToOne: false
+            referencedRelation: "worlds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_world_permissions: {
+        Row: {
+          created_at: string | null
+          id: string
+          permission_id: string
+          user_id: string
+          world_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          permission_id: string
+          user_id: string
+          world_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          permission_id?: string
+          user_id?: string
+          world_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_world_permissions_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "permissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_world_permissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_world_permissions_world_id_fkey"
+            columns: ["world_id"]
+            isOneToOne: false
+            referencedRelation: "worlds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      world_permissions: {
+        Row: {
+          created_at: string | null
+          id: string
+          permission_id: string
+          world_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          permission_id: string
+          world_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          permission_id?: string
+          world_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "world_permissions_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "permissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "world_permissions_world_id_fkey"
+            columns: ["world_id"]
+            isOneToOne: false
+            referencedRelation: "worlds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      worlds: {
+        Row: {
+          code: Database["public"]["Enums"]["world_code"]
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          theme_colors: Json
+        }
+        Insert: {
+          code: Database["public"]["Enums"]["world_code"]
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          theme_colors: Json
+        }
+        Update: {
+          code?: Database["public"]["Enums"]["world_code"]
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          theme_colors?: Json
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      has_world_access: {
+        Args: { _user_id: string; _world_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "superadmin" | "admin" | "editor" | "viewer"
+      dossier_status: "nouveau" | "en_cours" | "cloture"
+      world_code: "JDE" | "JDMO" | "DBCS"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +497,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["superadmin", "admin", "editor", "viewer"],
+      dossier_status: ["nouveau", "en_cours", "cloture"],
+      world_code: ["JDE", "JDMO", "DBCS"],
+    },
   },
 } as const
