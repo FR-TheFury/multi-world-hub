@@ -52,6 +52,7 @@ const TaskManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -70,6 +71,7 @@ const TaskManagement = () => {
   }, []);
 
   const fetchTasks = async () => {
+    setLoading(true);
     const { data } = await supabase
       .from('tasks')
       .select(`
@@ -92,6 +94,7 @@ const TaskManagement = () => {
         world: (t as any).world
       })));
     }
+    setLoading(false);
   };
 
   const fetchUsers = async () => {
@@ -363,7 +366,19 @@ const TaskManagement = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {tasks.map((task) => (
+            {loading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><div className="h-4 bg-muted animate-pulse rounded" /></TableCell>
+                  <TableCell><div className="h-4 bg-muted animate-pulse rounded" /></TableCell>
+                  <TableCell><div className="h-6 w-16 bg-muted animate-pulse rounded" /></TableCell>
+                  <TableCell><div className="h-6 w-20 bg-muted animate-pulse rounded" /></TableCell>
+                  <TableCell><div className="h-6 w-20 bg-muted animate-pulse rounded" /></TableCell>
+                  <TableCell><div className="h-4 bg-muted animate-pulse rounded" /></TableCell>
+                  <TableCell><div className="h-8 w-20 bg-muted animate-pulse rounded" /></TableCell>
+                </TableRow>
+              ))
+            ) : tasks.map((task) => (
               <TableRow key={task.id} className="hover:bg-muted/30">
                 <TableCell className="font-medium">{task.title}</TableCell>
                 <TableCell>{task.assigned_user.display_name || task.assigned_user.email}</TableCell>
@@ -411,6 +426,13 @@ const TaskManagement = () => {
                 </TableCell>
               </TableRow>
             ))}
+            {!loading && tasks.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                  Aucune tâche trouvée
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </CardContent>
