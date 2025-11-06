@@ -5,6 +5,9 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { World } from '@/lib/store';
 import { useNavigate } from 'react-router-dom';
+import jdeLogo from '@/assets/JDE.svg';
+import jdmoLogo from '@/assets/JDMO.svg';
+import dbcsLogo from '@/assets/DBCS.svg';
 
 interface WorldCard3DProps {
   world: World;
@@ -16,6 +19,12 @@ const WorldCard3D = ({ world }: WorldCard3DProps) => {
 
   const handleClick = () => {
     navigate(`/${world.code.toLowerCase()}/dossiers`);
+  };
+
+  const logoMap: Record<string, string> = {
+    JDE: jdeLogo,
+    JDMO: jdmoLogo,
+    DBCS: dbcsLogo,
   };
 
   return (
@@ -52,15 +61,15 @@ const WorldCard3D = ({ world }: WorldCard3DProps) => {
           }}
         >
           <div className="p-6 space-y-4">
-            <div className="flex items-start justify-between">
-              <div className="space-y-1">
-                <h3 className="text-2xl font-bold" style={{ color: colors.primary }}>
-                  {world.name}
-                </h3>
-                <p className="text-sm text-muted-foreground">{world.description}</p>
-              </div>
+            <div className="flex items-center justify-between mb-4">
+              <img 
+                src={logoMap[world.code]} 
+                alt={`${world.name} logo`}
+                className="h-16 w-auto object-contain"
+                style={{ filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.1))' }}
+              />
               <Badge
-                className="shadow-sm"
+                className="shadow-md"
                 style={{
                   backgroundColor: colors.primary,
                   color: 'white',
@@ -68,6 +77,12 @@ const WorldCard3D = ({ world }: WorldCard3DProps) => {
               >
                 {world.code}
               </Badge>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-2xl font-bold" style={{ color: colors.primary }}>
+                {world.name}
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{world.description}</p>
             </div>
 
             <div className="pt-4">
