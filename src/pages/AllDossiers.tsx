@@ -7,6 +7,7 @@ import { FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import DossierFilters from '@/components/DossierFilters';
+import { cn } from '@/lib/utils';
 import {
   Table,
   TableBody,
@@ -85,13 +86,13 @@ const AllDossiers = () => {
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case 'nouveau':
-        return 'bg-blue-500 text-white';
+        return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'en_cours':
-        return 'bg-yellow-500 text-white';
+        return 'bg-amber-50 text-amber-700 border-amber-200';
       case 'cloture':
-        return 'bg-gray-500 text-white';
+        return 'bg-slate-100 text-slate-700 border-slate-200';
       default:
-        return 'bg-gray-500 text-white';
+        return 'bg-slate-100 text-slate-700 border-slate-200';
     }
   };
 
@@ -147,16 +148,18 @@ const AllDossiers = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold mb-2">Tous les Dossiers</h2>
-        <p className="text-muted-foreground">
+        <h2 className="text-2xl font-bold mb-1 text-foreground">Tous les Dossiers</h2>
+        <p className="text-sm text-muted-foreground">
           Gérez et consultez tous vos dossiers de tous les mondes
         </p>
       </div>
 
-      <Card className="shadow-vuexy-md">
-        <CardHeader className="bg-muted/30">
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
+      <Card className="shadow-vuexy-md border-0">
+        <CardHeader className="border-b bg-card">
+          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <FileText className="h-5 w-5 text-primary" />
+            </div>
             Liste des dossiers
           </CardTitle>
         </CardHeader>
@@ -175,7 +178,7 @@ const AllDossiers = () => {
 
           <div className="mt-6">
             {filteredDossiers.length > 0 ? (
-              <div className="rounded-md border">
+              <div className="rounded-lg border overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -191,30 +194,32 @@ const AllDossiers = () => {
                     {filteredDossiers.map((dossier) => (
                       <TableRow
                         key={dossier.id}
-                        className="cursor-pointer hover:bg-accent/50"
+                        className="cursor-pointer hover:bg-muted/30 transition-colors"
                       >
                         <TableCell>
                           <Badge
+                            className="font-medium shadow-none"
                             style={{
-                              backgroundColor: dossier.world.theme_colors.primary,
-                              color: 'white',
+                              backgroundColor: dossier.world.theme_colors.primary + '15',
+                              color: dossier.world.theme_colors.primary,
+                              borderColor: dossier.world.theme_colors.primary + '30',
                             }}
                           >
                             {dossier.world.code}
                           </Badge>
                         </TableCell>
-                        <TableCell className="font-medium">{dossier.title}</TableCell>
+                        <TableCell className="font-medium text-sm">{dossier.title}</TableCell>
                         <TableCell>
-                          <Badge className={getStatusBadgeColor(dossier.status)}>
+                          <Badge className={cn("shadow-none font-medium", getStatusBadgeColor(dossier.status))}>
                             {getStatusLabel(dossier.status)}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-muted-foreground">
+                        <TableCell className="text-sm text-muted-foreground">
                           {format(new Date(dossier.created_at), 'dd MMM yyyy', {
                             locale: fr,
                           })}
                         </TableCell>
-                        <TableCell className="text-muted-foreground">
+                        <TableCell className="text-sm text-muted-foreground">
                           {dossier.owner?.display_name || 'Inconnu'}
                         </TableCell>
                         <TableCell>
@@ -223,14 +228,14 @@ const AllDossiers = () => {
                               {dossier.tags.map((tag, idx) => (
                                 <span
                                   key={idx}
-                                  className="text-xs bg-muted px-2 py-1 rounded"
+                                  className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-md font-medium"
                                 >
                                   {tag}
                                 </span>
                               ))}
                             </div>
                           ) : (
-                            <span className="text-muted-foreground text-sm">-</span>
+                            <span className="text-muted-foreground text-xs">-</span>
                           )}
                         </TableCell>
                       </TableRow>
@@ -239,9 +244,12 @@ const AllDossiers = () => {
                 </Table>
               </div>
             ) : (
-              <div className="text-center py-12 text-muted-foreground">
-                <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Aucun dossier trouvé</p>
+              <div className="text-center py-16 text-muted-foreground">
+                <div className="p-4 rounded-full bg-muted/50 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                  <FileText className="h-10 w-10 opacity-40" />
+                </div>
+                <p className="text-sm font-medium">Aucun dossier trouvé</p>
+                <p className="text-xs mt-1">Essayez d'ajuster vos filtres</p>
               </div>
             )}
           </div>

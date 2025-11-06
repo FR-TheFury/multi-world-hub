@@ -123,17 +123,17 @@ const Users = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold mb-2">Gestion des Utilisateurs</h2>
-        <p className="text-muted-foreground">
+        <h2 className="text-2xl font-bold mb-1">Gestion des Utilisateurs</h2>
+        <p className="text-sm text-muted-foreground">
           Gérez les accès des utilisateurs aux différents Mondes
         </p>
       </div>
 
-      <Card className="shadow-vuexy-md">
-        <CardHeader>
+      <Card className="shadow-vuexy-md border-0">
+        <CardHeader className="border-b">
           <div className="flex items-center justify-between">
-            <CardTitle>Utilisateurs</CardTitle>
-            <Button>
+            <CardTitle className="text-lg font-semibold">Utilisateurs</CardTitle>
+            <Button className="h-9">
               <UserPlus className="mr-2 h-4 w-4" />
               Inviter un utilisateur
             </Button>
@@ -152,26 +152,26 @@ const Users = () => {
             </div>
           </div>
 
-          <div className="rounded-md border">
+          <div className="rounded-lg border overflow-hidden">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Utilisateur</TableHead>
-                  <TableHead>Email</TableHead>
+                  <TableRow>
+                  <TableHead className="font-semibold">Utilisateur</TableHead>
+                  <TableHead className="font-semibold">Email</TableHead>
                   {worlds.map((world) => (
-                    <TableHead key={world.id} className="text-center">
-                      {world.code}
+                    <TableHead key={world.id} className="text-center font-semibold">
+                      <Badge variant="outline">{world.code}</Badge>
                     </TableHead>
                   ))}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredProfiles.map((profile) => (
-                  <TableRow key={profile.id}>
-                    <TableCell className="font-medium">
+                  <TableRow key={profile.id} className="hover:bg-muted/30">
+                    <TableCell className="font-medium text-sm">
                       {profile.display_name || 'N/A'}
                     </TableCell>
-                    <TableCell>{profile.email}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{profile.email}</TableCell>
                     {worlds.map((world) => (
                       <TableCell key={world.id} className="text-center">
                         <Switch

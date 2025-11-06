@@ -39,15 +39,17 @@ const DossierFilters = ({
   const hasActiveFilters = selectedWorlds.length > 0 || selectedStatus !== 'all' || searchQuery !== '';
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5 p-5 bg-muted/30 rounded-lg border">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Filter className="h-5 w-5 text-muted-foreground" />
-          <h3 className="font-semibold">Filtres</h3>
+          <div className="p-1.5 rounded-md bg-primary/10">
+            <Filter className="h-4 w-4 text-primary" />
+          </div>
+          <h3 className="font-semibold text-sm">Filtres</h3>
         </div>
         {hasActiveFilters && (
-          <Button variant="ghost" size="sm" onClick={onReset}>
-            <X className="h-4 w-4 mr-1" />
+          <Button variant="ghost" size="sm" onClick={onReset} className="h-8">
+            <X className="h-3.5 w-3.5 mr-1" />
             Réinitialiser
           </Button>
         )}
@@ -56,7 +58,7 @@ const DossierFilters = ({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* World Filter */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">Mondes</label>
+          <label className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">Mondes</label>
           <div className="flex flex-wrap gap-2">
             {worlds.map((world) => {
               const isSelected = selectedWorlds.includes(world.code);
@@ -87,7 +89,7 @@ const DossierFilters = ({
 
         {/* Status Filter */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">Statut</label>
+          <label className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">Statut</label>
           <Select value={selectedStatus} onValueChange={onStatusChange}>
             <SelectTrigger>
               <SelectValue placeholder="Tous les statuts" />
@@ -103,7 +105,7 @@ const DossierFilters = ({
 
         {/* Search */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">Recherche</label>
+          <label className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">Recherche</label>
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
@@ -116,8 +118,10 @@ const DossierFilters = ({
         </div>
       </div>
 
-      <div className="text-sm text-muted-foreground">
-        {resultCount} dossier{resultCount !== 1 ? 's' : ''} trouvé{resultCount !== 1 ? 's' : ''}
+      <div className="flex items-center gap-2 pt-2 border-t">
+        <div className="text-xs text-muted-foreground font-medium">
+          {resultCount} dossier{resultCount !== 1 ? 's' : ''} trouvé{resultCount !== 1 ? 's' : ''}
+        </div>
       </div>
     </div>
   );

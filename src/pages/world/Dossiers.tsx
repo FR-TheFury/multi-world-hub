@@ -70,13 +70,13 @@ const Dossiers = () => {
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case 'nouveau':
-        return 'bg-blue-500 text-white';
+        return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'en_cours':
-        return 'bg-yellow-500 text-white';
+        return 'bg-amber-50 text-amber-700 border-amber-200';
       case 'cloture':
-        return 'bg-gray-500 text-white';
+        return 'bg-slate-100 text-slate-700 border-slate-200';
       default:
-        return 'bg-gray-500 text-white';
+        return 'bg-slate-100 text-slate-700 border-slate-200';
     }
   };
 
@@ -104,16 +104,18 @@ const Dossiers = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold mb-2">Dossiers {worldCode?.toUpperCase()}</h2>
-        <p className="text-muted-foreground">
+        <h2 className="text-2xl font-bold mb-1">Dossiers {worldCode?.toUpperCase()}</h2>
+        <p className="text-sm text-muted-foreground">
           Gérez et consultez tous vos dossiers
         </p>
       </div>
 
-      <Card className="shadow-vuexy-md">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
+      <Card className="shadow-vuexy-md border-0">
+        <CardHeader className="border-b bg-card">
+          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <FileText className="h-5 w-5 text-primary" />
+            </div>
             Tous les dossiers
           </CardTitle>
         </CardHeader>
@@ -130,20 +132,20 @@ const Dossiers = () => {
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             {filteredDossiers.map((dossier) => (
               <div
                 key={dossier.id}
-                className="flex items-center justify-between p-4 rounded-lg border hover:bg-accent/50 transition-smooth cursor-pointer"
+                className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/30 transition-colors cursor-pointer"
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-medium">{dossier.title}</h4>
+                    <h4 className="font-medium text-sm">{dossier.title}</h4>
                     <Badge className={getStatusBadgeColor(dossier.status)}>
                       {getStatusLabel(dossier.status)}
                     </Badge>
                   </div>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     <span>
                       {format(new Date(dossier.created_at), 'dd MMM yyyy', { locale: fr })}
                     </span>
@@ -159,8 +161,11 @@ const Dossiers = () => {
             ))}
 
             {filteredDossiers.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                Aucun dossier trouvé
+              <div className="text-center py-16 text-muted-foreground">
+                <div className="p-4 rounded-full bg-muted/50 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                  <FileText className="h-10 w-10 opacity-40" />
+                </div>
+                <p className="text-sm font-medium">Aucun dossier trouvé</p>
               </div>
             )}
           </div>

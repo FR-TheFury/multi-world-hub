@@ -9,6 +9,7 @@ import { ArrowRight, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 interface Dossier {
   id: string;
@@ -70,13 +71,13 @@ const Dashboard = () => {
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case 'nouveau':
-        return 'bg-blue-500 text-white';
+        return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'en_cours':
-        return 'bg-yellow-500 text-white';
+        return 'bg-amber-50 text-amber-700 border-amber-200';
       case 'cloture':
-        return 'bg-gray-500 text-white';
+        return 'bg-slate-100 text-slate-700 border-slate-200';
       default:
-        return 'bg-gray-500 text-white';
+        return 'bg-slate-100 text-slate-700 border-slate-200';
     }
   };
 
@@ -96,15 +97,15 @@ const Dashboard = () => {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-3xl font-bold mb-2">Bienvenue</h2>
-        <p className="text-muted-foreground">
+        <h2 className="text-2xl font-bold mb-1 text-foreground">Bienvenue</h2>
+        <p className="text-sm text-muted-foreground">
           Accédez à vos espaces de travail et consultez vos derniers dossiers
         </p>
       </div>
 
       {/* 3D World Cards */}
       <section>
-        <h3 className="text-xl font-semibold mb-4">Vos Mondes</h3>
+        <h3 className="text-lg font-semibold mb-4 text-foreground">Vos Mondes</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {accessibleWorlds.map((world) => (
             <WorldCard3D key={world.id} world={world} />
@@ -114,13 +115,14 @@ const Dashboard = () => {
 
       {/* Recent Dossiers by World */}
       {!loading && Object.keys(dossiersByWorld).length > 0 && (
-        <section className="space-y-6">
+        <section className="space-y-5">
           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-semibold">Derniers Dossiers</h3>
+            <h3 className="text-lg font-semibold text-foreground">Derniers Dossiers</h3>
             <Button
               variant="outline"
               size="sm"
               onClick={() => navigate('/dossiers')}
+              className="h-9"
             >
               <FileText className="h-4 w-4 mr-2" />
               Voir tous les dossiers
@@ -132,39 +134,42 @@ const Dashboard = () => {
             if (!world || dossiers.length === 0) return null;
 
             return (
-              <Card key={worldCode} className="shadow-vuexy-md">
-                <CardHeader>
+              <Card key={worldCode} className="shadow-vuexy-md border-0">
+                <CardHeader className="border-b">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                      <FileText className="h-5 w-5" style={{ color: world.theme_colors.primary }} />
-                      {world.name}
+                    <CardTitle className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg" style={{ backgroundColor: `${world.theme_colors.primary}15` }}>
+                        <FileText className="h-5 w-5" style={{ color: world.theme_colors.primary }} />
+                      </div>
+                      <span>{world.name}</span>
                     </CardTitle>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => navigate(`/${worldCode.toLowerCase()}/dossiers`)}
+                      className="h-8"
                     >
                       Voir tout
-                      <ArrowRight className="ml-2 h-4 w-4" />
+                      <ArrowRight className="ml-1 h-4 w-4" />
                     </Button>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {dossiers.map((dossier) => (
                       <div
                         key={dossier.id}
-                        className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent/50 transition-smooth cursor-pointer"
+                        className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/30 transition-colors cursor-pointer"
                         onClick={() => navigate(`/${worldCode.toLowerCase()}/dossiers/${dossier.id}`)}
                       >
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-medium">{dossier.title}</h4>
-                            <Badge className={getStatusBadgeColor(dossier.status)}>
+                            <h4 className="font-medium text-sm">{dossier.title}</h4>
+                            <Badge className={cn("text-xs", getStatusBadgeColor(dossier.status))}>
                               {getStatusLabel(dossier.status)}
                             </Badge>
                           </div>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
                             <span>
                               {format(new Date(dossier.created_at), 'dd MMM yyyy', { locale: fr })}
                             </span>
@@ -187,7 +192,10 @@ const Dashboard = () => {
       )}
 
       {!loading && accessibleWorlds.length === 0 && (
-        <Card className="text-center p-8">
+        <Card className="text-center py-12 shadow-vuexy-md border-0">
+          <div className="p-4 rounded-full bg-muted/50 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+            <FileText className="h-10 w-10 opacity-40" />
+          </div>
           <p className="text-muted-foreground">
             Vous n'avez accès à aucun monde pour le moment.
           </p>

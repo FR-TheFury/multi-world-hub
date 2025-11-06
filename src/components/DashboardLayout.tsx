@@ -30,12 +30,12 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <AppSidebar />
 
         <div className="flex-1 flex flex-col">
-          <header className="h-14 border-b bg-card flex items-center px-4 shadow-vuexy-sm sticky top-0 z-10">
+          <header className="h-16 border-b bg-card flex items-center px-6 shadow-vuexy-sm sticky top-0 z-10">
             <SidebarTrigger />
-            <h1 className="ml-4 text-lg font-semibold">Multi-World Dashboard</h1>
+            <h1 className="ml-4 text-xl font-bold text-foreground">Multi-World Dashboard</h1>
           </header>
 
-          <main className="flex-1 p-6 bg-background">
+          <main className="flex-1 p-6 lg:p-8 bg-background">
             {children}
           </main>
         </div>
