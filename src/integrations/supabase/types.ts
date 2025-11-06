@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointments: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          end_time: string
+          google_calendar_id: string | null
+          id: string
+          start_time: string
+          status: string
+          title: string
+          updated_at: string | null
+          user_id: string
+          world_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          end_time: string
+          google_calendar_id?: string | null
+          id?: string
+          start_time: string
+          status?: string
+          title: string
+          updated_at?: string | null
+          user_id: string
+          world_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          end_time?: string
+          google_calendar_id?: string | null
+          id?: string
+          start_time?: string
+          status?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+          world_id?: string | null
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -100,6 +142,39 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          read: boolean | null
+          related_id: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          read?: boolean | null
+          related_id?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          read?: boolean | null
+          related_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       permissions: {
         Row: {
           created_at: string | null
@@ -166,6 +241,48 @@ export type Database = {
           id?: string
           label?: string
           name?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          assigned_to: string
+          created_at: string | null
+          created_by: string
+          description: string | null
+          due_date: string | null
+          id: string
+          priority: string
+          status: string
+          title: string
+          updated_at: string | null
+          world_id: string
+        }
+        Insert: {
+          assigned_to: string
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string
+          status?: string
+          title: string
+          updated_at?: string | null
+          world_id: string
+        }
+        Update: {
+          assigned_to?: string
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string
+          status?: string
+          title?: string
+          updated_at?: string | null
+          world_id?: string
         }
         Relationships: []
       }

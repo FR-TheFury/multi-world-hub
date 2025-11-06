@@ -2,10 +2,13 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/lib/store';
 import WorldCard3D from '@/components/WorldCard3D';
+import StatsCard from '@/components/StatsCard';
+import TasksPanel from '@/components/TasksPanel';
+import AppointmentsPanel from '@/components/AppointmentsPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, FileText } from 'lucide-react';
+import { ArrowRight, FileText, FolderOpen, CheckSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -25,10 +28,16 @@ const Dashboard = () => {
   const { accessibleWorlds } = useAuthStore();
   const [dossiersByWorld, setDossiersByWorld] = useState<Record<string, Dossier[]>>({});
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalInProgress: 0,
+    totalTasks: 0,
+    byWorld: {} as Record<string, number>
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchRecentDossiers();
+    fetchStats();
   }, [accessibleWorlds]);
 
   const fetchRecentDossiers = async () => {
@@ -68,6 +77,42 @@ const Dashboard = () => {
     }
   };
 
+  const fetchStats = async () => {
+    try {
+      // Total dossiers en cours
+      const { count: totalInProgress } = await supabase
+        .from('dossiers')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'en_cours')
+        .in('world_id', accessibleWorlds.map(w => w.id));
+
+      // Total tâches
+      const { count: totalTasks } = await supabase
+        .from('tasks')
+        .select('*', { count: 'exact', head: true });
+
+      // Dossiers en cours par monde
+      const byWorld: Record<string, number> = {};
+      for (const world of accessibleWorlds) {
+        const { count } = await supabase
+          .from('dossiers')
+          .select('*', { count: 'exact', head: true })
+          .eq('world_id', world.id)
+          .eq('status', 'en_cours');
+        
+        byWorld[world.code] = count || 0;
+      }
+
+      setStats({
+        totalInProgress: totalInProgress || 0,
+        totalTasks: totalTasks || 0,
+        byWorld
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case 'nouveau':
@@ -101,6 +146,43 @@ const Dashboard = () => {
         <p className="text-sm text-muted-foreground">
           Accédez à vos espaces de travail et consultez vos derniers dossiers
         </p>
+      </div>
+
+      {/* Statistics Cards */}
+      <section>
+        <h3 className="text-lg font-semibold mb-4 text-foreground">Statistiques</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatsCard
+            title="Dossiers en cours"
+            value={stats.totalInProgress}
+            icon={FolderOpen}
+            iconColor="#7c3aed"
+            iconBg="#7c3aed15"
+          />
+          <StatsCard
+            title="Tâches assignées"
+            value={stats.totalTasks}
+            icon={CheckSquare}
+            iconColor="#2563eb"
+            iconBg="#2563eb15"
+          />
+          {accessibleWorlds.slice(0, 2).map((world) => (
+            <StatsCard
+              key={world.id}
+              title={`${world.name} - En cours`}
+              value={stats.byWorld[world.code] || 0}
+              icon={FileText}
+              iconColor={world.theme_colors.primary}
+              iconBg={`${world.theme_colors.primary}15`}
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* Tasks and Appointments */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <TasksPanel />
+        <AppointmentsPanel />
       </div>
 
       {/* 3D World Cards */}
