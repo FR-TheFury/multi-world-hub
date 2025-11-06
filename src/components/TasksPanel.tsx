@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/lib/store';
-import { format } from 'date-fns';
+import { format, startOfDay, endOfDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
@@ -18,7 +18,7 @@ interface Task {
   priority: string;
   due_date: string | null;
   assigned_to: string;
-  world: { code: string; name: string; theme_colors: any };
+  world?: { code: string; name: string; theme_colors: any };
 }
 
 const TasksPanel = () => {
@@ -33,39 +33,75 @@ const TasksPanel = () => {
   const fetchTasks = async () => {
     try {
       const { data: userData } = await supabase.auth.getUser();
-      
-      const query = supabase
+      const userId = userData.user?.id;
+
+      const baseSelect = 'id,title,description,status,priority,due_date,assigned_to,world_id';
+
+      const today = new Date();
+      const startDate = startOfDay(today).toISOString();
+      const endDate = endOfDay(today).toISOString();
+
+      // Base query for today tasks
+      let todayQuery = supabase
         .from('tasks')
-        .select(`
-          id,
-          title,
-          description,
-          status,
-          priority,
-          due_date,
-          assigned_to,
-          world_id,
-          worlds!tasks_world_id_fkey(code, name, theme_colors)
-        `)
+        .select(baseSelect)
         .eq('status', 'todo')
+        .gte('due_date', startDate)
+        .lte('due_date', endDate)
         .order('due_date', { ascending: true, nullsFirst: false });
 
-      if (!isSuperAdmin() && userData.user) {
-        query.eq('assigned_to', userData.user.id);
+      if (!isSuperAdmin() && userId) {
+        todayQuery = todayQuery.eq('assigned_to', userId);
       }
 
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Error fetching tasks:', error);
+      let { data: todayTasks, error: todayError } = await todayQuery;
+      if (todayError) {
+        console.error('Error fetching tasks:', todayError);
         return;
       }
 
-      if (data) {
-        setTasks(data.map(t => ({ 
-          ...t, 
-          world: (t as any).worlds 
-        })));
+      let rows = todayTasks ?? [];
+
+      // If none today, fetch next upcoming tasks
+      if (rows.length === 0) {
+        let nextQuery = supabase
+          .from('tasks')
+          .select(baseSelect)
+          .eq('status', 'todo')
+          .gt('due_date', endDate)
+          .order('due_date', { ascending: true, nullsFirst: false })
+          .limit(5);
+
+        if (!isSuperAdmin() && userId) {
+          nextQuery = nextQuery.eq('assigned_to', userId);
+        }
+
+        const { data: nextTasks, error: nextError } = await nextQuery;
+        if (nextError) {
+          console.error('Error fetching next tasks:', nextError);
+          return;
+        }
+        rows = nextTasks ?? [];
+      }
+
+      // Enrich with worlds info via separate query
+      if (rows.length > 0) {
+        const worldIds = Array.from(new Set(rows.map(t => t.world_id).filter(Boolean)));
+        let worldMap: Record<string, any> = {};
+        if (worldIds.length > 0) {
+          const { data: worldsData } = await supabase
+            .from('worlds')
+            .select('id, code, name, theme_colors')
+            .in('id', worldIds);
+
+          if (worldsData) {
+            worldMap = Object.fromEntries(worldsData.map(w => [w.id, w]));
+          }
+        }
+
+        setTasks(rows.map(t => ({ ...t, world: t.world_id ? worldMap[t.world_id] : undefined })));
+      } else {
+        setTasks([]);
       }
     } catch (error) {
       console.error('Error fetching tasks:', error);
@@ -161,16 +197,18 @@ const TasksPanel = () => {
                         {task.priority}
                       </span>
                     </Badge>
-                    <Badge 
-                      style={{ 
-                        backgroundColor: `${task.world.theme_colors.primary}15`,
-                        color: task.world.theme_colors.primary,
-                        borderColor: `${task.world.theme_colors.primary}30`
-                      }}
-                      className="text-xs"
-                    >
-                      {task.world.code}
-                    </Badge>
+                    {task.world && (
+                      <Badge 
+                        style={{ 
+                          backgroundColor: `${task.world.theme_colors.primary}15`,
+                          color: task.world.theme_colors.primary,
+                          borderColor: `${task.world.theme_colors.primary}30`
+                        }}
+                        className="text-xs"
+                      >
+                        {task.world.code}
+                      </Badge>
+                    )}
                   </div>
                   {task.description && (
                     <p className="text-xs text-muted-foreground">{task.description}</p>

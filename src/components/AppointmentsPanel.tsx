@@ -32,36 +32,69 @@ const AppointmentsPanel = () => {
       const endDate = endOfDay(today).toISOString();
 
       const { data: userData } = await supabase.auth.getUser();
-      
-      const { data, error } = await supabase
+      const userId = userData.user?.id;
+      if (!userId) {
+        setAppointments([]);
+        return;
+      }
+
+      // 1) RDV du jour
+      let { data: todayData, error: todayError } = await supabase
         .from('appointments')
-        .select(`
-          id,
-          title,
-          description,
-          start_time,
-          end_time,
-          status,
-          user_id,
-          world_id,
-          worlds!appointments_world_id_fkey(code, name, theme_colors)
-        `)
-        .eq('user_id', userData.user?.id)
+        .select('id,title,description,start_time,end_time,status,user_id,world_id')
+        .eq('user_id', userId)
         .gte('start_time', startDate)
         .lte('start_time', endDate)
         .eq('status', 'scheduled')
         .order('start_time', { ascending: true });
 
-      if (error) {
-        console.error('Error fetching appointments:', error);
+      if (todayError) {
+        console.error('Error fetching today appointments:', todayError);
         return;
       }
 
-      if (data) {
-        setAppointments(data.map(a => ({ 
-          ...a, 
-          world: (a as any).worlds 
-        })));
+      // 2) Sinon, prochains RDV
+      let rows = todayData ?? [];
+      if (rows.length === 0) {
+        const { data: upcomingData, error: upcomingError } = await supabase
+          .from('appointments')
+          .select('id,title,description,start_time,end_time,status,user_id,world_id')
+          .eq('user_id', userId)
+          .gt('start_time', endDate)
+          .eq('status', 'scheduled')
+          .order('start_time', { ascending: true })
+          .limit(5);
+
+        if (upcomingError) {
+          console.error('Error fetching upcoming appointments:', upcomingError);
+          return;
+        }
+        rows = upcomingData ?? [];
+      }
+
+      // 3) Enrichir avec worlds via une requête séparée
+      if (rows.length > 0) {
+        const worldIds = Array.from(new Set(rows.map(r => r.world_id).filter(Boolean)));
+        let worldMap: Record<string, any> = {};
+        if (worldIds.length > 0) {
+          const { data: worldsData } = await supabase
+            .from('worlds')
+            .select('id, code, name, theme_colors')
+            .in('id', worldIds);
+
+          if (worldsData) {
+            worldMap = Object.fromEntries(worldsData.map(w => [w.id, w]));
+          }
+        }
+
+        setAppointments(
+          rows.map(a => ({
+            ...a,
+            world: a.world_id ? worldMap[a.world_id] : undefined,
+          }))
+        );
+      } else {
+        setAppointments([]);
       }
     } catch (error) {
       console.error('Error fetching appointments:', error);
@@ -69,7 +102,6 @@ const AppointmentsPanel = () => {
       setLoading(false);
     }
   };
-
   return (
     <Card className="border-0 shadow-vuexy-md">
       <CardHeader className="border-b">
