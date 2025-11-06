@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/lib/store';
 import WorldCard3D from '@/components/WorldCard3D';
@@ -27,11 +27,14 @@ interface Dossier {
 const Dashboard = () => {
   const { accessibleWorlds: unsortedWorlds, profile } = useAuthStore();
   
-  // Sort worlds in the correct order: JDE, JDMO, DBCS
-  const accessibleWorlds = [...unsortedWorlds].sort((a, b) => {
-    const order = { 'JDE': 1, 'JDMO': 2, 'DBCS': 3 };
-    return order[a.code] - order[b.code];
-  });
+  // Sort worlds in the correct order: JDE, JDMO, DBCS - MEMOIZED to prevent infinite loops
+  const accessibleWorlds = useMemo(() => {
+    return [...unsortedWorlds].sort((a, b) => {
+      const order = { 'JDE': 1, 'JDMO': 2, 'DBCS': 3 };
+      return order[a.code] - order[b.code];
+    });
+  }, [unsortedWorlds]);
+
   const [dossiersByWorld, setDossiersByWorld] = useState<Record<string, Dossier[]>>({});
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -42,9 +45,11 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchRecentDossiers();
-    fetchStats();
-  }, [accessibleWorlds]);
+    if (accessibleWorlds.length > 0) {
+      fetchRecentDossiers();
+      fetchStats();
+    }
+  }, [accessibleWorlds.length]);
 
   const fetchRecentDossiers = async () => {
     try {
