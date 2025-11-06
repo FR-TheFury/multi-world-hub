@@ -46,28 +46,18 @@ const AppSidebar = () => {
                   {!isCollapsed && <span>Accueil</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  onClick={() => navigate('/dossiers')}
+                  className={isActive('/dossiers') ? 'bg-sidebar-accent font-medium' : ''}
+                >
+                  <FolderOpen className="h-4 w-4" />
+                  {!isCollapsed && <span>Dossiers</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        {accessibleWorlds.map((world) => (
-          <SidebarGroup key={world.id}>
-            <SidebarGroupLabel>{world.name}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton 
-                    onClick={() => navigate(`/${world.code.toLowerCase()}/dossiers`)}
-                    className={isActive(`/${world.code.toLowerCase()}/dossiers`) ? 'bg-sidebar-accent font-medium' : ''}
-                  >
-                    <FolderOpen className="h-4 w-4" />
-                    {!isCollapsed && <span>Dossiers</span>}
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
 
         {isSuperAdmin() && (
           <SidebarGroup>

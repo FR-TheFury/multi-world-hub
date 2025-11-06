@@ -115,7 +115,17 @@ const Dashboard = () => {
       {/* Recent Dossiers by World */}
       {!loading && Object.keys(dossiersByWorld).length > 0 && (
         <section className="space-y-6">
-          <h3 className="text-xl font-semibold">Derniers Dossiers</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-semibold">Derniers Dossiers</h3>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/dossiers')}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Voir tous les dossiers
+            </Button>
+          </div>
 
           {Object.entries(dossiersByWorld).map(([worldCode, dossiers]) => {
             const world = accessibleWorlds.find(w => w.code === worldCode);
