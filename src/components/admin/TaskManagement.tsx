@@ -53,6 +53,7 @@ const TaskManagement = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedUserId, setSelectedUserId] = useState<string>('all');
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -68,11 +69,12 @@ const TaskManagement = () => {
   useEffect(() => {
     fetchTasks();
     fetchUsers();
-  }, []);
+  }, [selectedUserId]);
 
   const fetchTasks = async () => {
     setLoading(true);
-    const { data } = await supabase
+    
+    let query = supabase
       .from('tasks')
       .select(`
         id,
@@ -84,8 +86,14 @@ const TaskManagement = () => {
         assigned_to,
         assigned_user:profiles!tasks_assigned_to_fkey(display_name, email),
         world:worlds(code, name, theme_colors)
-      `)
-      .order('created_at', { ascending: false });
+      `);
+
+    // Filter by selected user if not "all"
+    if (selectedUserId !== 'all') {
+      query = query.eq('assigned_to', selectedUserId);
+    }
+
+    const { data } = await query.order('created_at', { ascending: false });
 
     if (data) {
       setTasks(data.map(t => ({
@@ -232,124 +240,144 @@ const TaskManagement = () => {
   return (
     <Card className="border-0 shadow-vuexy-md">
       <CardHeader className="border-b">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <CheckSquare className="h-5 w-5 text-primary" />
-            Gestion des Tâches
-          </CardTitle>
-          <Dialog open={dialogOpen} onOpenChange={(open) => {
-            setDialogOpen(open);
-            if (!open) resetForm();
-          }}>
-            <DialogTrigger asChild>
-              <Button size="sm">
-                <Plus className="h-4 w-4 mr-1" />
-                Nouvelle tâche
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>
-                  {editingTask ? 'Modifier la tâche' : 'Créer une nouvelle tâche'}
-                </DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div>
-                  <Label htmlFor="title">Titre *</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="Titre de la tâche"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Description détaillée"
-                    rows={3}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="priority">Priorité</Label>
-                    <Select value={formData.priority} onValueChange={(val) => setFormData({ ...formData, priority: val })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">Basse</SelectItem>
-                        <SelectItem value="medium">Moyenne</SelectItem>
-                        <SelectItem value="high">Haute</SelectItem>
-                        <SelectItem value="urgent">Urgente</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="status">Statut</Label>
-                    <Select value={formData.status} onValueChange={(val) => setFormData({ ...formData, status: val })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="todo">À faire</SelectItem>
-                        <SelectItem value="in_progress">En cours</SelectItem>
-                        <SelectItem value="done">Terminé</SelectItem>
-                        <SelectItem value="cancelled">Annulé</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="assigned_to">Assigné à *</Label>
-                    <Select value={formData.assigned_to} onValueChange={(val) => setFormData({ ...formData, assigned_to: val })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un utilisateur" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {users.map((user) => (
-                          <SelectItem key={user.id} value={user.id}>
-                            {user.display_name || user.email}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="world_id">Monde *</Label>
-                    <Select value={formData.world_id} onValueChange={(val) => setFormData({ ...formData, world_id: val })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un monde" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {accessibleWorlds.map((world) => (
-                          <SelectItem key={world.id} value={world.id}>
-                            {world.name} ({world.code})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="due_date">Date d'échéance</Label>
-                  <Input
-                    id="due_date"
-                    type="date"
-                    value={formData.due_date}
-                    onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                  />
-                </div>
-                <Button onClick={handleSubmit} className="w-full">
-                  {editingTask ? 'Modifier' : 'Créer'}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <CheckSquare className="h-5 w-5 text-primary" />
+              Gestion des Tâches
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Créez et gérez les tâches assignées aux utilisateurs
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Tous les utilisateurs" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les utilisateurs</SelectItem>
+                {users.map((user) => (
+                  <SelectItem key={user.id} value={user.id}>
+                    {user.display_name || user.email}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Dialog open={dialogOpen} onOpenChange={(open) => {
+              setDialogOpen(open);
+              if (!open) resetForm();
+            }}>
+              <DialogTrigger asChild>
+                <Button size="sm">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Nouvelle tâche
                 </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingTask ? 'Modifier la tâche' : 'Créer une nouvelle tâche'}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div>
+                    <Label htmlFor="title">Titre *</Label>
+                    <Input
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      placeholder="Titre de la tâche"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      placeholder="Description détaillée"
+                      rows={3}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="priority">Priorité</Label>
+                      <Select value={formData.priority} onValueChange={(val) => setFormData({ ...formData, priority: val })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Basse</SelectItem>
+                          <SelectItem value="medium">Moyenne</SelectItem>
+                          <SelectItem value="high">Haute</SelectItem>
+                          <SelectItem value="urgent">Urgente</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="status">Statut</Label>
+                      <Select value={formData.status} onValueChange={(val) => setFormData({ ...formData, status: val })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="todo">À faire</SelectItem>
+                          <SelectItem value="in_progress">En cours</SelectItem>
+                          <SelectItem value="done">Terminé</SelectItem>
+                          <SelectItem value="cancelled">Annulé</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="assigned_to">Assigné à *</Label>
+                      <Select value={formData.assigned_to} onValueChange={(val) => setFormData({ ...formData, assigned_to: val })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner un utilisateur" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {users.map((user) => (
+                            <SelectItem key={user.id} value={user.id}>
+                              {user.display_name || user.email}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="world_id">Monde *</Label>
+                      <Select value={formData.world_id} onValueChange={(val) => setFormData({ ...formData, world_id: val })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner un monde" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {accessibleWorlds.map((world) => (
+                            <SelectItem key={world.id} value={world.id}>
+                              {world.name} ({world.code})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="due_date">Date d'échéance</Label>
+                    <Input
+                      id="due_date"
+                      type="date"
+                      value={formData.due_date}
+                      onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                    />
+                  </div>
+                  <Button onClick={handleSubmit} className="w-full">
+                    {editingTask ? 'Modifier' : 'Créer'}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       </CardHeader>
       <CardContent>

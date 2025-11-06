@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import StatsCard from '@/components/StatsCard';
 import { 
   BarChart, 
@@ -19,7 +22,10 @@ import {
   Legend, 
   ResponsiveContainer 
 } from 'recharts';
-import { TrendingUp, Users, FolderOpen, CheckSquare, Activity } from 'lucide-react';
+import { TrendingUp, Users, FolderOpen, CheckSquare, Activity, CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 interface WorldStats {
   worldCode: string;
@@ -40,6 +46,10 @@ const Analytics = () => {
   const { accessibleWorlds, isSuperAdmin } = useAuthStore();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
+    from: new Date(new Date().setDate(new Date().getDate() - 30)),
+    to: new Date()
+  });
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalDossiers: 0,
@@ -54,11 +64,14 @@ const Analytics = () => {
       return;
     }
     fetchAnalytics();
-  }, [isSuperAdmin, navigate, accessibleWorlds]);
+  }, [isSuperAdmin, navigate, accessibleWorlds, dateRange]);
 
   const fetchAnalytics = async () => {
     try {
-      // Fetch ALL data in parallel with optimized queries
+      const fromISO = dateRange.from.toISOString();
+      const toISO = dateRange.to.toISOString();
+
+      // Fetch ALL data in parallel with optimized queries and date filters
       const [
         profilesCount,
         dossiersData,
@@ -66,8 +79,16 @@ const Analytics = () => {
         worldAccessData
       ] = await Promise.all([
         supabase.from('profiles').select('*', { count: 'exact', head: true }),
-        supabase.from('dossiers').select('world_id, status'),
-        supabase.from('tasks').select('world_id, status'),
+        supabase
+          .from('dossiers')
+          .select('world_id, status, created_at')
+          .gte('created_at', fromISO)
+          .lte('created_at', toISO),
+        supabase
+          .from('tasks')
+          .select('world_id, status, created_at')
+          .gte('created_at', fromISO)
+          .lte('created_at', toISO),
         supabase.from('user_world_access').select('user_id, world_id')
       ]);
 
@@ -137,11 +158,87 @@ const Analytics = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold mb-1 text-foreground">Analytiques</h2>
-        <p className="text-sm text-muted-foreground">
-          Vue d'ensemble des activités et statistiques globales
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold mb-1 text-foreground">Analytiques</h2>
+          <p className="text-sm text-muted-foreground">
+            Vue d'ensemble des activités et statistiques globales
+          </p>
+        </div>
+        
+        {/* Date Range Selector */}
+        <div className="flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-[280px] justify-start text-left font-normal">
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateRange.from && dateRange.to ? (
+                  <>
+                    {format(dateRange.from, 'dd MMM yyyy', { locale: fr })} - {format(dateRange.to, 'dd MMM yyyy', { locale: fr })}
+                  </>
+                ) : (
+                  <span>Sélectionner une période</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <div className="p-3 space-y-2">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Date de début</p>
+                  <Calendar
+                    mode="single"
+                    selected={dateRange.from}
+                    onSelect={(date) => date && setDateRange({ ...dateRange, from: date })}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Date de fin</p>
+                  <Calendar
+                    mode="single"
+                    selected={dateRange.to}
+                    onSelect={(date) => date && setDateRange({ ...dateRange, to: date })}
+                    disabled={(date) => date < dateRange.from}
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => setDateRange({
+                      from: new Date(new Date().setDate(new Date().getDate() - 7)),
+                      to: new Date()
+                    })}
+                  >
+                    7 jours
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => setDateRange({
+                      from: new Date(new Date().setDate(new Date().getDate() - 30)),
+                      to: new Date()
+                    })}
+                  >
+                    30 jours
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => setDateRange({
+                      from: new Date(new Date().setFullYear(new Date().getFullYear() - 1)),
+                      to: new Date()
+                    })}
+                  >
+                    1 an
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
       {/* Global Stats */}
