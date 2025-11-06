@@ -4,6 +4,7 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
 import UserProfileMenu from '@/components/UserProfileMenu';
 import AnimatedBackground from '@/components/AnimatedBackground';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAuthStore } from '@/lib/store';
 
 interface DashboardLayoutProps {
@@ -33,13 +34,16 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
         <div className="flex-1 flex flex-col relative z-10">
           <header className="h-16 border-b bg-card/80 backdrop-blur-md flex items-center justify-between px-6 shadow-sm sticky top-0 z-20">
-            <div className="flex items-center">
+            <div className="flex items-center gap-4">
               <SidebarTrigger />
-              <h1 className="ml-4 text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <h1 className="ml-2 text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 Multi-World Dashboard
               </h1>
             </div>
-            <UserProfileMenu />
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
+              <UserProfileMenu />
+            </div>
           </header>
 
           <main className="flex-1 p-6 lg:p-8">

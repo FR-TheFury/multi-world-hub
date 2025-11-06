@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useAuthStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles } from 'lucide-react';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import jdeLogo from '@/assets/JDE.svg';
 import jdmoLogo from '@/assets/JDMO.svg';
 import dbcsLogo from '@/assets/DBCS.svg';
@@ -46,6 +47,11 @@ const Home = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-secondary/10 to-accent/10 p-4 relative overflow-hidden">
+      {/* Theme toggle */}
+      <div className="absolute top-6 right-6 z-50">
+        <ThemeToggle />
+      </div>
+
       {/* Animated background circles */}
       <motion.div
         className="absolute top-0 left-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl"
