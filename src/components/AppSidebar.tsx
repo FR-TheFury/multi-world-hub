@@ -66,11 +66,11 @@ const AppSidebar = () => {
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton 
-                    onClick={() => navigate('/superadmin/users')}
-                    className={isActive('/superadmin/users') ? 'bg-sidebar-accent font-medium' : ''}
+                    onClick={() => navigate('/superadmin/administration')}
+                    className={isActive('/superadmin/administration') ? 'bg-sidebar-accent font-medium' : ''}
                   >
                     <Shield className="h-4 w-4" />
-                    {!isCollapsed && <span>Gestion</span>}
+                    {!isCollapsed && <span>Administration</span>}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
