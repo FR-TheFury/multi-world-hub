@@ -38,7 +38,7 @@ const Auth = () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           toast({ title: 'Connexion réussie', description: 'Bienvenue !' });
-          navigate('/dashboard');
+          navigate('/');
         }
       }
     } catch (error) {
@@ -57,7 +57,7 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      const redirectUrl = `${window.location.origin}/dashboard`;
+      const redirectUrl = `${window.location.origin}/`;
 
       const { error } = await supabase.auth.signUp({
         email,
