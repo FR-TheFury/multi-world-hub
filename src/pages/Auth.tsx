@@ -34,11 +34,12 @@ const Auth = () => {
           variant: 'destructive',
         });
       } else {
-        toast({
-          title: 'Connexion réussie',
-          description: 'Bienvenue !',
-        });
-        navigate('/dashboard');
+        // Ensure session is ready before navigation to avoid double-login feeling
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          toast({ title: 'Connexion réussie', description: 'Bienvenue !' });
+          navigate('/dashboard');
+        }
       }
     } catch (error) {
       toast({

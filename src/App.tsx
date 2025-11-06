@@ -16,12 +16,22 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const AuthBootstrap = () => {
+  // Initialize auth globally so session is ready before navigating
+  // This prevents the "login twice" issue caused by guards running before state is set
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { useAuth } = require('./hooks/useAuth');
+  useAuth();
+  return null;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <AuthBootstrap />
         <Routes>
           <Route path="/auth" element={<Auth />} />
           <Route path="/" element={<Auth />} />
@@ -31,7 +41,7 @@ const App = () => (
           <Route path="/superadmin/administration" element={<DashboardLayout><Administration /></DashboardLayout>} />
           <Route path="/superadmin/analytics" element={<DashboardLayout><Analytics /></DashboardLayout>} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/:worldCode/dossiers" element={<DashboardLayout><Dossiers /></DashboardLayout>} />
+          <Route path=":worldCode/dossiers" element={<DashboardLayout><Dossiers /></DashboardLayout>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

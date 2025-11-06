@@ -4,7 +4,6 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
 import UserProfileMenu from '@/components/UserProfileMenu';
 import { useAuthStore } from '@/lib/store';
-import { useAuth } from '@/hooks/useAuth';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -13,7 +12,7 @@ interface DashboardLayoutProps {
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { session } = useAuthStore();
   const navigate = useNavigate();
-  useAuth();
+  
 
   useEffect(() => {
     if (!session) {
