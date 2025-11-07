@@ -41,133 +41,133 @@ interface Email {
 const DEMO_EMAILS: Email[] = [
   {
     id: '1',
-    sender: 'Chandler Bing',
-    senderAvatar: 'CB',
-    subject: 'Focused impactful open issues from the project of GitHub',
-    preview: 'Hey team, I wanted to discuss the critical bugs we found in the latest release...',
+    sender: 'Marie Dubois',
+    senderAvatar: 'MD',
+    subject: 'URGENT - Sinistre incendie habitation Somain',
+    preview: 'Bonjour, notre maison a subi un incendie hier soir. L\'assurance nous a conseillé de vous contacter pour une expertise d\'assuré. Pouvons-nous prévoir un rendez-vous rapidement ?',
     time: '08:40 AM',
     unread: true,
     starred: false,
     hasAttachment: false,
     priority: 'high',
-    labels: []
+    labels: ['urgent', 'JDE']
   },
   {
     id: '2',
-    sender: 'Ross Geller',
-    senderAvatar: 'RG',
-    subject: 'Hey Katy, Dessert soufflé tootsie roll soufflé carrot cake halvah jelly.',
-    preview: 'The meeting notes from yesterday are ready for review. Please check them out...',
+    sender: 'AXA Assurances',
+    senderAvatar: 'AX',
+    subject: 'Dossier 45892 - Demande complément expertise',
+    preview: 'Veuillez trouver en pièce jointe notre rapport préliminaire concernant le dossier de dégât des eaux. Nous aurions besoin de compléments d\'information sur l\'évaluation des dommages.',
     time: '10:12 AM',
     unread: true,
     starred: false,
     hasAttachment: true,
     priority: 'normal',
-    labels: []
+    labels: ['JDE']
   },
   {
     id: '3',
-    sender: 'Barney Stinson',
-    senderAvatar: 'BS',
-    subject: 'Hey Katy, Soufflé apple pie caramels soufflé tiramisu bear claw.',
-    preview: 'I have attached the documents you requested last week for the quarterly review...',
-    time: '12:44 AM',
+    sender: 'Pierre Lefevre',
+    senderAvatar: 'PL',
+    subject: 'Projet extension maison - Demande devis',
+    preview: 'Nous souhaitons faire réaliser une extension de 30m² sur notre pavillon à Somain. Pourriez-vous nous établir un devis pour la maîtrise d\'œuvre complète ?',
+    time: '12:44 PM',
     unread: false,
     starred: false,
     hasAttachment: true,
     priority: 'normal',
-    labels: []
+    labels: ['JDMO']
   },
   {
     id: '4',
-    sender: 'Phoebe Buffay',
-    senderAvatar: 'PB',
-    subject: 'Hey Katy, Tart croissant jujubes gummies macaroon icing sweet.',
-    preview: 'Looking forward to our collaboration on the new project. Let me know if you need anything...',
-    time: 'Yesterday',
+    sender: 'Mairie de Somain',
+    senderAvatar: 'MS',
+    subject: 'Permis de construire PC 2025-034 - Avis favorable',
+    preview: 'Nous avons le plaisir de vous informer que votre demande de permis de construire a reçu un avis favorable de la commission d\'urbanisme. Le document officiel est disponible en mairie.',
+    time: 'Hier',
     unread: false,
     starred: true,
     hasAttachment: false,
     priority: 'low',
-    labels: ['Company']
+    labels: ['JDMO']
   },
   {
     id: '5',
-    sender: 'Ted Mosby',
-    senderAvatar: 'TM',
-    subject: 'Hey Katy, I love Pudding cookie chocolate sweet tiramisu jujubes I love danish.',
-    preview: 'The architecture plans are complete. Review when you have a moment...',
-    time: 'Yesterday',
+    sender: 'Jean Martin',
+    senderAvatar: 'JM',
+    subject: 'Chantier Rue Pasteur - Point avancement travaux',
+    preview: 'Les travaux de maçonnerie sont terminés. Début des travaux de plâtrerie prévu lundi prochain. Le planning est respecté, livraison matériaux confirmée pour vendredi.',
+    time: 'Hier',
     unread: false,
     starred: false,
-    hasAttachment: false,
+    hasAttachment: true,
     priority: 'normal',
-    labels: []
+    labels: ['DBCS']
   },
   {
     id: '6',
-    sender: 'Stacy Cooper',
-    senderAvatar: 'SC',
-    subject: 'Hey Katy, I love danish. Cupcake I love carrot cake sugar plum I love.',
-    preview: 'Quick update on the project status. Everything is on track...',
-    time: '5 May',
+    sender: 'Sophie Bertrand',
+    senderAvatar: 'SB',
+    subject: 'Devis rénovation énergétique - Immeuble Lille',
+    preview: 'Suite à notre visite du site jeudi dernier, veuillez trouver ci-joint notre devis détaillé pour l\'isolation thermique et la rénovation énergétique de l\'immeuble.',
+    time: 'Il y a 2 jours',
     unread: false,
     starred: false,
-    hasAttachment: false,
-    priority: 'normal',
-    labels: []
+    hasAttachment: true,
+    priority: 'high',
+    labels: ['DBCS', 'urgent']
   },
   {
     id: '7',
-    sender: 'Rachel Green',
-    senderAvatar: 'RG',
-    subject: 'Hey Katy, Chocolate cake pudding chocolate bar ice cream bonbon lollipop.',
-    preview: 'The fashion show was a success! Here are some photos from the event...',
-    time: '15 May',
+    sender: 'MAIF Assurances',
+    senderAvatar: 'MF',
+    subject: 'Fissures pavillon Douai - Acceptation dossier',
+    preview: 'Nous accusons réception de votre dossier d\'expertise concernant les fissures du pavillon suite à la sécheresse. L\'indemnisation proposée est conforme à vos conclusions.',
+    time: 'Il y a 2 jours',
     unread: false,
-    starred: false,
-    hasAttachment: true,
-    priority: 'normal',
-    labels: []
+    starred: true,
+    hasAttachment: false,
+    priority: 'low',
+    labels: ['JDE']
   },
   {
     id: '8',
-    sender: 'Grace Shelby',
-    senderAvatar: 'GS',
-    subject: 'Hey Katy, Icing gummi bears ice cream croissant dessert wafer.',
-    preview: 'Meeting scheduled for next Monday at 10 AM. Please confirm your attendance...',
-    time: '20 Apr',
-    unread: false,
-    starred: false,
-    hasAttachment: true,
-    priority: 'normal',
-    labels: []
-  },
-  {
-    id: '9',
-    sender: 'Jacob Frye',
-    senderAvatar: 'JF',
-    subject: 'Hey Katy, Chocolate cake pudding chocolate bar ice cream Sweet.',
-    preview: 'The security audit results are in. Overall looking good with minor recommendations...',
-    time: '25 Mar',
+    sender: 'Thomas Durand',
+    senderAvatar: 'TD',
+    subject: 'Plans architecturaux - Validation cliente',
+    preview: 'Les clients ont validé les plans d\'architecture pour l\'extension. Nous pouvons passer à la phase suivante : dépôt du permis de construire et consultation des entreprises.',
+    time: 'Il y a 3 jours',
     unread: false,
     starred: false,
     hasAttachment: false,
     priority: 'normal',
-    labels: []
+    labels: ['JDMO']
+  },
+  {
+    id: '9',
+    sender: 'Comptabilité DBCS',
+    senderAvatar: 'CO',
+    subject: 'Factures novembre - Validation requise',
+    preview: 'Merci de valider les factures fournisseurs pour le mois de novembre avant vendredi. Le fichier récapitulatif est en pièce jointe avec tous les détails.',
+    time: 'Il y a 4 jours',
+    unread: false,
+    starred: false,
+    hasAttachment: true,
+    priority: 'normal',
+    labels: ['DBCS']
   },
   {
     id: '10',
-    sender: 'Alistair Crowley',
-    senderAvatar: 'AC',
-    subject: 'Hey Katy, I love danish. Cupcake I love carrot cake sugar plum I love.',
-    preview: 'Thanks for the great collaboration. Looking forward to working together again...',
-    time: '25 Feb',
+    sender: 'Groupama Nord-Est',
+    senderAvatar: 'GR',
+    subject: 'Sinistre dégât des eaux Valenciennes - Clôture',
+    preview: 'Nous vous confirmons la clôture du dossier suite à l\'accord trouvé avec l\'assuré. Le règlement de vos honoraires d\'expertise sera effectué sous 8 jours.',
+    time: 'Il y a 5 jours',
     unread: false,
     starred: false,
     hasAttachment: false,
     priority: 'low',
-    labels: ['Personal']
+    labels: ['JDE']
   }
 ];
 
@@ -181,10 +181,10 @@ const SIDEBAR_ITEMS = [
 ];
 
 const LABELS = [
-  { name: 'Personal', color: 'bg-green-500' },
-  { name: 'Company', color: 'bg-blue-500' },
-  { name: 'Important', color: 'bg-orange-500' },
-  { name: 'Private', color: 'bg-red-500' }
+  { name: 'JDE', color: 'bg-emerald-500' },
+  { name: 'JDMO', color: 'bg-orange-500' },
+  { name: 'DBCS', color: 'bg-red-500' },
+  { name: 'urgent', color: 'bg-amber-500' }
 ];
 
 const Mailbox = () => {
