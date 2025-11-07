@@ -5,10 +5,11 @@ import WorldCard3D from '@/components/WorldCard3D';
 import StatsCard from '@/components/StatsCard';
 import TasksPanel from '@/components/TasksPanel';
 import AppointmentsPanel from '@/components/AppointmentsPanel';
+import EmailsPanel from '@/components/EmailsPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, FileText, FolderOpen, CheckSquare } from 'lucide-react';
+import { ArrowRight, FileText, FolderOpen, CheckSquare, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -40,6 +41,7 @@ const Dashboard = () => {
   const [stats, setStats] = useState({
     totalInProgress: 0,
     totalTasks: 0,
+    newEmails: 2, // Demo data
     byWorld: {} as Record<string, number>
   });
   const navigate = useNavigate();
@@ -117,6 +119,7 @@ const Dashboard = () => {
       setStats({
         totalInProgress: totalInProgress || 0,
         totalTasks: totalTasks || 0,
+        newEmails: 2, // Demo data
         byWorld
       });
     } catch (error) {
@@ -182,7 +185,14 @@ const Dashboard = () => {
             iconColor="#2563eb"
             iconBg="#2563eb15"
           />
-          {accessibleWorlds.slice(0, 2).map((world) => (
+          <StatsCard
+            title="Nouveaux emails"
+            value={stats.newEmails}
+            icon={Mail}
+            iconColor="#10b981"
+            iconBg="#10b98115"
+          />
+          {accessibleWorlds.slice(0, 1).map((world) => (
             <StatsCard
               key={world.id}
               title={`${world.name} - En cours`}
@@ -195,10 +205,14 @@ const Dashboard = () => {
         </div>
       </section>
 
-      {/* Tasks and Appointments */}
+      {/* Tasks, Appointments and Emails */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <TasksPanel />
         <AppointmentsPanel />
+      </div>
+      
+      <div className="grid grid-cols-1 gap-6">
+        <EmailsPanel />
       </div>
 
       {/* 3D World Cards */}

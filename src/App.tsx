@@ -7,6 +7,7 @@ import { AnimatePresence } from "framer-motion";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
+import Mailbox from "./pages/Mailbox";
 import DashboardLayout from "./components/DashboardLayout";
 import Users from "./pages/superadmin/Users";
 import Administration from "./pages/superadmin/Administration";
@@ -37,6 +38,7 @@ const AnimatedRoutes = () => {
         <Route path="/auth" element={<PageTransition><Auth /></PageTransition>} />
         <Route path="/" element={<PageTransition><Home /></PageTransition>} />
         <Route path="/dashboard" element={<DashboardLayout><PageTransition><Dashboard /></PageTransition></DashboardLayout>} />
+        <Route path="/mailbox" element={<DashboardLayout><PageTransition><Mailbox /></PageTransition></DashboardLayout>} />
         <Route path="/dossiers" element={<DashboardLayout><PageTransition><AllDossiers /></PageTransition></DashboardLayout>} />
         <Route path="/superadmin/users" element={<DashboardLayout><PageTransition><Users /></PageTransition></DashboardLayout>} />
         <Route path="/superadmin/administration" element={<DashboardLayout><PageTransition><Administration /></PageTransition></DashboardLayout>} />
