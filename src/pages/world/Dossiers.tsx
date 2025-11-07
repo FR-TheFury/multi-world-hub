@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -157,17 +156,14 @@ const Dossiers = () => {
 
   if (loading) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-muted-foreground">Chargement...</div>
-        </div>
-      </DashboardLayout>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-muted-foreground">Chargement...</div>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header avec menu d'actions */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
@@ -394,19 +390,18 @@ const Dossiers = () => {
             </div>
           </CardContent>
         </Card>
-      </div>
 
-      {/* Create Dialog */}
-      {world && (
-        <CreateDossierDialog
-          open={createDialogOpen}
-          onOpenChange={setCreateDialogOpen}
-          worldId={world.id}
-          onSuccess={fetchWorldAndDossiers}
-        />
-      )}
-    </DashboardLayout>
-  );
-};
+        {/* Create Dialog */}
+        {world && (
+          <CreateDossierDialog
+            open={createDialogOpen}
+            onOpenChange={setCreateDialogOpen}
+            worldId={world.id}
+            onSuccess={fetchWorldAndDossiers}
+          />
+        )}
+      </div>
+    );
+  };
 
 export default Dossiers;
