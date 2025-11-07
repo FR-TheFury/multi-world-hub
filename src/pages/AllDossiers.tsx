@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/lib/store';
-import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -169,17 +168,14 @@ const AllDossiers = () => {
 
   if (loading) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-muted-foreground">Chargement des dossiers...</div>
-        </div>
-      </DashboardLayout>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-muted-foreground">Chargement des dossiers...</div>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold mb-1 text-foreground">Tous les Dossiers</h2>
         <p className="text-sm text-muted-foreground">
@@ -345,8 +341,7 @@ const AllDossiers = () => {
           </div>
         </CardContent>
       </Card>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 };
 

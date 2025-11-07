@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/lib/store';
-import DashboardLayout from '@/components/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -93,30 +92,25 @@ const DossierDetail = () => {
 
   if (loading) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-[60vh]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Chargement du dossier...</p>
-          </div>
+      <div className="flex items-center justify-center h-[60vh]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Chargement du dossier...</p>
         </div>
-      </DashboardLayout>
+      </div>
     );
   }
 
   if (!dossier) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">Dossier introuvable</p>
-        </div>
-      </DashboardLayout>
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">Dossier introuvable</p>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="space-y-2">
@@ -225,7 +219,6 @@ const DossierDetail = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </DashboardLayout>
   );
 };
 
