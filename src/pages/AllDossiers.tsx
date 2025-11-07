@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/lib/store';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,6 +37,7 @@ interface Dossier {
 }
 
 const AllDossiers = () => {
+  const navigate = useNavigate();
   const { accessibleWorlds } = useAuthStore();
   const [dossiers, setDossiers] = useState<Dossier[]>([]);
   const [loading, setLoading] = useState(true);
@@ -195,6 +197,7 @@ const AllDossiers = () => {
                       <TableRow
                         key={dossier.id}
                         className="cursor-pointer hover:bg-muted/30 transition-colors"
+                        onClick={() => navigate(`/dossier/${dossier.id}`)}
                       >
                         <TableCell>
                           <Badge

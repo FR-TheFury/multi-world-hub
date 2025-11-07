@@ -16,6 +16,7 @@ import Dossiers from "./pages/world/Dossiers";
 import AllDossiers from "./pages/AllDossiers";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import DossierDetail from "./pages/DossierDetail";
 import { useAuth } from "./hooks/useAuth";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { PageTransition } from "./components/PageTransition";
@@ -40,6 +41,7 @@ const AnimatedRoutes = () => {
         <Route path="/dashboard" element={<DashboardLayout><PageTransition><Dashboard /></PageTransition></DashboardLayout>} />
         <Route path="/mailbox" element={<DashboardLayout><PageTransition><Mailbox /></PageTransition></DashboardLayout>} />
         <Route path="/dossiers" element={<DashboardLayout><PageTransition><AllDossiers /></PageTransition></DashboardLayout>} />
+        <Route path="/dossier/:id" element={<DashboardLayout><PageTransition><DossierDetail /></PageTransition></DashboardLayout>} />
         <Route path="/superadmin/users" element={<DashboardLayout><PageTransition><Users /></PageTransition></DashboardLayout>} />
         <Route path="/superadmin/administration" element={<DashboardLayout><PageTransition><Administration /></PageTransition></DashboardLayout>} />
         <Route path="/superadmin/analytics" element={<DashboardLayout><PageTransition><Analytics /></PageTransition></DashboardLayout>} />
