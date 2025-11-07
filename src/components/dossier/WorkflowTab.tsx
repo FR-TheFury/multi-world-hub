@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import WorkflowTimeline from './WorkflowTimeline';
+import WorkflowDiagram from './WorkflowDiagram';
 
 interface WorkflowTabProps {
   dossierId: string;
@@ -17,6 +19,10 @@ interface WorkflowStep {
   requires_decision: boolean;
   form_fields: any;
   metadata: any;
+  next_step_id: string | null;
+  decision_yes_next_step_id: string | null;
+  decision_no_next_step_id: string | null;
+  parallel_steps: string[] | null;
 }
 
 interface WorkflowProgress {
@@ -71,12 +77,30 @@ const WorkflowTab = ({ dossierId, worldId }: WorkflowTabProps) => {
 
       if (progressError) throw progressError;
 
-      setWorkflowSteps(stepsData || []);
+      // Transform steps data to match interface
+      const transformedSteps: WorkflowStep[] = (stepsData || []).map(step => ({
+        id: step.id,
+        step_number: step.step_number,
+        name: step.name,
+        description: step.description,
+        step_type: step.step_type,
+        requires_decision: step.requires_decision,
+        form_fields: step.form_fields,
+        metadata: step.metadata,
+        next_step_id: step.next_step_id,
+        decision_yes_next_step_id: step.decision_yes_next_step_id,
+        decision_no_next_step_id: step.decision_no_next_step_id,
+        parallel_steps: Array.isArray(step.parallel_steps) 
+          ? (step.parallel_steps as string[]) 
+          : null,
+      }));
+
+      setWorkflowSteps(transformedSteps);
       setProgress(progressData || []);
 
       // If no progress exists, initialize it
       if (!progressData || progressData.length === 0) {
-        await initializeWorkflowProgress(dossierId, stepsData || []);
+        await initializeWorkflowProgress(dossierId, transformedSteps);
       }
     } catch (error) {
       console.error('Error fetching workflow data:', error);
@@ -145,19 +169,42 @@ const WorkflowTab = ({ dossierId, worldId }: WorkflowTabProps) => {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Suivi du workflow</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <WorkflowTimeline
-            steps={workflowSteps}
-            progress={progress}
-            dossierId={dossierId}
-            onUpdate={handleProgressUpdate}
-          />
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="timeline" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="timeline">Timeline</TabsTrigger>
+          <TabsTrigger value="diagram">Diagramme</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="timeline">
+          <Card>
+            <CardHeader>
+              <CardTitle>Suivi du workflow</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <WorkflowTimeline
+                steps={workflowSteps}
+                progress={progress}
+                dossierId={dossierId}
+                onUpdate={handleProgressUpdate}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="diagram">
+          <Card>
+            <CardHeader>
+              <CardTitle>Visualisation du processus</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <WorkflowDiagram
+                steps={workflowSteps}
+                progress={progress}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
