@@ -313,11 +313,13 @@ async function initiateTransfer(supabase: any, userId: string, dossierId: string
       console.log('Attachments metadata copied');
     }
 
-    // 11. Copy appointments
+    // 11. Copy appointments and notify assigned users
     const { data: appointments } = await supabase
       .from('appointments')
       .select('*')
       .eq('dossier_id', dossierId);
+
+    const notifiedUsers = new Set<string>();
 
     if (appointments && appointments.length > 0) {
       console.log(`Found ${appointments.length} appointments to copy`);
@@ -326,7 +328,7 @@ async function initiateTransfer(supabase: any, userId: string, dossierId: string
           .from('appointments')
           .insert({
             dossier_id: newDossier.id,
-            user_id: userId,
+            user_id: appointment.user_id,
             world_id: targetWorld.id,
             title: appointment.title,
             description: appointment.description,
@@ -336,8 +338,29 @@ async function initiateTransfer(supabase: any, userId: string, dossierId: string
             appointment_type: appointment.appointment_type,
             workflow_step_id: appointment.workflow_step_id
           });
+
+        // Track user for notification (if not the one doing the transfer)
+        if (appointment.user_id !== userId) {
+          notifiedUsers.add(appointment.user_id);
+        }
       }
       console.log('Appointments copied');
+
+      // Send notifications to users with appointments
+      if (notifiedUsers.size > 0) {
+        console.log(`Sending notifications to ${notifiedUsers.size} users`);
+        const notificationPromises = Array.from(notifiedUsers).map(notifiedUserId =>
+          supabase.from('notifications').insert({
+            user_id: notifiedUserId,
+            type: 'dossier_transfer',
+            title: 'Dossier transféré',
+            message: `Le dossier "${sourceDossier.title}" a été transféré vers ${targetWorld.name}. Vos rendez-vous ont été copiés.`,
+            related_id: newDossier.id
+          })
+        );
+        await Promise.all(notificationPromises);
+        console.log('Notifications sent');
+      }
     }
 
     // 12. Copy existing comments (excluding system comments)
