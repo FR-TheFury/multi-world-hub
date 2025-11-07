@@ -24,6 +24,7 @@ interface WorkflowStep {
   decision_yes_next_step_id: string | null;
   decision_no_next_step_id: string | null;
   parallel_steps: string[] | null;
+  can_loop_back: boolean | null;
 }
 
 interface WorkflowProgress {
@@ -70,13 +71,30 @@ const getStepTypeIcon = (stepType: string) => {
   switch (stepType) {
     case 'decision':
       return '❓';
-    case 'document':
+    case 'document_generation':
       return '📄';
-    case 'meeting':
-      return '👥';
+    case 'data_entry':
+      return '✍️';
+    case 'appointment':
+      return '📅';
+    case 'approval':
+      return '✅';
+    case 'external_form':
+      return '🌐';
+    case 'task_creation':
+      return '📋';
+    case 'review':
+      return '👁️';
+    case 'quality_control':
+      return '🔍';
+    case 'archiving':
+      return '📦';
     case 'notification':
       return '📧';
-    case 'action':
+    case 'milestone':
+      return '🎯';
+    case 'checklist':
+      return '☑️';
     default:
       return '⚡';
   }
@@ -101,12 +119,20 @@ const CustomNode = ({ data }: any) => {
         </div>
       </div>
       <div className="font-semibold text-sm text-foreground mb-1">{data.label}</div>
-      {data.isDecision && (
-        <div className="flex items-center gap-1 text-xs text-muted-foreground mt-2">
-          <AlertCircle className="w-3 h-3" />
-          <span>Décision requise</span>
-        </div>
-      )}
+      <div className="flex flex-col gap-1 mt-2">
+        {data.isDecision && (
+          <div className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
+            <AlertCircle className="w-3 h-3" />
+            <span>Décision</span>
+          </div>
+        )}
+        {data.canLoopBack && (
+          <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
+            <span>🔄</span>
+            <span>Boucle</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -143,6 +169,7 @@ const WorkflowDiagram = ({ steps, progress }: WorkflowDiagramProps) => {
           statusIcon: getStatusIcon(status),
           typeIcon: getStepTypeIcon(step.step_type),
           isDecision: step.requires_decision,
+          canLoopBack: step.can_loop_back,
         },
         sourcePosition: Position.Right,
         targetPosition: Position.Left,
@@ -153,56 +180,80 @@ const WorkflowDiagram = ({ steps, progress }: WorkflowDiagramProps) => {
     const newEdges: Edge[] = [];
     
     steps.forEach((step) => {
-      // Regular next step
-      if (step.next_step_id) {
+      const isActive = progress.find(p => p.workflow_step_id === step.id)?.status === 'in_progress';
+      
+      // Regular next step (only if not a decision step)
+      if (step.next_step_id && !step.requires_decision) {
+        // Check if this is a loop back edge
+        const targetStep = steps.find(s => s.id === step.next_step_id);
+        const isLoopBack = targetStep && targetStep.step_number < step.step_number;
+        
         newEdges.push({
           id: `${step.id}-${step.next_step_id}`,
           source: step.id,
           target: step.next_step_id,
           type: 'smoothstep',
-          animated: progress.find(p => p.workflow_step_id === step.id)?.status === 'in_progress',
-          style: { stroke: 'hsl(var(--muted-foreground))' },
+          animated: isActive,
+          style: { 
+            stroke: isLoopBack ? 'hsl(var(--chart-2))' : 'hsl(var(--muted-foreground))',
+            strokeDasharray: isLoopBack ? '5,5' : undefined
+          },
           markerEnd: {
             type: MarkerType.ArrowClosed,
-            color: 'hsl(var(--muted-foreground))',
+            color: isLoopBack ? 'hsl(var(--chart-2))' : 'hsl(var(--muted-foreground))',
           },
+          label: isLoopBack ? '🔄 Retour' : undefined,
+          labelStyle: isLoopBack ? { fill: 'hsl(var(--chart-2))', fontWeight: 600 } : undefined,
+          labelBgStyle: isLoopBack ? { fill: 'hsl(var(--background))' } : undefined,
         });
       }
 
       // Decision branches
       if (step.requires_decision) {
         if (step.decision_yes_next_step_id) {
+          const yesTarget = steps.find(s => s.id === step.decision_yes_next_step_id);
+          const isYesLoopBack = yesTarget && yesTarget.step_number < step.step_number;
+          
           newEdges.push({
             id: `${step.id}-yes-${step.decision_yes_next_step_id}`,
             source: step.id,
             target: step.decision_yes_next_step_id,
             type: 'smoothstep',
-            animated: progress.find(p => p.workflow_step_id === step.id)?.status === 'in_progress',
-            label: 'OUI',
-            style: { stroke: 'hsl(var(--primary))' },
+            animated: isActive,
+            label: isYesLoopBack ? '✓ OUI (↩️)' : '✓ OUI',
+            style: { 
+              stroke: 'hsl(var(--jde-primary))',
+              strokeDasharray: isYesLoopBack ? '5,5' : undefined
+            },
             markerEnd: {
               type: MarkerType.ArrowClosed,
-              color: 'hsl(var(--primary))',
+              color: 'hsl(var(--jde-primary))',
             },
-            labelStyle: { fill: 'hsl(var(--primary))', fontWeight: 600 },
+            labelStyle: { fill: 'hsl(var(--jde-primary))', fontWeight: 700, fontSize: 12 },
             labelBgStyle: { fill: 'hsl(var(--background))' },
           });
         }
 
         if (step.decision_no_next_step_id) {
+          const noTarget = steps.find(s => s.id === step.decision_no_next_step_id);
+          const isNoLoopBack = noTarget && noTarget.step_number < step.step_number;
+          
           newEdges.push({
             id: `${step.id}-no-${step.decision_no_next_step_id}`,
             source: step.id,
             target: step.decision_no_next_step_id,
             type: 'smoothstep',
-            animated: progress.find(p => p.workflow_step_id === step.id)?.status === 'in_progress',
-            label: 'NON',
-            style: { stroke: 'hsl(var(--destructive))' },
+            animated: isActive,
+            label: isNoLoopBack ? '✗ NON (↩️)' : '✗ NON',
+            style: { 
+              stroke: 'hsl(var(--destructive))',
+              strokeDasharray: isNoLoopBack ? '5,5' : undefined
+            },
             markerEnd: {
               type: MarkerType.ArrowClosed,
               color: 'hsl(var(--destructive))',
             },
-            labelStyle: { fill: 'hsl(var(--destructive))', fontWeight: 600 },
+            labelStyle: { fill: 'hsl(var(--destructive))', fontWeight: 700, fontSize: 12 },
             labelBgStyle: { fill: 'hsl(var(--background))' },
           });
         }

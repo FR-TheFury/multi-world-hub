@@ -23,6 +23,7 @@ interface WorkflowStep {
   decision_yes_next_step_id: string | null;
   decision_no_next_step_id: string | null;
   parallel_steps: string[] | null;
+  can_loop_back: boolean | null;
 }
 
 interface WorkflowProgress {
@@ -93,6 +94,7 @@ const WorkflowTab = ({ dossierId, worldId }: WorkflowTabProps) => {
         parallel_steps: Array.isArray(step.parallel_steps) 
           ? (step.parallel_steps as string[]) 
           : null,
+        can_loop_back: step.can_loop_back || null,
       }));
 
       setWorkflowSteps(transformedSteps);

@@ -159,7 +159,7 @@ async function completeStep(
 
   // 7. Trigger auto-actions if configured
   if (step.auto_actions && step.auto_actions.length > 0) {
-    await executeAutoActions(supabase, dossierId, step.auto_actions);
+    await executeAutoActions(supabase, dossierId, step.auto_actions, userId);
   }
 
   // 8. Add comment to dossier
@@ -241,9 +241,17 @@ async function getAvailableSteps(supabase: any, dossierId: string) {
 async function executeAutoActions(
   supabase: any,
   dossierId: string,
-  autoActions: any[]
+  autoActions: any[],
+  userId?: string
 ) {
   console.log(`[Auto Actions] Executing ${autoActions.length} actions for dossier ${dossierId}`);
+  
+  // Get dossier info for context
+  const { data: dossier } = await supabase
+    .from('dossiers')
+    .select('*, worlds(*)')
+    .eq('id', dossierId)
+    .single();
   
   for (const action of autoActions) {
     try {
@@ -255,19 +263,57 @@ async function executeAutoActions(
         
         case 'send_email':
           console.log(`[Auto Action] Send email to: ${action.recipient}`);
-          // TODO: Send email
+          // TODO: Send email via Resend or similar
           break;
         
         case 'create_notification':
-          await supabase
-            .from('notifications')
-            .insert({
-              user_id: action.userId,
-              type: 'workflow',
-              title: action.title || 'Notification de workflow',
-              message: action.message,
-              related_id: dossierId
-            });
+          // Get the user to notify (owner or specific user)
+          const notifyUserId = action.userId || dossier?.owner_id || userId;
+          if (notifyUserId) {
+            await supabase
+              .from('notifications')
+              .insert({
+                user_id: notifyUserId,
+                type: 'workflow',
+                title: action.title || 'Notification de workflow',
+                message: action.message,
+                related_id: dossierId
+              });
+          }
+          break;
+        
+        case 'create_task':
+          // Create a task for the assigned user
+          const { data: assignedUser } = await supabase
+            .from('profiles')
+            .select('id')
+            .ilike('display_name', `%${action.assignedTo}%`)
+            .single();
+          
+          if (assignedUser && dossier) {
+            await supabase
+              .from('tasks')
+              .insert({
+                title: action.title,
+                description: action.description || `Tâche créée automatiquement pour le dossier ${dossier.title}`,
+                assigned_to: assignedUser.id,
+                created_by: userId,
+                world_id: dossier.world_id,
+                status: 'todo',
+                priority: action.priority || 'medium'
+              });
+            
+            // Also create a notification
+            await supabase
+              .from('notifications')
+              .insert({
+                user_id: assignedUser.id,
+                type: 'task',
+                title: 'Nouvelle tâche assignée',
+                message: action.title,
+                related_id: dossierId
+              });
+          }
           break;
         
         default:
