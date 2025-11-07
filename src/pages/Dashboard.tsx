@@ -9,7 +9,7 @@ import EmailsPanel from '@/components/EmailsPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, FileText, FolderOpen, CheckSquare, Mail } from 'lucide-react';
+import { ArrowRight, FileText, FolderOpen, CheckSquare, Mail, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -42,6 +42,7 @@ const Dashboard = () => {
     totalInProgress: 0,
     totalTasks: 0,
     newEmails: 2, // Demo data
+    activeUsers: 12, // Demo data - nombre d'utilisateurs actifs
     byWorld: {} as Record<string, number>
   });
   const navigate = useNavigate();
@@ -120,6 +121,7 @@ const Dashboard = () => {
         totalInProgress: totalInProgress || 0,
         totalTasks: totalTasks || 0,
         newEmails: 2, // Demo data
+        activeUsers: 12, // Demo data - nombre d'utilisateurs actifs
         byWorld
       });
     } catch (error) {
@@ -192,16 +194,13 @@ const Dashboard = () => {
             iconColor="#10b981"
             iconBg="#10b98115"
           />
-          {accessibleWorlds.slice(0, 1).map((world) => (
-            <StatsCard
-              key={world.id}
-              title={`${world.name} - En cours`}
-              value={stats.byWorld[world.code] || 0}
-              icon={FileText}
-              iconColor={world.theme_colors.primary}
-              iconBg={`${world.theme_colors.primary}15`}
-            />
-          ))}
+          <StatsCard
+            title="Utilisateurs actifs"
+            value={stats.activeUsers}
+            icon={Users}
+            iconColor="#f59e0b"
+            iconBg="#f59e0b15"
+          />
         </div>
       </section>
 
