@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
 import UserProfileMenu from '@/components/UserProfileMenu';
+import NotificationBell from '@/components/NotificationBell';
 import AnimatedBackground from '@/components/AnimatedBackground';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAuthStore } from '@/lib/store';
@@ -42,6 +43,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             </div>
             <div className="flex items-center gap-3">
               <ThemeToggle />
+              <NotificationBell />
               <UserProfileMenu />
             </div>
           </header>
