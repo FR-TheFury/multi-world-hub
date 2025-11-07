@@ -15,6 +15,7 @@ import Analytics from "./pages/superadmin/Analytics";
 import Dossiers from "./pages/world/Dossiers";
 import DossiersJDMO from "./pages/world/DossiersJDMO";
 import DossiersJDE from "./pages/world/DossiersJDE";
+import DossiersDBCS from "./pages/world/DossiersDBCS";
 import AllDossiers from "./pages/AllDossiers";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
@@ -50,6 +51,7 @@ const AnimatedRoutes = () => {
         <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
         <Route path="/jde/dossiers" element={<DashboardLayout><PageTransition><DossiersJDE /></PageTransition></DashboardLayout>} />
         <Route path="/jdmo/dossiers" element={<DashboardLayout><PageTransition><DossiersJDMO /></PageTransition></DashboardLayout>} />
+        <Route path="/dbcs/dossiers" element={<DashboardLayout><PageTransition><DossiersDBCS /></PageTransition></DashboardLayout>} />
         <Route path=":worldCode/dossiers" element={<DashboardLayout><PageTransition><Dossiers /></PageTransition></DashboardLayout>} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />

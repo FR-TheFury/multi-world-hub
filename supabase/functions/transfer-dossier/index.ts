@@ -166,12 +166,12 @@ async function initiateTransfer(supabase: any, userId: string, dossierId: string
       }
     }
 
-    // 7. Initialize workflow for target world
+    // 7. Initialize workflow for target world with auto-completion for DBCS
     const { data: workflowTemplate, error: templateError } = await supabase
       .from('workflow_templates')
       .select(`
         id,
-        steps:workflow_steps(id, step_number, step_type, name)
+        steps:workflow_steps(id, step_number, step_type, name, metadata)
       `)
       .eq('world_id', targetWorld.id)
       .eq('is_active', true)
@@ -182,20 +182,78 @@ async function initiateTransfer(supabase: any, userId: string, dossierId: string
     if (!templateError && workflowTemplate && workflowTemplate.steps) {
       console.log(`Initializing workflow with ${workflowTemplate.steps.length} steps`);
       
-      // Create workflow progress for first step only
-      const firstStep = workflowTemplate.steps.find((s: any) => s.step_number === 1);
+      const sortedSteps = workflowTemplate.steps.sort((a: any, b: any) => a.step_number - b.step_number);
+      const firstStep = sortedSteps[0];
+      const secondStep = sortedSteps[1];
+      
       if (firstStep) {
-        const { error: progressError } = await supabase
-          .from('dossier_workflow_progress')
-          .insert({
-            dossier_id: newDossier.id,
-            workflow_step_id: firstStep.id,
-            status: 'pending',
-            form_data: { transferred_from_world: sourceDossier.world.code }
-          });
+        // Check if first step should be auto-completed (for DBCS reception)
+        const shouldAutoComplete = firstStep.metadata?.auto_complete === true;
+        
+        if (shouldAutoComplete) {
+          console.log('Auto-completing first step for DBCS');
+          
+          // Mark first step as completed
+          await supabase
+            .from('dossier_workflow_progress')
+            .insert({
+              dossier_id: newDossier.id,
+              workflow_step_id: firstStep.id,
+              status: 'completed',
+              started_at: new Date().toISOString(),
+              completed_at: new Date().toISOString(),
+              completed_by: userId,
+              notes: 'Réception automatique lors du transfert depuis JDMO',
+              form_data: { transferred_from_world: sourceDossier.world.code }
+            });
 
-        if (progressError) {
-          console.error('Failed to initialize workflow:', progressError);
+          // Log in history
+          await supabase
+            .from('dossier_workflow_history')
+            .insert({
+              dossier_id: newDossier.id,
+              workflow_step_id: firstStep.id,
+              user_id: userId,
+              metadata: {
+                auto_completed: true,
+                reason: 'Réception automatique lors du transfert',
+                source_world: sourceDossier.world.code
+              }
+            });
+
+          // Add comment about auto-completion
+          await supabase
+            .from('dossier_comments')
+            .insert({
+              dossier_id: newDossier.id,
+              user_id: userId,
+              comment_type: 'system',
+              content: `Étape "${firstStep.name || 'Réception'}" complétée automatiquement lors du transfert.`
+            });
+
+          // Activate second step if exists
+          if (secondStep) {
+            console.log('Activating second step');
+            await supabase
+              .from('dossier_workflow_progress')
+              .insert({
+                dossier_id: newDossier.id,
+                workflow_step_id: secondStep.id,
+                status: 'in_progress',
+                started_at: new Date().toISOString(),
+                form_data: { transferred_from_world: sourceDossier.world.code }
+              });
+          }
+        } else {
+          // Normal workflow initialization - first step pending
+          await supabase
+            .from('dossier_workflow_progress')
+            .insert({
+              dossier_id: newDossier.id,
+              workflow_step_id: firstStep.id,
+              status: 'pending',
+              form_data: { transferred_from_world: sourceDossier.world.code }
+            });
         }
       }
     }

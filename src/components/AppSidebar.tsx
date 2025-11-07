@@ -1,4 +1,4 @@
-import { Home, FolderOpen, Settings, Shield, LogOut, TrendingUp, Sparkles, Building2, Scale } from 'lucide-react';
+import { Home, FolderOpen, Settings, Shield, LogOut, TrendingUp, Sparkles, Building2, Scale, Archive } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/integrations/supabase/client';
@@ -101,6 +101,22 @@ const AppSidebar = () => {
                   {!isCollapsed && <span>Dossiers JDMO</span>}
                   {isActive('/jdmo/dossiers') && (
                     <div className="absolute right-2 w-2 h-2 rounded-full bg-orange-600 animate-pulse" />
+                  )}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  onClick={() => navigate('/dbcs/dossiers')}
+                  className={`relative transition-all duration-200 ${
+                    isActive('/dbcs/dossiers') 
+                      ? 'bg-gradient-to-r from-purple-100 to-pink-50 text-purple-700 font-semibold border-l-4 border-purple-600 shadow-md' 
+                      : 'hover:bg-accent hover:translate-x-1'
+                  }`}
+                >
+                  <Archive className={`h-5 w-5 ${isActive('/dbcs/dossiers') ? 'text-purple-600' : ''}`} />
+                  {!isCollapsed && <span>Dossiers DBCS</span>}
+                  {isActive('/dbcs/dossiers') && (
+                    <div className="absolute right-2 w-2 h-2 rounded-full bg-purple-600 animate-pulse" />
                   )}
                 </SidebarMenuButton>
               </SidebarMenuItem>
