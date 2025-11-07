@@ -19,6 +19,7 @@ interface Dossier {
 
 const Dossiers = () => {
   const { worldCode } = useParams<{ worldCode: string }>();
+  const navigate = useNavigate();
   const [dossiers, setDossiers] = useState<Dossier[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);

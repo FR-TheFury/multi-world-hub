@@ -1,0 +1,232 @@
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuthStore } from '@/lib/store';
+import DashboardLayout from '@/components/DashboardLayout';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Calendar, FileText, MessageSquare, User, Workflow, LayoutDashboard } from 'lucide-react';
+import { toast } from 'sonner';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import OverviewTab from '@/components/dossier/OverviewTab';
+import WorkflowTab from '@/components/dossier/WorkflowTab';
+import DocumentsTab from '@/components/dossier/DocumentsTab';
+import CommentsTab from '@/components/dossier/CommentsTab';
+import AppointmentsTab from '@/components/dossier/AppointmentsTab';
+import ClientInfoTab from '@/components/dossier/ClientInfoTab';
+
+interface Dossier {
+  id: string;
+  title: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  world_id: string;
+  owner_id: string;
+  tags: string[];
+  world: {
+    code: string;
+    name: string;
+    theme_colors: any;
+  };
+  owner: {
+    display_name: string;
+    email: string;
+  };
+}
+
+const DossierDetail = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { session } = useAuthStore();
+  const [dossier, setDossier] = useState<Dossier | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!id) return;
+    fetchDossier();
+  }, [id]);
+
+  const fetchDossier = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('dossiers')
+        .select(`
+          *,
+          world:worlds(code, name, theme_colors),
+          owner:profiles!dossiers_owner_id_fkey(display_name, email)
+        `)
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      setDossier(data as any);
+    } catch (error: any) {
+      console.error('Error fetching dossier:', error);
+      toast.error('Erreur lors du chargement du dossier');
+      navigate(-1);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusBadgeVariant = (status: string) => {
+    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+      nouveau: "secondary",
+      en_cours: "default",
+      cloture: "outline",
+    };
+    return variants[status] || "default";
+  };
+
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      nouveau: "Nouveau",
+      en_cours: "En cours",
+      cloture: "Clôturé",
+    };
+    return labels[status] || status;
+  };
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-[60vh]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Chargement du dossier...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!dossier) {
+    return (
+      <DashboardLayout>
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">Dossier introuvable</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-start justify-between">
+          <div className="space-y-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate(-1)}
+              className="mb-2"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Retour
+            </Button>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold">{dossier.title}</h1>
+              <Badge variant={getStatusBadgeVariant(dossier.status)}>
+                {getStatusLabel(dossier.status)}
+              </Badge>
+              <Badge
+                variant="outline"
+                style={{
+                  borderColor: dossier.world.theme_colors.primary,
+                  color: dossier.world.theme_colors.primary,
+                }}
+              >
+                {dossier.world.code}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <span>
+                Créé le {format(new Date(dossier.created_at), 'dd MMMM yyyy', { locale: fr })}
+              </span>
+              <span>•</span>
+              <span>Par {dossier.owner.display_name}</span>
+              {dossier.updated_at !== dossier.created_at && (
+                <>
+                  <span>•</span>
+                  <span>
+                    Mis à jour le {format(new Date(dossier.updated_at), 'dd MMMM yyyy', { locale: fr })}
+                  </span>
+                </>
+              )}
+            </div>
+            {dossier.tags && dossier.tags.length > 0 && (
+              <div className="flex gap-2 mt-2">
+                {dossier.tags.map((tag, index) => (
+                  <Badge key={index} variant="secondary" className="text-xs">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <Tabs defaultValue="overview" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="overview">
+              <LayoutDashboard className="h-4 w-4 mr-2" />
+              Vue d'ensemble
+            </TabsTrigger>
+            <TabsTrigger value="workflow">
+              <Workflow className="h-4 w-4 mr-2" />
+              Workflow
+            </TabsTrigger>
+            <TabsTrigger value="documents">
+              <FileText className="h-4 w-4 mr-2" />
+              Documents
+            </TabsTrigger>
+            <TabsTrigger value="comments">
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Historique
+            </TabsTrigger>
+            <TabsTrigger value="appointments">
+              <Calendar className="h-4 w-4 mr-2" />
+              Rendez-vous
+            </TabsTrigger>
+            <TabsTrigger value="client">
+              <User className="h-4 w-4 mr-2" />
+              Client
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview">
+            <OverviewTab dossierId={dossier.id} worldId={dossier.world_id} />
+          </TabsContent>
+
+          <TabsContent value="workflow">
+            <WorkflowTab dossierId={dossier.id} worldId={dossier.world_id} />
+          </TabsContent>
+
+          <TabsContent value="documents">
+            <DocumentsTab dossierId={dossier.id} />
+          </TabsContent>
+
+          <TabsContent value="comments">
+            <CommentsTab dossierId={dossier.id} />
+          </TabsContent>
+
+          <TabsContent value="appointments">
+            <AppointmentsTab dossierId={dossier.id} worldId={dossier.world_id} />
+          </TabsContent>
+
+          <TabsContent value="client">
+            <ClientInfoTab dossierId={dossier.id} />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </DashboardLayout>
+  );
+};
+
+export default DossierDetail;
