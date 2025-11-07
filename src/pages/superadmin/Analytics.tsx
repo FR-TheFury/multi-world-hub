@@ -76,7 +76,8 @@ const Analytics = () => {
         profilesCount,
         dossiersData,
         tasksData,
-        worldAccessData
+        worldAccessData,
+        userRolesData
       ] = await Promise.all([
         supabase.from('profiles').select('*', { count: 'exact', head: true }),
         supabase
@@ -89,22 +90,41 @@ const Analytics = () => {
           .select('world_id, status, created_at')
           .gte('created_at', fromISO)
           .lte('created_at', toISO),
-        supabase.from('user_world_access').select('user_id, world_id')
+        supabase.from('user_world_access').select('user_id, world_id'),
+        supabase
+          .from('user_roles')
+          .select('user_id, role:roles(name)')
       ]);
+
+      // Identifier les superadmins pour les exclure du comptage des clients
+      const superAdminIds = new Set(
+        userRolesData.data
+          ?.filter(ur => (ur.role as any)?.name === 'superadmin')
+          .map(ur => ur.user_id) || []
+      );
+
+      // Compter uniquement les utilisateurs clients (non superadmin) ayant accès
+      const clientUserIds = new Set(
+        worldAccessData.data
+          ?.filter(wa => !superAdminIds.has(wa.user_id))
+          .map(wa => wa.user_id) || []
+      );
 
       // Process global stats
       setStats({
         totalUsers: profilesCount.count || 0,
         totalDossiers: dossiersData.data?.length || 0,
         totalTasks: tasksData.data?.length || 0,
-        activeUsers: new Set(worldAccessData.data?.map(wa => wa.user_id)).size
+        activeUsers: clientUserIds.size
       });
 
       // Process stats per world
       const worldStatsData: WorldStats[] = accessibleWorlds.map(world => {
         const worldDossiers = dossiersData.data?.filter(d => d.world_id === world.id) || [];
         const worldTasks = tasksData.data?.filter(t => t.world_id === world.id) || [];
-        const worldUsers = worldAccessData.data?.filter(wa => wa.world_id === world.id) || [];
+        // Compter uniquement les utilisateurs clients (non superadmin) pour ce monde
+        const worldClientUsers = worldAccessData.data
+          ?.filter(wa => wa.world_id === world.id && !superAdminIds.has(wa.user_id)) || [];
 
         return {
           worldCode: world.code,
@@ -118,7 +138,7 @@ const Analytics = () => {
           todotasks: worldTasks.filter(t => t.status === 'todo').length,
           inProgressTasks: worldTasks.filter(t => t.status === 'in_progress').length,
           doneTasks: worldTasks.filter(t => t.status === 'done').length,
-          activeUsers: worldUsers.length
+          activeUsers: worldClientUsers.length
         };
       });
 
