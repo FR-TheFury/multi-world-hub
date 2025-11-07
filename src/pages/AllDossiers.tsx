@@ -2,9 +2,19 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/lib/store';
+import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FileText } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { FileText, Eye, MoreHorizontal, Calendar, Mail, Download, Filter } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import DossierFilters from '@/components/DossierFilters';
@@ -139,16 +149,37 @@ const AllDossiers = () => {
     setSearchQuery('');
   };
 
+  const handlePrefetchDossier = (dossierId: string) => {
+    // Prefetch dossier data for faster loading
+    supabase
+      .from('dossiers')
+      .select(`
+        *,
+        world:worlds(code, name, theme_colors),
+        owner:profiles!dossiers_owner_id_fkey(display_name, email)
+      `)
+      .eq('id', dossierId)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          sessionStorage.setItem(`dossier_${dossierId}`, JSON.stringify(data));
+        }
+      });
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-muted-foreground">Chargement des dossiers...</div>
-      </div>
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-muted-foreground">Chargement des dossiers...</div>
+        </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <DashboardLayout>
+      <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold mb-1 text-foreground">Tous les Dossiers</h2>
         <p className="text-sm text-muted-foreground">
@@ -158,12 +189,26 @@ const AllDossiers = () => {
 
       <Card className="shadow-vuexy-md border-0">
         <CardHeader className="border-b bg-card">
-          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <FileText className="h-5 w-5 text-primary" />
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <FileText className="h-5 w-5 text-primary" />
+              </div>
+              Liste des dossiers
+              <Badge variant="secondary">{filteredDossiers.length}</Badge>
+            </CardTitle>
+            
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm">
+                <Filter className="h-4 w-4 mr-2" />
+                Filtrer
+              </Button>
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Exporter
+              </Button>
             </div>
-            Liste des dossiers
-          </CardTitle>
+          </div>
         </CardHeader>
         <CardContent className="pt-6">
           <DossierFilters
@@ -190,14 +235,15 @@ const AllDossiers = () => {
                       <TableHead>Date de création</TableHead>
                       <TableHead>Propriétaire</TableHead>
                       <TableHead>Tags</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredDossiers.map((dossier) => (
                       <TableRow
                         key={dossier.id}
-                        className="cursor-pointer hover:bg-muted/30 transition-colors"
-                        onClick={() => navigate(`/dossier/${dossier.id}`)}
+                        className="hover:bg-muted/30 transition-colors"
+                        onMouseEnter={() => handlePrefetchDossier(dossier.id)}
                       >
                         <TableCell>
                           <Badge
@@ -241,6 +287,47 @@ const AllDossiers = () => {
                             <span className="text-muted-foreground text-xs">-</span>
                           )}
                         </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              onClick={() => navigate(`/dossier/${dossier.id}`)}
+                              size="sm"
+                              variant="default"
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              Voir
+                            </Button>
+                            
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => navigate(`/dossier/${dossier.id}`)}>
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  Voir les détails
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  <Calendar className="h-4 w-4 mr-2" />
+                                  Planifier un RDV
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  <Mail className="h-4 w-4 mr-2" />
+                                  Envoyer un email
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem>
+                                  <Download className="h-4 w-4 mr-2" />
+                                  Télécharger
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -258,7 +345,8 @@ const AllDossiers = () => {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 };
 
