@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { World } from '@/lib/store';
 import { useNavigate } from 'react-router-dom';
-import jdeLogo from '@/assets/JDE.svg';
-import jdmoLogo from '@/assets/JDMO.svg';
-import dbcsLogo from '@/assets/DBCS.svg';
+import jdeLogo from '@/assets/JDE.png';
+import jdmoLogo from '@/assets/JDMO.png';
+import dbcsLogo from '@/assets/DBCS.png';
 
 interface WorldCard3DProps {
   world: World;

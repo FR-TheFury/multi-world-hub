@@ -5,9 +5,9 @@ import { useAuthStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import jdeLogo from '@/assets/JDE.svg';
-import jdmoLogo from '@/assets/JDMO.svg';
-import dbcsLogo from '@/assets/DBCS.svg';
+import jdeLogo from '@/assets/JDE.png';
+import jdmoLogo from '@/assets/JDMO.png';
+import dbcsLogo from '@/assets/DBCS.png';
 
 const Home = () => {
   const navigate = useNavigate();
