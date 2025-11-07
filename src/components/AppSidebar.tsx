@@ -1,4 +1,4 @@
-import { Home, FolderOpen, Settings, Shield, LogOut, TrendingUp, Sparkles } from 'lucide-react';
+import { Home, FolderOpen, Settings, Shield, LogOut, TrendingUp, Sparkles, Building2 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/integrations/supabase/client';
@@ -66,9 +66,25 @@ const AppSidebar = () => {
                   }`}
                 >
                   <FolderOpen className={`h-5 w-5 ${isActive('/dossiers') ? 'text-primary' : ''}`} />
-                  {!isCollapsed && <span>Dossiers</span>}
+                  {!isCollapsed && <span>Tous les Dossiers</span>}
                   {isActive('/dossiers') && (
                     <div className="absolute right-2 w-2 h-2 rounded-full bg-primary animate-pulse" />
+                  )}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  onClick={() => navigate('/jdmo/dossiers')}
+                  className={`relative transition-all duration-200 ${
+                    isActive('/jdmo/dossiers') 
+                      ? 'bg-gradient-to-r from-orange-100 to-orange-50 text-orange-700 font-semibold border-l-4 border-orange-600 shadow-md' 
+                      : 'hover:bg-accent hover:translate-x-1'
+                  }`}
+                >
+                  <Building2 className={`h-5 w-5 ${isActive('/jdmo/dossiers') ? 'text-orange-600' : ''}`} />
+                  {!isCollapsed && <span>Dossiers JDMO</span>}
+                  {isActive('/jdmo/dossiers') && (
+                    <div className="absolute right-2 w-2 h-2 rounded-full bg-orange-600 animate-pulse" />
                   )}
                 </SidebarMenuButton>
               </SidebarMenuItem>
