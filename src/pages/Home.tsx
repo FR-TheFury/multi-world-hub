@@ -11,7 +11,7 @@ import dbcsLogo from '@/assets/DBCS.png';
 
 const Home = () => {
   const navigate = useNavigate();
-  const { session } = useAuthStore();
+  const { session, accessibleWorlds } = useAuthStore();
 
   useEffect(() => {
     if (!session) {
@@ -21,29 +21,28 @@ const Home = () => {
 
   if (!session) return null;
 
-  const worlds = [
-    {
-      name: 'JDE',
-      fullName: 'Journal des Entreprises',
-      logo: jdeLogo,
-      color: '#538135',
-      gradient: 'from-emerald-500/20 to-green-600/10',
-    },
-    {
-      name: 'JDMO',
-      fullName: 'Journal des Marches et Opérations',
-      logo: jdmoLogo,
-      color: '#ed7d31',
-      gradient: 'from-orange-500/20 to-amber-600/10',
-    },
-    {
-      name: 'DBCS',
-      fullName: 'Database Consultation System',
-      logo: dbcsLogo,
-      color: '#CE2A2B',
-      gradient: 'from-red-500/20 to-rose-600/10',
-    },
-  ];
+  // Mapping des logos par code de monde
+  const logoMap: Record<string, string> = {
+    JDE: jdeLogo,
+    JDMO: jdmoLogo,
+    DBCS: dbcsLogo,
+  };
+
+  // Mapping des gradients par code de monde
+  const gradientMap: Record<string, string> = {
+    JDE: 'from-emerald-500/20 to-green-600/10',
+    JDMO: 'from-orange-500/20 to-amber-600/10',
+    DBCS: 'from-red-500/20 to-rose-600/10',
+  };
+
+  // Créer la liste des mondes à partir des mondes accessibles
+  const worlds = accessibleWorlds.map(world => ({
+    name: world.code,
+    fullName: world.name,
+    logo: logoMap[world.code],
+    color: world.theme_colors.primary,
+    gradient: gradientMap[world.code] || 'from-primary/20 to-accent/10',
+  }));
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-secondary/10 to-accent/10 p-4 relative overflow-hidden">
