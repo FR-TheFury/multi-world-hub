@@ -118,6 +118,56 @@ export type Database = {
           },
         ]
       }
+      document_templates: {
+        Row: {
+          auto_generate: boolean | null
+          created_at: string | null
+          document_type: string
+          id: string
+          metadata: Json | null
+          name: string
+          needs_signature: boolean | null
+          required_fields: Json | null
+          template_content: Json
+          updated_at: string | null
+          workflow_step_id: string
+        }
+        Insert: {
+          auto_generate?: boolean | null
+          created_at?: string | null
+          document_type: string
+          id?: string
+          metadata?: Json | null
+          name: string
+          needs_signature?: boolean | null
+          required_fields?: Json | null
+          template_content: Json
+          updated_at?: string | null
+          workflow_step_id: string
+        }
+        Update: {
+          auto_generate?: boolean | null
+          created_at?: string | null
+          document_type?: string
+          id?: string
+          metadata?: Json | null
+          name?: string
+          needs_signature?: boolean | null
+          required_fields?: Json | null
+          template_content?: Json
+          updated_at?: string | null
+          workflow_step_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_templates_workflow_step_id_fkey"
+            columns: ["workflow_step_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dossier_attachments: {
         Row: {
           created_at: string | null
@@ -292,39 +342,125 @@ export type Database = {
           },
         ]
       }
+      dossier_workflow_history: {
+        Row: {
+          created_at: string | null
+          decision_reason: string | null
+          decision_taken: string | null
+          dossier_id: string
+          id: string
+          metadata: Json | null
+          next_step_id: string | null
+          previous_step_id: string | null
+          user_id: string
+          workflow_step_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          decision_reason?: string | null
+          decision_taken?: string | null
+          dossier_id: string
+          id?: string
+          metadata?: Json | null
+          next_step_id?: string | null
+          previous_step_id?: string | null
+          user_id: string
+          workflow_step_id: string
+        }
+        Update: {
+          created_at?: string | null
+          decision_reason?: string | null
+          decision_taken?: string | null
+          dossier_id?: string
+          id?: string
+          metadata?: Json | null
+          next_step_id?: string | null
+          previous_step_id?: string | null
+          user_id?: string
+          workflow_step_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dossier_workflow_history_dossier_id_fkey"
+            columns: ["dossier_id"]
+            isOneToOne: false
+            referencedRelation: "dossiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dossier_workflow_history_next_step_id_fkey"
+            columns: ["next_step_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_steps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dossier_workflow_history_previous_step_id_fkey"
+            columns: ["previous_step_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_steps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dossier_workflow_history_workflow_step_id_fkey"
+            columns: ["workflow_step_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dossier_workflow_progress: {
         Row: {
+          assigned_to: string | null
+          blocked: boolean | null
+          blocking_reason: string | null
           completed_at: string | null
           completed_by: string | null
           created_at: string | null
           decision_taken: boolean | null
           dossier_id: string
+          due_date: string | null
+          form_data: Json | null
           id: string
           notes: string | null
+          started_at: string | null
           status: Database["public"]["Enums"]["workflow_progress_status"]
           updated_at: string | null
           workflow_step_id: string
         }
         Insert: {
+          assigned_to?: string | null
+          blocked?: boolean | null
+          blocking_reason?: string | null
           completed_at?: string | null
           completed_by?: string | null
           created_at?: string | null
           decision_taken?: boolean | null
           dossier_id: string
+          due_date?: string | null
+          form_data?: Json | null
           id?: string
           notes?: string | null
+          started_at?: string | null
           status?: Database["public"]["Enums"]["workflow_progress_status"]
           updated_at?: string | null
           workflow_step_id: string
         }
         Update: {
+          assigned_to?: string | null
+          blocked?: boolean | null
+          blocking_reason?: string | null
           completed_at?: string | null
           completed_by?: string | null
           created_at?: string | null
           decision_taken?: boolean | null
           dossier_id?: string
+          due_date?: string | null
+          form_data?: Json | null
           id?: string
           notes?: string | null
+          started_at?: string | null
           status?: Database["public"]["Enums"]["workflow_progress_status"]
           updated_at?: string | null
           workflow_step_id?: string
@@ -669,16 +805,24 @@ export type Database = {
       workflow_steps: {
         Row: {
           assigned_role: string | null
+          auto_actions: Json | null
+          can_loop_back: boolean | null
+          conditions: Json | null
           created_at: string | null
           decision_no_next_step: number | null
+          decision_no_next_step_id: string | null
           decision_yes_next_step: number | null
+          decision_yes_next_step_id: string | null
           description: string | null
           estimated_duration: unknown
           form_fields: Json | null
           id: string
+          is_optional: boolean | null
           is_required: boolean | null
           metadata: Json | null
           name: string
+          next_step_id: string | null
+          parallel_steps: Json | null
           requires_decision: boolean | null
           step_number: number
           step_type: Database["public"]["Enums"]["workflow_step_type"]
@@ -686,16 +830,24 @@ export type Database = {
         }
         Insert: {
           assigned_role?: string | null
+          auto_actions?: Json | null
+          can_loop_back?: boolean | null
+          conditions?: Json | null
           created_at?: string | null
           decision_no_next_step?: number | null
+          decision_no_next_step_id?: string | null
           decision_yes_next_step?: number | null
+          decision_yes_next_step_id?: string | null
           description?: string | null
           estimated_duration?: unknown
           form_fields?: Json | null
           id?: string
+          is_optional?: boolean | null
           is_required?: boolean | null
           metadata?: Json | null
           name: string
+          next_step_id?: string | null
+          parallel_steps?: Json | null
           requires_decision?: boolean | null
           step_number: number
           step_type: Database["public"]["Enums"]["workflow_step_type"]
@@ -703,22 +855,51 @@ export type Database = {
         }
         Update: {
           assigned_role?: string | null
+          auto_actions?: Json | null
+          can_loop_back?: boolean | null
+          conditions?: Json | null
           created_at?: string | null
           decision_no_next_step?: number | null
+          decision_no_next_step_id?: string | null
           decision_yes_next_step?: number | null
+          decision_yes_next_step_id?: string | null
           description?: string | null
           estimated_duration?: unknown
           form_fields?: Json | null
           id?: string
+          is_optional?: boolean | null
           is_required?: boolean | null
           metadata?: Json | null
           name?: string
+          next_step_id?: string | null
+          parallel_steps?: Json | null
           requires_decision?: boolean | null
           step_number?: number
           step_type?: Database["public"]["Enums"]["workflow_step_type"]
           workflow_template_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "workflow_steps_decision_no_next_step_id_fkey"
+            columns: ["decision_no_next_step_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_steps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_steps_decision_yes_next_step_id_fkey"
+            columns: ["decision_yes_next_step_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_steps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_steps_next_step_id_fkey"
+            columns: ["next_step_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_steps"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "workflow_steps_workflow_template_id_fkey"
             columns: ["workflow_template_id"]
@@ -837,6 +1018,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_next_workflow_step: {
+        Args: { _decision?: boolean; _step_id: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

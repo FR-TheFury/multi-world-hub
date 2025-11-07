@@ -21,6 +21,8 @@ import {
   HelpCircle,
   Calendar,
   Clipboard,
+  GitBranch,
+  ArrowRight,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -85,26 +87,23 @@ const WorkflowTimeline = ({ steps, progress, dossierId, onUpdate }: WorkflowTime
 
   const handleCompleteStep = async (step: any, progressRecord: any) => {
     try {
-      const { error } = await supabase
-        .from('dossier_workflow_progress')
-        .update({
-          status: 'completed',
-          completed_at: new Date().toISOString(),
-          completed_by: user?.id,
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error('Non authentifié');
+        return;
+      }
+
+      const response = await supabase.functions.invoke('workflow-engine', {
+        body: {
+          action: 'complete_step',
+          dossierId,
+          stepId: step.id,
           notes: formData[step.id]?.notes || null,
-        })
-        .eq('id', progressRecord.id);
-
-      if (error) throw error;
-
-      // Add comment
-      await supabase.from('dossier_comments').insert({
-        dossier_id: dossierId,
-        user_id: user?.id,
-        comment_type: 'step_completed',
-        content: `Étape "${step.name}" complétée`,
-        metadata: { step_id: step.id, step_number: step.step_number },
+          formData: formData[step.id] || {}
+        }
       });
+
+      if (response.error) throw response.error;
 
       toast.success('Étape complétée');
       setExpandedStep(null);
@@ -118,29 +117,26 @@ const WorkflowTimeline = ({ steps, progress, dossierId, onUpdate }: WorkflowTime
 
   const handleDecision = async (step: any, progressRecord: any, decision: boolean) => {
     try {
-      const { error } = await supabase
-        .from('dossier_workflow_progress')
-        .update({
-          status: 'completed',
-          completed_at: new Date().toISOString(),
-          completed_by: user?.id,
-          decision_taken: decision,
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error('Non authentifié');
+        return;
+      }
+
+      const response = await supabase.functions.invoke('workflow-engine', {
+        body: {
+          action: 'complete_step',
+          dossierId,
+          stepId: step.id,
+          decision,
           notes: formData[step.id]?.notes || null,
-        })
-        .eq('id', progressRecord.id);
-
-      if (error) throw error;
-
-      // Add comment
-      await supabase.from('dossier_comments').insert({
-        dossier_id: dossierId,
-        user_id: user?.id,
-        comment_type: 'decision_made',
-        content: `Décision pour "${step.name}": ${decision ? 'Oui' : 'Non'}`,
-        metadata: { step_id: step.id, decision },
+          formData: formData[step.id] || {}
+        }
       });
 
-      toast.success('Décision enregistrée');
+      if (response.error) throw response.error;
+
+      toast.success(`Décision enregistrée: ${decision ? 'Oui' : 'Non'}`);
       setExpandedStep(null);
       setFormData({});
       onUpdate();
@@ -148,6 +144,18 @@ const WorkflowTimeline = ({ steps, progress, dossierId, onUpdate }: WorkflowTime
       console.error('Error recording decision:', error);
       toast.error('Erreur lors de l\'enregistrement de la décision');
     }
+  };
+
+  const getNextStepInfo = (step: any) => {
+    if (step.requires_decision) {
+      return {
+        yes: steps.find(s => s.id === step.decision_yes_next_step_id),
+        no: steps.find(s => s.id === step.decision_no_next_step_id)
+      };
+    }
+    return {
+      next: steps.find(s => s.id === step.next_step_id)
+    };
   };
 
   const renderFormField = (field: any, stepId: string) => {
@@ -227,6 +235,7 @@ const WorkflowTimeline = ({ steps, progress, dossierId, onUpdate }: WorkflowTime
         const progressRecord = getStepProgress(step.id);
         const isExpanded = expandedStep === step.id;
         const canInteract = progressRecord?.status !== 'completed';
+        const nextSteps = getNextStepInfo(step);
 
         return (
           <Card
@@ -255,16 +264,67 @@ const WorkflowTimeline = ({ steps, progress, dossierId, onUpdate }: WorkflowTime
                       </span>
                       <h4 className="font-semibold">{step.name}</h4>
                     </div>
-                    {progressRecord && getStatusBadge(progressRecord.status)}
+                    <div className="flex items-center gap-2">
+                      {progressRecord && getStatusBadge(progressRecord.status)}
+                      {step.is_optional && (
+                        <Badge variant="outline" className="text-xs">Optionnel</Badge>
+                      )}
+                      {step.requires_decision && (
+                        <Badge variant="secondary" className="text-xs">
+                          <GitBranch className="h-3 w-3 mr-1" />
+                          Décision
+                        </Badge>
+                      )}
+                    </div>
                   </div>
 
                   {step.description && (
                     <p className="text-sm text-muted-foreground">{step.description}</p>
                   )}
 
+                  {/* Show branches if decision step */}
+                  {step.requires_decision && (nextSteps.yes || nextSteps.no) && (
+                    <div className="mt-3 space-y-2 text-xs">
+                      {nextSteps.yes && (
+                        <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                          <ArrowRight className="h-3 w-3" />
+                          <span>Si Oui → {nextSteps.yes.name}</span>
+                        </div>
+                      )}
+                      {nextSteps.no && (
+                        <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
+                          <ArrowRight className="h-3 w-3" />
+                          <span>Si Non → {nextSteps.no.name}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Show next step if linear */}
+                  {!step.requires_decision && nextSteps.next && (
+                    <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+                      <ArrowRight className="h-3 w-3" />
+                      <span>Ensuite → {nextSteps.next.name}</span>
+                    </div>
+                  )}
+
+                  {/* Show parallel steps if any */}
+                  {step.parallel_steps && step.parallel_steps.length > 0 && (
+                    <div className="mt-3 text-xs">
+                      <Badge variant="outline" className="text-xs">
+                        {step.parallel_steps.length} étapes parallèles
+                      </Badge>
+                    </div>
+                  )}
+
                   {progressRecord?.completed_at && (
                     <p className="text-xs text-muted-foreground">
                       Complété le {format(new Date(progressRecord.completed_at), 'dd MMM yyyy à HH:mm', { locale: fr })}
+                      {progressRecord.decision_taken !== null && (
+                        <span className="ml-2 font-medium">
+                          • Décision: {progressRecord.decision_taken ? 'Oui' : 'Non'}
+                        </span>
+                      )}
                     </p>
                   )}
 
