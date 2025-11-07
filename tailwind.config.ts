@@ -82,10 +82,21 @@ export default {
             height: "0",
           },
         },
+        "notification-shake": {
+          "0%, 100%": { transform: "rotate(0deg)" },
+          "10%, 30%, 50%, 70%, 90%": { transform: "rotate(-10deg)" },
+          "20%, 40%, 60%, 80%": { transform: "rotate(10deg)" },
+        },
+        "notification-bounce": {
+          "0%, 100%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.2)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "notification-shake": "notification-shake 0.5s ease-in-out",
+        "notification-bounce": "notification-bounce 0.3s ease-in-out",
       },
     },
   },

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,6 +26,9 @@ const NotificationBell = () => {
   const { user } = useAuthStore();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const previousUnreadCountRef = useRef(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -66,8 +69,48 @@ const NotificationBell = () => {
 
     if (data) {
       setNotifications(data);
-      setUnreadCount(data.filter(n => !n.read).length);
+      const newUnreadCount = data.filter(n => !n.read).length;
+      
+      // Détecter une nouvelle notification
+      if (newUnreadCount > previousUnreadCountRef.current) {
+        // Jouer le son
+        playNotificationSound();
+        
+        // Déclencher l'animation
+        setIsAnimating(true);
+        setTimeout(() => setIsAnimating(false), 500);
+      }
+      
+      previousUnreadCountRef.current = newUnreadCount;
+      setUnreadCount(newUnreadCount);
     }
+  };
+
+  const playNotificationSound = () => {
+    // Créer un son de notification simple avec Web Audio API
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    
+    // Créer une série de bips pour une notification agréable
+    const playBeep = (frequency: number, startTime: number, duration: number) => {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = frequency;
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.3, startTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+      
+      oscillator.start(startTime);
+      oscillator.stop(startTime + duration);
+    };
+    
+    const currentTime = audioContext.currentTime;
+    playBeep(800, currentTime, 0.1);
+    playBeep(1000, currentTime + 0.1, 0.15);
   };
 
   const markAsRead = async (id: string) => {
@@ -95,9 +138,17 @@ const NotificationBell = () => {
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
+          <Bell 
+            className={`h-5 w-5 transition-transform ${
+              isAnimating ? 'animate-notification-shake' : ''
+            }`} 
+          />
           {unreadCount > 0 && (
-            <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
+            <Badge 
+              className={`absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs ${
+                isAnimating ? 'animate-notification-bounce' : ''
+              }`}
+            >
               {unreadCount}
             </Badge>
           )}
