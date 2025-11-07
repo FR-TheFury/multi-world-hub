@@ -1,4 +1,4 @@
-import { Home, FolderOpen, Settings, Shield, LogOut, TrendingUp, Sparkles, Building2 } from 'lucide-react';
+import { Home, FolderOpen, Settings, Shield, LogOut, TrendingUp, Sparkles, Building2, Scale } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/integrations/supabase/client';
@@ -69,6 +69,22 @@ const AppSidebar = () => {
                   {!isCollapsed && <span>Tous les Dossiers</span>}
                   {isActive('/dossiers') && (
                     <div className="absolute right-2 w-2 h-2 rounded-full bg-primary animate-pulse" />
+                  )}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  onClick={() => navigate('/jde/dossiers')}
+                  className={`relative transition-all duration-200 ${
+                    isActive('/jde/dossiers') 
+                      ? 'bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 font-semibold border-l-4 border-emerald-600 shadow-md' 
+                      : 'hover:bg-accent hover:translate-x-1'
+                  }`}
+                >
+                  <Scale className={`h-5 w-5 ${isActive('/jde/dossiers') ? 'text-emerald-600' : ''}`} />
+                  {!isCollapsed && <span>Dossiers JDE</span>}
+                  {isActive('/jde/dossiers') && (
+                    <div className="absolute right-2 w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
                   )}
                 </SidebarMenuButton>
               </SidebarMenuItem>
