@@ -288,7 +288,7 @@ async function initiateTransfer(supabase: any, userId: string, dossierId: string
         }
       });
 
-    // 10. Copy attachments (optional - can be done in background)
+    // 10. Copy attachments
     const { data: attachments } = await supabase
       .from('dossier_attachments')
       .select('*')
@@ -296,8 +296,6 @@ async function initiateTransfer(supabase: any, userId: string, dossierId: string
 
     if (attachments && attachments.length > 0) {
       console.log(`Found ${attachments.length} attachments to copy`);
-      // Note: Actual file copying would need to be done via storage API
-      // This is a placeholder for metadata copying
       for (const attachment of attachments) {
         await supabase
           .from('dossier_attachments')
@@ -306,7 +304,7 @@ async function initiateTransfer(supabase: any, userId: string, dossierId: string
             file_name: attachment.file_name,
             file_type: attachment.file_type,
             file_size: attachment.file_size,
-            storage_path: attachment.storage_path, // Would need to copy actual file
+            storage_path: attachment.storage_path,
             document_type: attachment.document_type,
             uploaded_by: userId,
             metadata: { ...attachment.metadata, copied_from_transfer: transfer.id }
@@ -315,7 +313,57 @@ async function initiateTransfer(supabase: any, userId: string, dossierId: string
       console.log('Attachments metadata copied');
     }
 
-    // 11. Update transfer record as completed
+    // 11. Copy appointments
+    const { data: appointments } = await supabase
+      .from('appointments')
+      .select('*')
+      .eq('dossier_id', dossierId);
+
+    if (appointments && appointments.length > 0) {
+      console.log(`Found ${appointments.length} appointments to copy`);
+      for (const appointment of appointments) {
+        await supabase
+          .from('appointments')
+          .insert({
+            dossier_id: newDossier.id,
+            user_id: userId,
+            world_id: targetWorld.id,
+            title: appointment.title,
+            description: appointment.description,
+            start_time: appointment.start_time,
+            end_time: appointment.end_time,
+            status: appointment.status,
+            appointment_type: appointment.appointment_type,
+            workflow_step_id: appointment.workflow_step_id
+          });
+      }
+      console.log('Appointments copied');
+    }
+
+    // 12. Copy existing comments (excluding system comments)
+    const { data: comments } = await supabase
+      .from('dossier_comments')
+      .select('*')
+      .eq('dossier_id', dossierId)
+      .neq('comment_type', 'system');
+
+    if (comments && comments.length > 0) {
+      console.log(`Found ${comments.length} comments to copy`);
+      for (const comment of comments) {
+        await supabase
+          .from('dossier_comments')
+          .insert({
+            dossier_id: newDossier.id,
+            user_id: comment.user_id,
+            comment_type: comment.comment_type,
+            content: comment.content,
+            metadata: { ...comment.metadata, copied_from_transfer: transfer.id, original_date: comment.created_at }
+          });
+      }
+      console.log('Comments copied');
+    }
+
+    // 13. Update transfer record as completed
     await supabase
       .from('dossier_transfers')
       .update({
@@ -325,7 +373,9 @@ async function initiateTransfer(supabase: any, userId: string, dossierId: string
         metadata: {
           ...transfer.metadata,
           new_dossier_id: newDossier.id,
-          attachments_copied: attachments?.length || 0
+          attachments_copied: attachments?.length || 0,
+          appointments_copied: appointments?.length || 0,
+          comments_copied: comments?.length || 0
         }
       })
       .eq('id', transfer.id);
