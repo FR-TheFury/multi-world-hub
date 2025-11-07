@@ -1,27 +1,31 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Mail, TrendingUp, Search, Plus, Archive, Eye, MoreVertical, Calendar as CalendarIcon, Send, Download } from "lucide-react";
-import CreateDossierDialog from "@/components/dossier/CreateDossierDialog";
-import { toast } from "sonner";
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import DBCSLogo from "@/assets/DBCS.svg";
+} from '@/components/ui/dropdown-menu';
+import { Search, FileText, Plus, Filter, Download, MoreHorizontal, Eye, Calendar, Mail, BarChart3, Database } from 'lucide-react';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import CreateDossierDialog from '@/components/dossier/CreateDossierDialog';
+import { toast } from 'sonner';
+import DBCSLogo from '@/assets/DBCS.svg';
 
 interface Dossier {
   id: string;
   title: string;
   status: string;
   created_at: string;
-  owner_id: string;
+  owner: { display_name: string | null };
   tags: string[] | null;
 }
 
@@ -29,18 +33,17 @@ interface World {
   id: string;
   code: string;
   name: string;
-  description: string | null;
-  theme_colors: any;
+  description: string;
 }
 
-export default function DossiersDBCS() {
+const DossiersDBCS = () => {
   const navigate = useNavigate();
   const [dossiers, setDossiers] = useState<Dossier[]>([]);
   const [world, setWorld] = useState<World | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   useEffect(() => {
     fetchWorldAndDossiers();
@@ -48,285 +51,349 @@ export default function DossiersDBCS() {
 
   const fetchWorldAndDossiers = async () => {
     try {
-      setLoading(true);
-      
-      // Fetch DBCS world
+      // Fetch DBCS world data
       const { data: worldData, error: worldError } = await supabase
-        .from("worlds")
-        .select("*")
-        .eq("code", "DBCS")
+        .from('worlds')
+        .select('*')
+        .eq('code', 'DBCS')
         .single();
 
       if (worldError) throw worldError;
       setWorld(worldData);
 
-      // Fetch dossiers for DBCS world
-      const { data: dossiersData, error: dossiersError } = await supabase
-        .from("dossiers")
+      // Fetch DBCS dossiers
+      const { data, error } = await supabase
+        .from('dossiers')
         .select(`
           id,
           title,
           status,
           created_at,
-          owner_id,
-          tags
+          tags,
+          owner:profiles(display_name)
         `)
-        .eq("world_id", worldData.id)
-        .order("created_at", { ascending: false });
+        .eq('world_id', worldData.id)
+        .order('created_at', { ascending: false });
 
-      if (dossiersError) throw dossiersError;
-      setDossiers(dossiersData || []);
+      if (error) throw error;
+
+      if (data) {
+        setDossiers(data.map(d => ({
+          ...d,
+          owner: (d as any).owner,
+        })));
+      }
     } catch (error) {
-      console.error("Error fetching data:", error);
-      toast.error("Erreur lors du chargement des dossiers");
+      console.error('Error fetching DBCS data:', error);
+      toast.error('Erreur lors du chargement des dossiers DBCS');
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePrefetchDossier = async (dossierId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("dossiers")
-        .select(`
-          *,
-          worlds (
-            id,
-            code,
-            name
-          )
-        `)
-        .eq("id", dossierId)
-        .single();
-
-      if (error) throw error;
-      
-      sessionStorage.setItem(`dossier_${dossierId}`, JSON.stringify(data));
-    } catch (error) {
-      console.error("Error prefetching dossier:", error);
-    }
+  const handlePrefetchDossier = (dossierId: string) => {
+    supabase
+      .from('dossiers')
+      .select(`
+        *,
+        world:worlds(code, name, theme_colors),
+        owner:profiles!dossiers_owner_id_fkey(display_name, email)
+      `)
+      .eq('id', dossierId)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          sessionStorage.setItem(`dossier_${dossierId}`, JSON.stringify(data));
+        }
+      });
   };
 
   const getStatusBadgeColor = (status: string) => {
-    const statusMap: Record<string, string> = {
-      nouveau: "bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/30",
-      en_cours: "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30",
-      archive: "bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30",
-      cloture: "bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30",
-    };
-    return statusMap[status] || "bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30";
+    switch (status) {
+      case 'nouveau':
+        return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'en_cours':
+        return 'bg-amber-50 text-amber-700 border-amber-200';
+      case 'archive':
+        return 'bg-slate-100 text-slate-700 border-slate-200';
+      case 'cloture':
+        return 'bg-green-50 text-green-700 border-green-200';
+      default:
+        return 'bg-slate-100 text-slate-700 border-slate-200';
+    }
   };
 
   const getStatusLabel = (status: string) => {
-    const statusLabels: Record<string, string> = {
-      nouveau: "Nouveau",
-      en_cours: "En cours",
-      archive: "Archivé",
-      cloture: "Clôturé",
-    };
-    return statusLabels[status] || status;
+    switch (status) {
+      case 'nouveau':
+        return 'Nouveau';
+      case 'en_cours':
+        return 'En cours';
+      case 'archive':
+        return 'Archivé';
+      case 'cloture':
+        return 'Clôturé';
+      default:
+        return status;
+    }
   };
 
   const filteredDossiers = dossiers.filter((dossier) => {
     const matchesSearch = dossier.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all" || dossier.status === statusFilter;
+    const matchesStatus = statusFilter === 'all' || dossier.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   const stats = {
     total: dossiers.length,
-    nouveau: dossiers.filter((d) => d.status === "nouveau").length,
-    archive: dossiers.filter((d) => d.status === "archive").length,
-    cloture: dossiers.filter((d) => d.status === "cloture").length,
+    nouveau: dossiers.filter(d => d.status === 'nouveau').length,
+    archive: dossiers.filter(d => d.status === 'archive').length,
+    cloture: dossiers.filter(d => d.status === 'cloture').length,
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-muted-foreground">Chargement...</p>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-muted-foreground">Chargement des dossiers DBCS...</div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-6">
+      {/* Header avec logo DBCS */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
           <img src={DBCSLogo} alt="DBCS" className="h-16 w-16" />
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            <h2 className="text-3xl font-bold mb-1 text-green-600">
               DBCS - Base de Connaissance et Statistiques
-            </h1>
-            <p className="text-muted-foreground">
+            </h2>
+            <p className="text-sm text-muted-foreground">
               Archivage et analyse des dossiers clôturés
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="icon">
-            <Mail className="h-4 w-4" />
+        
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            onClick={() => navigate('/mailbox')}
+            variant="outline"
+            size="sm"
+          >
+            <Mail className="h-4 w-4 mr-2" />
+            Messages
           </Button>
-          <Button variant="outline" size="icon">
-            <Calendar className="h-4 w-4" />
+          <Button
+            onClick={() => navigate('/dashboard')}
+            variant="outline"
+            size="sm"
+          >
+            <Calendar className="h-4 w-4 mr-2" />
+            Agenda
           </Button>
-          <Button variant="outline" size="icon">
-            <TrendingUp className="h-4 w-4" />
+          <Button
+            variant="outline"
+            size="sm"
+          >
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Statistiques
+          </Button>
+          <Button
+            onClick={() => setCreateDialogOpen(true)}
+            size="sm"
+            className="bg-green-600 hover:bg-green-700"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Nouveau dossier DBCS
           </Button>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-transparent">
+      {/* Stats cards */}
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card className="hover:shadow-md transition-shadow cursor-pointer border-green-200" onClick={() => setStatusFilter('all')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Dossiers</CardTitle>
-            <Archive className="h-4 w-4 text-purple-600" />
+            <Database className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
+            <div className="text-2xl font-bold text-green-600">{stats.total}</div>
+            <p className="text-xs text-muted-foreground">Tous les dossiers archivés</p>
           </CardContent>
         </Card>
-
-        <Card className="border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-transparent">
+        
+        <Card className="hover:shadow-md transition-shadow cursor-pointer border-blue-200" onClick={() => setStatusFilter('nouveau')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Nouveaux</CardTitle>
-            <Archive className="h-4 w-4 text-blue-600" />
+            <div className="h-2 w-2 rounded-full bg-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.nouveau}</div>
+            <div className="text-2xl font-bold text-blue-600">{stats.nouveau}</div>
+            <p className="text-xs text-muted-foreground">À traiter</p>
           </CardContent>
         </Card>
-
-        <Card className="border-gray-500/20 bg-gradient-to-br from-gray-500/5 to-transparent">
+        
+        <Card className="hover:shadow-md transition-shadow cursor-pointer border-slate-200" onClick={() => setStatusFilter('archive')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Archivés</CardTitle>
-            <Archive className="h-4 w-4 text-gray-600" />
+            <div className="h-2 w-2 rounded-full bg-slate-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.archive}</div>
+            <div className="text-2xl font-bold text-slate-600">{stats.archive}</div>
+            <p className="text-xs text-muted-foreground">En base de données</p>
           </CardContent>
         </Card>
-
-        <Card className="border-green-500/20 bg-gradient-to-br from-green-500/5 to-transparent">
+        
+        <Card className="hover:shadow-md transition-shadow cursor-pointer border-green-200" onClick={() => setStatusFilter('cloture')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Clôturés</CardTitle>
-            <Archive className="h-4 w-4 text-green-600" />
+            <div className="h-2 w-2 rounded-full bg-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.cloture}</div>
+            <div className="text-2xl font-bold text-green-600">{stats.cloture}</div>
+            <p className="text-xs text-muted-foreground">Traitement terminé</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Dossiers List */}
-      <Card>
-        <CardHeader>
+      {/* Liste des dossiers */}
+      <Card className="shadow-vuexy-md border-0">
+        <CardHeader className="border-b bg-card">
           <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Dossiers Archivés</CardTitle>
-              <CardDescription>
-                Gestion et consultation des dossiers archivés
-              </CardDescription>
-            </div>
-            <Button onClick={() => setCreateDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nouveau Dossier
-            </Button>
-          </div>
-          <div className="flex items-center gap-4 mt-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher un dossier..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+              <div className="p-2 rounded-lg bg-green-600/10">
+                <FileText className="h-5 w-5 text-green-600" />
+              </div>
+              {statusFilter === 'all' ? 'Tous les dossiers DBCS' : `Dossiers ${getStatusLabel(statusFilter)}`}
+              <Badge variant="secondary">{filteredDossiers.length}</Badge>
+            </CardTitle>
+            
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm">
+                <Filter className="h-4 w-4 mr-2" />
+                Filtrer
+              </Button>
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Exporter
+              </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {filteredDossiers.length === 0 ? (
-              <div className="text-center py-12">
-                <Archive className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Aucun dossier trouvé</h3>
-                <p className="text-muted-foreground mb-4">
-                  Commencez par créer votre premier dossier d'archivage
-                </p>
-                <Button onClick={() => setCreateDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Créer un dossier
-                </Button>
-              </div>
-            ) : (
-              filteredDossiers.map((dossier) => (
-                <div
-                  key={dossier.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
-                  onMouseEnter={() => handlePrefetchDossier(dossier.id)}
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold">{dossier.title}</h3>
-                      <Badge variant="outline" className={getStatusBadgeColor(dossier.status)}>
-                        {getStatusLabel(dossier.status)}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span>
-                        Créé le {new Date(dossier.created_at).toLocaleDateString("fr-FR")}
-                      </span>
-                      {dossier.tags && dossier.tags.length > 0 && (
-                        <div className="flex gap-1">
-                          {dossier.tags.map((tag) => (
-                            <Badge key={tag} variant="secondary" className="text-xs">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+        <CardContent className="p-0">
+          {/* Search bar */}
+          <div className="p-4 border-b">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher un dossier DBCS..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+
+          {/* Dossiers list */}
+          <div className="divide-y">
+            {filteredDossiers.map((dossier) => (
+              <div
+                key={dossier.id}
+                className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
+                onMouseEnter={() => handlePrefetchDossier(dossier.id)}
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h4 className="font-medium text-sm truncate">{dossier.title}</h4>
+                    <Badge className={getStatusBadgeColor(dossier.status)}>
+                      {getStatusLabel(dossier.status)}
+                    </Badge>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/dossier/${dossier.id}`)}
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      Voir le détail
-                    </Button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <CalendarIcon className="h-4 w-4 mr-2" />
-                          Planifier
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Send className="h-4 w-4 mr-2" />
-                          Envoyer
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Download className="h-4 w-4 mr-2" />
-                          Télécharger
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span>
+                      📅 {format(new Date(dossier.created_at), 'dd MMM yyyy', { locale: fr })}
+                    </span>
+                    <span>👤 {dossier.owner?.display_name || 'Inconnu'}</span>
+                    {dossier.tags && dossier.tags.length > 0 && (
+                      <span className="text-xs flex gap-1">
+                        🏷️ {dossier.tags.slice(0, 2).join(', ')}
+                        {dossier.tags.length > 2 && ` +${dossier.tags.length - 2}`}
+                      </span>
+                    )}
                   </div>
                 </div>
-              ))
+                
+                <div className="flex items-center gap-2 ml-4">
+                  <Button
+                    onClick={() => navigate(`/dossier/${dossier.id}`)}
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    Voir le détail
+                  </Button>
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => navigate(`/dossier/${dossier.id}`)}>
+                        <Eye className="h-4 w-4 mr-2" />
+                        Voir les détails
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Planifier un RDV
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Mail className="h-4 w-4 mr-2" />
+                        Envoyer un email
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem>
+                        <Download className="h-4 w-4 mr-2" />
+                        Télécharger le dossier
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+            ))}
+
+            {filteredDossiers.length === 0 && (
+              <div className="text-center py-16 text-muted-foreground">
+                <div className="p-4 rounded-full bg-green-50 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                  <Database className="h-10 w-10 text-green-600 opacity-40" />
+                </div>
+                <p className="text-sm font-medium">Aucun dossier DBCS trouvé</p>
+                <p className="text-xs mt-1">
+                  {searchQuery || statusFilter !== 'all'
+                    ? 'Essayez de modifier vos filtres'
+                    : 'Créez votre premier dossier DBCS pour commencer'}
+                </p>
+                {!searchQuery && statusFilter === 'all' && (
+                  <Button
+                    onClick={() => setCreateDialogOpen(true)}
+                    className="mt-4 bg-green-600 hover:bg-green-700"
+                    size="sm"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Créer un dossier DBCS
+                  </Button>
+                )}
+              </div>
             )}
           </div>
         </CardContent>
       </Card>
 
+      {/* Create Dialog */}
       {world && (
         <CreateDossierDialog
           open={createDialogOpen}
@@ -337,4 +404,6 @@ export default function DossiersDBCS() {
       )}
     </div>
   );
-}
+};
+
+export default DossiersDBCS;
