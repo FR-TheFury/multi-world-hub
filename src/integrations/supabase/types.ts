@@ -342,6 +342,93 @@ export type Database = {
           },
         ]
       }
+      dossier_transfers: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          source_dossier_id: string
+          source_world_id: string
+          target_dossier_id: string | null
+          target_world_id: string
+          transfer_status: string
+          transfer_type: string
+          transferred_at: string
+          transferred_by: string
+          updated_at: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          source_dossier_id: string
+          source_world_id: string
+          target_dossier_id?: string | null
+          target_world_id: string
+          transfer_status?: string
+          transfer_type: string
+          transferred_at?: string
+          transferred_by: string
+          updated_at?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          source_dossier_id?: string
+          source_world_id?: string
+          target_dossier_id?: string | null
+          target_world_id?: string
+          transfer_status?: string
+          transfer_type?: string
+          transferred_at?: string
+          transferred_by?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dossier_transfers_source_dossier_id_fkey"
+            columns: ["source_dossier_id"]
+            isOneToOne: false
+            referencedRelation: "dossiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dossier_transfers_source_world_id_fkey"
+            columns: ["source_world_id"]
+            isOneToOne: false
+            referencedRelation: "worlds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dossier_transfers_target_dossier_id_fkey"
+            columns: ["target_dossier_id"]
+            isOneToOne: false
+            referencedRelation: "dossiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dossier_transfers_target_world_id_fkey"
+            columns: ["target_world_id"]
+            isOneToOne: false
+            referencedRelation: "worlds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dossier_transfers_transferred_by_fkey"
+            columns: ["transferred_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dossier_workflow_history: {
         Row: {
           created_at: string | null

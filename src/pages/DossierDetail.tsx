@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Calendar, FileText, MessageSquare, User, Workflow, LayoutDashboard } from 'lucide-react';
+import { ArrowLeft, Calendar, FileText, MessageSquare, User, Workflow, LayoutDashboard, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -16,6 +16,8 @@ import DocumentsTab from '@/components/dossier/DocumentsTab';
 import CommentsTab from '@/components/dossier/CommentsTab';
 import AppointmentsTab from '@/components/dossier/AppointmentsTab';
 import ClientInfoTab from '@/components/dossier/ClientInfoTab';
+import TransferDossierDialog from '@/components/dossier/TransferDossierDialog';
+import TransferHistoryBadge from '@/components/dossier/TransferHistoryBadge';
 
 interface Dossier {
   id: string;
@@ -43,6 +45,7 @@ const DossierDetail = () => {
   const { session } = useAuthStore();
   const [dossier, setDossier] = useState<Dossier | null>(null);
   const [loading, setLoading] = useState(true);
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -137,6 +140,7 @@ const DossierDetail = () => {
               >
                 {dossier.world.code}
               </Badge>
+              <TransferHistoryBadge dossierId={dossier.id} />
             </div>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <span>
@@ -161,6 +165,20 @@ const DossierDetail = () => {
                   </Badge>
                 ))}
               </div>
+            )}
+          </div>
+
+          {/* Transfer button */}
+          <div className="flex items-center gap-2">
+            {(dossier.world.code === 'JDE' || dossier.world.code === 'JDMO') && (
+              <Button
+                onClick={() => setTransferDialogOpen(true)}
+                variant="outline"
+                size="sm"
+              >
+                <ArrowRight className="h-4 w-4 mr-2" />
+                Transférer le dossier
+              </Button>
             )}
           </div>
         </div>
@@ -218,6 +236,14 @@ const DossierDetail = () => {
             <ClientInfoTab dossierId={dossier.id} />
           </TabsContent>
         </Tabs>
+
+        {/* Transfer Dialog */}
+        <TransferDossierDialog
+          open={transferDialogOpen}
+          onOpenChange={setTransferDialogOpen}
+          dossierId={dossier.id}
+          currentWorldCode={dossier.world.code}
+        />
       </div>
   );
 };
