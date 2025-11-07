@@ -57,6 +57,24 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // World-specific colors
+        world: {
+          jde: {
+            primary: "hsl(var(--world-jde-primary))",
+            accent: "hsl(var(--world-jde-accent))",
+            neutral: "hsl(var(--world-jde-neutral))",
+          },
+          jdmo: {
+            primary: "hsl(var(--world-jdmo-primary))",
+            accent: "hsl(var(--world-jdmo-accent))",
+            neutral: "hsl(var(--world-jdmo-neutral))",
+          },
+          dbcs: {
+            primary: "hsl(var(--world-dbcs-primary))",
+            accent: "hsl(var(--world-dbcs-accent))",
+            neutral: "hsl(var(--world-dbcs-neutral))",
+          },
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

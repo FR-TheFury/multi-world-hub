@@ -29,9 +29,9 @@ const AnimatedBackground = () => {
     }> = [];
 
     const colors = [
-      'rgba(130, 87, 229, 0.1)',  // primary
-      'rgba(161, 98, 229, 0.08)',  // primary variant
-      'rgba(130, 87, 229, 0.06)',  // lighter
+      'rgba(232, 49, 49, 0.1)',    // red (JDE)
+      'rgba(255, 153, 51, 0.08)',  // orange (JDMO)
+      'rgba(64, 186, 123, 0.09)',  // green (DBCS)
     ];
 
     // Create particles
@@ -76,7 +76,7 @@ const AnimatedBackground = () => {
             ctx.beginPath();
             ctx.moveTo(particle.x, particle.y);
             ctx.lineTo(otherParticle.x, otherParticle.y);
-            ctx.strokeStyle = `rgba(130, 87, 229, ${0.05 * (1 - distance / 150)})`;
+            ctx.strokeStyle = `rgba(232, 49, 49, ${0.05 * (1 - distance / 150)})`;
             ctx.lineWidth = 1;
             ctx.stroke();
           }
