@@ -1,73 +1,112 @@
-# Welcome to your Lovable project
+# Multi-World Hub
 
-## Project info
+Plateforme de gestion multi-monde pour JDE (Juriste Droit de l'Entreprise), JDMO (Juriste Droit de la Maîtrise d'Œuvre) et DBCS (Database/Base de Connaissance et Statistiques).
 
-**URL**: https://lovable.dev/projects/acda4313-fd49-4754-bd1c-333d833d4148
+## 🚀 Fonctionnalités
 
-## How can I edit this code?
+- **Gestion multi-monde** : Navigation entre JDE, JDMO et DBCS
+- **Workflows personnalisés** : Chaque monde dispose de son propre workflow adapté
+- **Système de dossiers** : Création, suivi et transfert de dossiers entre mondes
+- **Authentification** : Système d'authentification sécurisé avec gestion des rôles
+- **Dashboard interactif** : Statistiques et visualisation en temps réel
+- **Documents** : Gestion et génération de documents automatiques
+- **Notifications** : Système de notifications en temps réel
+- **Messagerie** : Communication interne intégrée
 
-There are several ways of editing your application.
+## 🛠️ Technologies
 
-**Use Lovable**
+- **Frontend** : React 18, TypeScript, Vite
+- **Styling** : Tailwind CSS, shadcn/ui
+- **Backend** : Supabase (Base de données PostgreSQL, Authentication, Storage, Edge Functions)
+- **State Management** : Zustand
+- **Routing** : React Router v6
+- **Forms** : React Hook Form + Zod
+- **Animations** : Framer Motion
+- **Charts** : Recharts
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/acda4313-fd49-4754-bd1c-333d833d4148) and start prompting.
+## 📦 Installation
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+```bash
+# Cloner le repository
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Installer les dépendances
+npm install
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Configurer les variables d'environnement
+cp .env.example .env
+# Ajouter vos clés Supabase dans .env
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Lancer le serveur de développement
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## 🗄️ Configuration de la base de données
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+1. Créer un projet Supabase
+2. Exécuter les migrations dans `supabase/migrations/`
+3. Exécuter les scripts de workflow dans `scripts/` :
+   - `insert-jde-workflow.sql`
+   - `insert-jdmo-complete-workflow.sql`
+   - `insert-dbcs-simple-workflow.sql`
 
-**Use GitHub Codespaces**
+## 🚀 Déploiement
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Le projet est configuré pour être déployé sur GitHub Pages.
 
-## What technologies are used for this project?
+```bash
+# Build de production
+npm run build
 
-This project is built with:
+# Preview du build
+npm run preview
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### GitHub Pages
 
-## How can I deploy this project?
+Le déploiement automatique sur GitHub Pages se fait via GitHub Actions à chaque push sur la branche `main`.
 
-Simply open [Lovable](https://lovable.dev/projects/acda4313-fd49-4754-bd1c-333d833d4148) and click on Share -> Publish.
+## 📝 Structure du projet
 
-## Can I connect a custom domain to my Lovable project?
+```
+src/
+├── components/          # Composants réutilisables
+│   ├── admin/          # Composants d'administration
+│   ├── dossier/        # Composants liés aux dossiers
+│   └── ui/             # Composants UI (shadcn)
+├── pages/              # Pages de l'application
+│   ├── world/          # Pages spécifiques aux mondes
+│   └── superadmin/     # Pages super admin
+├── hooks/              # Hooks personnalisés
+├── lib/                # Utilitaires et configuration
+└── integrations/       # Intégrations (Supabase)
 
-Yes, you can!
+supabase/
+├── functions/          # Edge Functions
+└── migrations/         # Migrations SQL
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 🌐 Mondes
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+### JDE (Juriste Droit de l'Entreprise)
+Gestion juridique d'entreprise avec workflow complet de création, consultation et clôture.
+
+### JDMO (Juriste Droit de la Maîtrise d'Œuvre)
+Gestion de projets de construction avec workflow incluant visites, validations et transferts vers DBCS.
+
+### DBCS (Base de Connaissance et Statistiques)
+Archivage et statistiques des dossiers clôturés avec indexation et analyse.
+
+## 👥 Rôles utilisateurs
+
+- **Super Admin** : Accès complet à toutes les fonctionnalités
+- **Admin** : Gestion des utilisateurs et des workflows
+- **User** : Accès aux dossiers et fonctionnalités standard
+
+## 📄 Licence
+
+Ce projet est privé et propriétaire.
+
+## 🤝 Contribution
+
+Les contributions sont les bienvenues. Veuillez créer une issue avant de soumettre une pull request.
