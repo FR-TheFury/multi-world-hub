@@ -33,11 +33,15 @@ git clone <YOUR_GIT_URL>
 # Installer les dépendances
 npm install
 
+# Configurer les variables d'environnement pour le développement local
+cp .env.example .env
+# Le fichier .env est déjà pré-rempli avec les bonnes valeurs
+
 # Lancer le serveur de développement
 npm run dev
 ```
 
-> **Note** : Les credentials Supabase sont déjà configurés dans le code (`src/integrations/supabase/client.ts`). Aucune configuration `.env` n'est nécessaire.
+> **Note** : Le fichier `.env` ne doit JAMAIS être commité dans le repository. Il contient vos credentials Supabase.
 
 ## 🗄️ Configuration de la base de données
 
@@ -113,16 +117,29 @@ Le projet est configuré pour un déploiement automatique via GitHub Actions.
    - Allez dans **Settings > Pages**
    - Source : **GitHub Actions**
 
-2. **Poussez sur la branche `main`** :
+2. **Configurez les GitHub Secrets** (OBLIGATOIRE) :
+   - Allez dans **Settings > Secrets and variables > Actions**
+   - Cliquez sur **New repository secret**
+   - Ajoutez les secrets suivants :
+   
+   **Secret 1 :**
+   - Name: `VITE_SUPABASE_URL`
+   - Secret: `https://nuokvcfabssbjlokqanp.supabase.co`
+   
+   **Secret 2 :**
+   - Name: `VITE_SUPABASE_PUBLISHABLE_KEY`
+   - Secret: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im51b2t2Y2ZhYnNzYmpsb2txYW5wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIzODA5MTMsImV4cCI6MjA3Nzk1NjkxM30.t-qfGI-6j8udGhdNjg580As0ErzJjcqpvA_h3dwyARk`
+
+3. **Poussez sur la branche `main`** :
    ```bash
    git add .
    git commit -m "Deploy to GitHub Pages"
    git push origin main
    ```
 
-3. **Le workflow GitHub Actions** se déclenche automatiquement et déploie votre site
+4. **Le workflow GitHub Actions** se déclenche automatiquement et déploie votre site
 
-4. **Votre site sera disponible à** : `https://fr-thefury.github.io/multi-world-hub/`
+5. **Votre site sera disponible à** : `https://fr-thefury.github.io/multi-world-hub/`
 
 #### Vérification du déploiement
 
