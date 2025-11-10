@@ -66,7 +66,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <BrowserRouter basename="/multi-world-hub">
           <AuthBootstrap />
           <AnimatedRoutes />
         </BrowserRouter>
