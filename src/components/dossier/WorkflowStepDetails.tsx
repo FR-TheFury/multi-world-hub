@@ -131,22 +131,22 @@ const WorkflowStepDetails = ({
                         initialData={progress?.form_data || {}}
                         onSubmit={(data) => {
                           if (step.requires_decision) {
-                            // Form data will be stored for decision
+                            // Save form data and open decision
                             return;
                           }
                           onComplete(step.id, data);
                         }}
-                        submitLabel={step.requires_decision ? undefined : "Compléter l'étape"}
+                        submitLabel={step.requires_decision ? "Sauvegarder les données" : "Compléter l'étape"}
                         isLoading={isSubmitting}
                       />
                       
                       {/* Decision Step */}
-                      {step.requires_decision && (
+                      {step.requires_decision && progress?.form_data && Object.keys(progress.form_data).length > 0 && (
                         <DecisionStepForm
                           stepName="Prendre une décision"
                           stepDescription="Sélectionnez votre décision et ajoutez des notes"
                           onSubmit={async (decision, decisionNotes) => {
-                            await onDecision(step.id, decision, decisionNotes, progress?.form_data);
+                            await onDecision(step.id, decision, decisionNotes, progress.form_data);
                           }}
                           isSubmitting={isSubmitting}
                         />

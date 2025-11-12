@@ -136,8 +136,9 @@ const WorkflowStepForm = ({
     defaultValues: initialData,
   });
 
-  const handleSubmit = (values: FormValues) => {
-    onSubmit(values);
+  const handleSubmit = async (values: FormValues) => {
+    await onSubmit(values);
+    form.reset(values);
   };
 
   const renderField = (field: FormFieldConfig) => {
