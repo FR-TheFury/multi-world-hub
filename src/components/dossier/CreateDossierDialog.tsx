@@ -115,10 +115,11 @@ const CreateDossierDialog = ({ open, onOpenChange, worldId, onSuccess }: CreateD
           .order('step_number', { ascending: true });
 
         if (stepsData && stepsData.length > 0) {
-          const progressRecords = stepsData.map((step) => ({
+          const progressRecords = stepsData.map((step, index) => ({
             dossier_id: dossierData.id,
             workflow_step_id: step.id,
-            status: 'pending' as const,
+            status: index === 0 ? ('in_progress' as const) : ('pending' as const),
+            started_at: index === 0 ? new Date().toISOString() : null,
           }));
 
           await supabase.from('dossier_workflow_progress').insert(progressRecords);
