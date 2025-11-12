@@ -342,6 +342,57 @@ export type Database = {
           },
         ]
       }
+      dossier_step_annotations: {
+        Row: {
+          annotation_type: Database["public"]["Enums"]["annotation_type"]
+          content: string
+          created_at: string | null
+          created_by: string
+          dossier_id: string
+          id: string
+          metadata: Json | null
+          title: string
+          workflow_step_id: string | null
+        }
+        Insert: {
+          annotation_type: Database["public"]["Enums"]["annotation_type"]
+          content: string
+          created_at?: string | null
+          created_by: string
+          dossier_id: string
+          id?: string
+          metadata?: Json | null
+          title: string
+          workflow_step_id?: string | null
+        }
+        Update: {
+          annotation_type?: Database["public"]["Enums"]["annotation_type"]
+          content?: string
+          created_at?: string | null
+          created_by?: string
+          dossier_id?: string
+          id?: string
+          metadata?: Json | null
+          title?: string
+          workflow_step_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dossier_step_annotations_dossier_id_fkey"
+            columns: ["dossier_id"]
+            isOneToOne: false
+            referencedRelation: "dossiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dossier_step_annotations_workflow_step_id_fkey"
+            columns: ["workflow_step_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dossier_transfers: {
         Row: {
           completed_at: string | null
@@ -744,6 +795,7 @@ export type Database = {
           status: string
           title: string
           updated_at: string | null
+          workflow_step_id: string | null
           world_id: string
         }
         Insert: {
@@ -757,6 +809,7 @@ export type Database = {
           status?: string
           title: string
           updated_at?: string | null
+          workflow_step_id?: string | null
           world_id: string
         }
         Update: {
@@ -770,9 +823,18 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string | null
+          workflow_step_id?: string | null
           world_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tasks_workflow_step_id_fkey"
+            columns: ["workflow_step_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_steps"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -1126,6 +1188,7 @@ export type Database = {
       }
     }
     Enums: {
+      annotation_type: "note" | "document_status" | "conversation" | "custom"
       app_role: "superadmin" | "admin" | "editor" | "viewer"
       client_type:
         | "locataire"
@@ -1279,6 +1342,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      annotation_type: ["note", "document_status", "conversation", "custom"],
       app_role: ["superadmin", "admin", "editor", "viewer"],
       client_type: [
         "locataire",
