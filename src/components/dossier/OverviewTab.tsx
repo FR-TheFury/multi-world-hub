@@ -187,11 +187,9 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-6 p-6">
-      {/* COLONNE GAUCHE - Informations détaillées */}
-      <div className="space-y-6">
-        
-        {/* En-tête du dossier */}
+    <div className="space-y-6 p-6">
+      {/* En-tête du dossier avec informations client */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card className="border-l-4 border-l-primary">
           <CardHeader>
             <div className="flex items-start gap-4">
@@ -199,83 +197,15 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
                 <FileText className="h-5 w-5 text-primary" />
               </div>
               <div className="flex-1">
-                <CardTitle className="text-xl mb-1">{dossierDetails?.reference || 'Chargement...'}</CardTitle>
+                <CardTitle className="text-lg mb-1">{dossierDetails?.reference || 'Chargement...'}</CardTitle>
                 <CardDescription className="text-sm">
                   {clientInfo ? `${clientInfo.prenom} ${clientInfo.nom}` : 'Aucune information client'}
                 </CardDescription>
-                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                  Dossier {dossierDetails?.worlds?.name || worldId} • Type: {clientInfo ? getClientTypeLabel(clientInfo.client_type) : '-'}
-                </p>
               </div>
             </div>
           </CardHeader>
         </Card>
 
-        {/* Informations Client */}
-        <Card className="border-l-4 border-l-green-500">
-          <CardHeader>
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                <User className="h-5 w-5 text-green-500" />
-              </div>
-              <div className="flex-1">
-                <CardTitle className="text-base mb-1">Informations Client</CardTitle>
-                <CardDescription className="text-xs">
-                  Détails du sinistré et coordonnées
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <p className="text-xs text-muted-foreground">Téléphone</p>
-                <p className="font-medium">{clientInfo?.telephone || '-'}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Email</p>
-                <p className="font-medium truncate">{clientInfo?.email || '-'}</p>
-              </div>
-              <div className="col-span-2">
-                <p className="text-xs text-muted-foreground">Adresse du sinistre</p>
-                <p className="font-medium">{clientInfo?.adresse_sinistre || '-'}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Informations Sinistre */}
-        <Card className="border-l-4 border-l-orange-500">
-          <CardHeader>
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center flex-shrink-0">
-                <AlertCircle className="h-5 w-5 text-orange-500" />
-              </div>
-              <div className="flex-1">
-                <CardTitle className="text-base mb-1">Détails du Sinistre</CardTitle>
-                <CardDescription className="text-xs">
-                  Nature et date de l'événement
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <p className="text-xs text-muted-foreground">Type de sinistre</p>
-                <p className="font-medium">{clientInfo?.type_sinistre || '-'}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Date du sinistre</p>
-                <p className="font-medium">
-                  {clientInfo?.date_sinistre ? format(new Date(clientInfo.date_sinistre), 'dd/MM/yyyy') : '-'}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Progression Globale */}
         <Card className="border-l-4 border-l-blue-500">
           <CardHeader>
             <div className="flex items-start gap-4">
@@ -285,85 +215,182 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
               <div className="flex-1">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-base mb-1">Progression Globale</CardTitle>
+                    <CardTitle className="text-base mb-1">Progression</CardTitle>
                     <CardDescription className="text-xs">
-                      {stats.completedSteps} étapes terminées sur {stats.totalSteps}
+                      {stats.completedSteps}/{stats.totalSteps} étapes
                     </CardDescription>
                   </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-blue-500">{progressPercentage}%</div>
-                    <Badge variant="secondary" className="mt-1">En cours</Badge>
-                  </div>
+                  <div className="text-2xl font-bold text-blue-500">{progressPercentage}%</div>
                 </div>
               </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <Progress value={progressPercentage} className="h-2" />
-          </CardContent>
         </Card>
 
-        {/* Statistiques */}
         <Card className="border-l-4 border-l-purple-500">
           <CardHeader>
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center flex-shrink-0">
-                <FileText className="h-5 w-5 text-purple-500" />
+            <div className="flex items-center justify-around">
+              <div className="text-center">
+                <div className="text-xl font-bold text-purple-500">{stats.documentsCount}</div>
+                <p className="text-xs text-muted-foreground">Docs</p>
               </div>
-              <div className="flex-1">
-                <CardTitle className="text-base mb-1">Statistiques</CardTitle>
-                <CardDescription className="text-xs">
-                  Documents, rendez-vous et commentaires
-                </CardDescription>
+              <div className="text-center">
+                <div className="text-xl font-bold text-purple-500">{stats.appointmentsCount}</div>
+                <p className="text-xs text-muted-foreground">RDV</p>
+              </div>
+              <div className="text-center">
+                <div className="text-xl font-bold text-purple-500">{stats.commentsCount}</div>
+                <p className="text-xs text-muted-foreground">Comm.</p>
               </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-500">{stats.documentsCount}</div>
-                <p className="text-xs text-muted-foreground mt-1">Documents</p>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-500">{stats.appointmentsCount}</div>
-                <p className="text-xs text-muted-foreground mt-1">Rendez-vous</p>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-500">{stats.commentsCount}</div>
-                <p className="text-xs text-muted-foreground mt-1">Commentaires</p>
-              </div>
-            </div>
-          </CardContent>
         </Card>
+      </div>
+
+      {/* TIMELINE ENRICHIE - Zone principale */}
+      <Card className="border-l-4 border-l-primary">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <TrendingUp className="h-4 w-4 text-primary" />
+            </div>
+            Timeline Enrichie du Dossier
+          </CardTitle>
+          <CardDescription>
+            Historique complet des étapes, documents, rendez-vous et annotations
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {workflowLoading ? (
+            <div className="space-y-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex items-center gap-4">
+                  <Skeleton className="h-12 w-12 rounded-full flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : workflowSteps.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              Aucun workflow configuré pour ce monde
+            </p>
+          ) : (
+            <EnrichedDossierTimeline
+              dossierId={dossierId}
+              steps={workflowSteps}
+              progress={progress}
+              onUpdate={() => {
+                fetchOverviewData();
+                fetchWorkflowData();
+              }}
+            />
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Informations détaillées en grille */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Informations Client */}
+        {clientInfo && (
+          <Card className="border-l-4 border-l-green-500">
+            <CardHeader>
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                  <User className="h-5 w-5 text-green-500" />
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-base mb-1">Informations Client</CardTitle>
+                  <CardDescription className="text-xs">
+                    Détails du sinistré et coordonnées
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-xs text-muted-foreground">Téléphone</p>
+                  <p className="font-medium">{clientInfo?.telephone || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Email</p>
+                  <p className="font-medium truncate">{clientInfo?.email || '-'}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-xs text-muted-foreground">Adresse du sinistre</p>
+                  <p className="font-medium">{clientInfo?.adresse_sinistre || '-'}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Informations Sinistre */}
+        {clientInfo && (
+          <Card className="border-l-4 border-l-orange-500">
+            <CardHeader>
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center flex-shrink-0">
+                  <AlertCircle className="h-5 w-5 text-orange-500" />
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-base mb-1">Détails du Sinistre</CardTitle>
+                  <CardDescription className="text-xs">
+                    Nature et date de l'événement
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-xs text-muted-foreground">Type de sinistre</p>
+                  <p className="font-medium">{clientInfo?.type_sinistre || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Date du sinistre</p>
+                  <p className="font-medium">
+                    {clientInfo?.date_sinistre ? format(new Date(clientInfo.date_sinistre), 'dd/MM/yyyy') : '-'}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Informations Assurance */}
-        <Card className="border-l-4 border-l-cyan-500">
-          <CardHeader>
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center flex-shrink-0">
-                <Shield className="h-5 w-5 text-cyan-500" />
+        {clientInfo && (
+          <Card className="border-l-4 border-l-cyan-500">
+            <CardHeader>
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center flex-shrink-0">
+                  <Shield className="h-5 w-5 text-cyan-500" />
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-base mb-1">Assurance</CardTitle>
+                  <CardDescription className="text-xs">
+                    Compagnie et numéro de police
+                  </CardDescription>
+                </div>
               </div>
-              <div className="flex-1">
-                <CardTitle className="text-base mb-1">Assurance</CardTitle>
-                <CardDescription className="text-xs">
-                  Compagnie et numéro de police
-                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-xs text-muted-foreground">Compagnie</p>
+                  <p className="font-medium">{clientInfo?.compagnie_assurance || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">N° de police</p>
+                  <p className="font-medium">{clientInfo?.numero_police || '-'}</p>
+                </div>
               </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <p className="text-xs text-muted-foreground">Compagnie</p>
-                <p className="font-medium">{clientInfo?.compagnie_assurance || '-'}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">N° de police</p>
-                <p className="font-medium">{clientInfo?.numero_police || '-'}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Informations Générales */}
         <Card className="border-l-4 border-l-pink-500">
@@ -403,52 +430,6 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
             </div>
           </CardContent>
         </Card>
-
-      </div>
-
-      {/* COLONNE DROITE - Timeline du workflow */}
-      <div className="space-y-4">
-        <div className="sticky top-6">
-          <Card className="border-l-4 border-l-primary">
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <TrendingUp className="h-4 w-4 text-primary" />
-                </div>
-                Timeline Enrichie
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {workflowLoading ? (
-                <div className="space-y-4">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div key={i} className="flex items-center gap-4">
-                      <Skeleton className="h-12 w-12 rounded-full flex-shrink-0" />
-                      <div className="flex-1 space-y-2">
-                        <Skeleton className="h-4 w-3/4" />
-                        <Skeleton className="h-3 w-1/2" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : workflowSteps.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  Aucun workflow configuré pour ce monde
-                </p>
-              ) : (
-                <EnrichedDossierTimeline
-                  dossierId={dossierId}
-                  steps={workflowSteps}
-                  progress={progress}
-                  onUpdate={() => {
-                    fetchOverviewData();
-                    fetchWorkflowData();
-                  }}
-                />
-              )}
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </div>
   );
