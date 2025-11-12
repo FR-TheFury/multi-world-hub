@@ -12,7 +12,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
@@ -26,9 +27,22 @@ interface CreateDossierDialogProps {
 const CreateDossierDialog = ({ open, onOpenChange, worldId, onSuccess }: CreateDossierDialogProps) => {
   const { user } = useAuthStore();
   const [loading, setLoading] = useState(false);
+  const [createClientInfo, setCreateClientInfo] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     tags: '',
+  });
+  const [clientInfo, setClientInfo] = useState({
+    client_type: 'locataire',
+    nom: '',
+    prenom: '',
+    telephone: '',
+    email: '',
+    adresse_sinistre: '',
+    type_sinistre: '',
+    date_sinistre: '',
+    compagnie_assurance: '',
+    numero_police: '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -80,6 +94,23 @@ const CreateDossierDialog = ({ open, onOpenChange, worldId, onSuccess }: CreateD
         }
       }
 
+      // Create client info if requested
+      if (createClientInfo) {
+        await supabase.from('dossier_client_info').insert({
+          dossier_id: dossierData.id,
+          client_type: clientInfo.client_type as any,
+          nom: clientInfo.nom || null,
+          prenom: clientInfo.prenom || null,
+          telephone: clientInfo.telephone || null,
+          email: clientInfo.email || null,
+          adresse_sinistre: clientInfo.adresse_sinistre || null,
+          type_sinistre: clientInfo.type_sinistre || null,
+          date_sinistre: clientInfo.date_sinistre || null,
+          compagnie_assurance: clientInfo.compagnie_assurance || null,
+          numero_police: clientInfo.numero_police || null,
+        });
+      }
+
       // Add creation comment
       await supabase.from('dossier_comments').insert({
         dossier_id: dossierData.id,
@@ -91,6 +122,19 @@ const CreateDossierDialog = ({ open, onOpenChange, worldId, onSuccess }: CreateD
 
       toast.success('Dossier créé avec succès');
       setFormData({ title: '', tags: '' });
+      setCreateClientInfo(false);
+      setClientInfo({
+        client_type: 'locataire',
+        nom: '',
+        prenom: '',
+        telephone: '',
+        email: '',
+        adresse_sinistre: '',
+        type_sinistre: '',
+        date_sinistre: '',
+        compagnie_assurance: '',
+        numero_police: '',
+      });
       onOpenChange(false);
       onSuccess();
     } catch (error: any) {
@@ -111,7 +155,7 @@ const CreateDossierDialog = ({ open, onOpenChange, worldId, onSuccess }: CreateD
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
             <div className="space-y-2">
               <Label htmlFor="title">
                 Titre du dossier <span className="text-destructive">*</span>
@@ -137,6 +181,149 @@ const CreateDossierDialog = ({ open, onOpenChange, worldId, onSuccess }: CreateD
                 disabled={loading}
               />
             </div>
+
+            {/* Client Info Toggle */}
+            <div className="flex items-center justify-between space-x-2 p-4 border rounded-lg bg-muted/30">
+              <div className="space-y-0.5">
+                <Label htmlFor="create-client" className="text-base cursor-pointer">
+                  Créer une fiche client
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Renseigner les informations du client dès maintenant
+                </p>
+              </div>
+              <Switch
+                id="create-client"
+                checked={createClientInfo}
+                onCheckedChange={setCreateClientInfo}
+                disabled={loading}
+              />
+            </div>
+
+            {/* Client Info Form */}
+            {createClientInfo && (
+              <div className="space-y-4 p-4 border rounded-lg bg-accent/5">
+                <h4 className="font-medium text-sm">Informations Client</h4>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="client_type">Type de client</Label>
+                    <Select
+                      value={clientInfo.client_type}
+                      onValueChange={(value) => setClientInfo({ ...clientInfo, client_type: value })}
+                      disabled={loading}
+                    >
+                      <SelectTrigger id="client_type">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="locataire">Locataire</SelectItem>
+                        <SelectItem value="proprietaire">Propriétaire</SelectItem>
+                        <SelectItem value="proprietaire_non_occupant">Propriétaire non occupant</SelectItem>
+                        <SelectItem value="professionnel">Professionnel</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="nom">Nom</Label>
+                    <Input
+                      id="nom"
+                      value={clientInfo.nom}
+                      onChange={(e) => setClientInfo({ ...clientInfo, nom: e.target.value })}
+                      disabled={loading}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="prenom">Prénom</Label>
+                    <Input
+                      id="prenom"
+                      value={clientInfo.prenom}
+                      onChange={(e) => setClientInfo({ ...clientInfo, prenom: e.target.value })}
+                      disabled={loading}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="telephone">Téléphone</Label>
+                    <Input
+                      id="telephone"
+                      type="tel"
+                      value={clientInfo.telephone}
+                      onChange={(e) => setClientInfo({ ...clientInfo, telephone: e.target.value })}
+                      disabled={loading}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={clientInfo.email}
+                      onChange={(e) => setClientInfo({ ...clientInfo, email: e.target.value })}
+                      disabled={loading}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="adresse_sinistre">Adresse du sinistre</Label>
+                  <Input
+                    id="adresse_sinistre"
+                    value={clientInfo.adresse_sinistre}
+                    onChange={(e) => setClientInfo({ ...clientInfo, adresse_sinistre: e.target.value })}
+                    disabled={loading}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="type_sinistre">Type de sinistre</Label>
+                    <Input
+                      id="type_sinistre"
+                      value={clientInfo.type_sinistre}
+                      onChange={(e) => setClientInfo({ ...clientInfo, type_sinistre: e.target.value })}
+                      disabled={loading}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="date_sinistre">Date du sinistre</Label>
+                    <Input
+                      id="date_sinistre"
+                      type="date"
+                      value={clientInfo.date_sinistre}
+                      onChange={(e) => setClientInfo({ ...clientInfo, date_sinistre: e.target.value })}
+                      disabled={loading}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="compagnie_assurance">Compagnie d'assurance</Label>
+                    <Input
+                      id="compagnie_assurance"
+                      value={clientInfo.compagnie_assurance}
+                      onChange={(e) => setClientInfo({ ...clientInfo, compagnie_assurance: e.target.value })}
+                      disabled={loading}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="numero_police">N° de police</Label>
+                    <Input
+                      id="numero_police"
+                      value={clientInfo.numero_police}
+                      onChange={(e) => setClientInfo({ ...clientInfo, numero_police: e.target.value })}
+                      disabled={loading}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button

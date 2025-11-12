@@ -581,6 +581,7 @@ export type Database = {
           created_at: string | null
           id: string
           owner_id: string
+          reference: string | null
           status: Database["public"]["Enums"]["dossier_status"]
           tags: string[] | null
           title: string
@@ -591,6 +592,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           owner_id: string
+          reference?: string | null
           status?: Database["public"]["Enums"]["dossier_status"]
           tags?: string[] | null
           title: string
@@ -601,6 +603,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           owner_id?: string
+          reference?: string | null
           status?: Database["public"]["Enums"]["dossier_status"]
           tags?: string[] | null
           title?: string
@@ -1105,6 +1108,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_dossier_reference: { Args: never; Returns: string }
       get_next_workflow_step: {
         Args: { _decision?: boolean; _step_id: string }
         Returns: string
