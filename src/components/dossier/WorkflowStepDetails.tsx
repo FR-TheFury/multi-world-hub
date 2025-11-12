@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import WorkflowStepForm from './WorkflowStepForm';
 import { DecisionStepForm } from './DecisionStepForm';
+import { toast } from 'sonner';
 
 interface WorkflowStepDetailsProps {
   step: any;
