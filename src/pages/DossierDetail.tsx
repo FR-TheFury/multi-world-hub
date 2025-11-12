@@ -6,12 +6,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Calendar, FileText, MessageSquare, User, Workflow, LayoutDashboard, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Calendar, FileText, MessageSquare, User, LayoutDashboard, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import OverviewTab from '@/components/dossier/OverviewTab';
-import WorkflowTab from '@/components/dossier/WorkflowTab';
 import DocumentsTab from '@/components/dossier/DocumentsTab';
 import CommentsTab from '@/components/dossier/CommentsTab';
 import AppointmentsTab from '@/components/dossier/AppointmentsTab';
@@ -185,14 +184,10 @@ const DossierDetail = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">
               <LayoutDashboard className="h-4 w-4 mr-2" />
               Vue d'ensemble
-            </TabsTrigger>
-            <TabsTrigger value="workflow">
-              <Workflow className="h-4 w-4 mr-2" />
-              Workflow
             </TabsTrigger>
             <TabsTrigger value="documents">
               <FileText className="h-4 w-4 mr-2" />
@@ -214,10 +209,6 @@ const DossierDetail = () => {
 
           <TabsContent value="overview">
             <OverviewTab dossierId={dossier.id} worldId={dossier.world_id} />
-          </TabsContent>
-
-          <TabsContent value="workflow">
-            <WorkflowTab dossierId={dossier.id} worldId={dossier.world_id} />
           </TabsContent>
 
           <TabsContent value="documents">
