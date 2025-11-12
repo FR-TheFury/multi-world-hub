@@ -187,259 +187,269 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* En-tête du dossier avec infos client */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div className="space-y-1">
-              <CardTitle className="text-2xl">{dossierDetails?.reference || 'Chargement...'}</CardTitle>
-              <CardDescription>
-                {clientInfo ? `${clientInfo.prenom} ${clientInfo.nom}` : 'Aucune information client'}
-              </CardDescription>
-            </div>
-            <Badge variant="secondary" className="text-sm">
-              {dossierDetails?.worlds?.name || worldId}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-4">
-            <div className="flex items-center gap-2">
-              <User className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="text-sm font-medium">Type client</p>
-                <p className="text-xs text-muted-foreground">
-                  {clientInfo ? getClientTypeLabel(clientInfo.client_type) : '-'}
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-6 p-6">
+      {/* COLONNE GAUCHE - Informations détaillées */}
+      <div className="space-y-6">
+        
+        {/* En-tête du dossier */}
+        <Card className="border-l-4 border-l-primary">
+          <CardHeader>
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <FileText className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <CardTitle className="text-xl mb-1">{dossierDetails?.reference || 'Chargement...'}</CardTitle>
+                <CardDescription className="text-sm">
+                  {clientInfo ? `${clientInfo.prenom} ${clientInfo.nom}` : 'Aucune information client'}
+                </CardDescription>
+                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+                  Dossier {dossierDetails?.worlds?.name || worldId} • Type: {clientInfo ? getClientTypeLabel(clientInfo.client_type) : '-'}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="text-sm font-medium">Adresse sinistre</p>
-                <p className="text-xs text-muted-foreground line-clamp-1">
-                  {clientInfo?.adresse_sinistre || '-'}
-                </p>
+          </CardHeader>
+        </Card>
+
+        {/* Informations Client */}
+        <Card className="border-l-4 border-l-green-500">
+          <CardHeader>
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                <User className="h-5 w-5 text-green-500" />
+              </div>
+              <div className="flex-1">
+                <CardTitle className="text-base mb-1">Informations Client</CardTitle>
+                <CardDescription className="text-xs">
+                  Détails du sinistré et coordonnées
+                </CardDescription>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <p className="text-sm font-medium">Type sinistre</p>
-                <p className="text-xs text-muted-foreground">
-                  {clientInfo?.type_sinistre || '-'}
-                </p>
+                <p className="text-xs text-muted-foreground">Téléphone</p>
+                <p className="font-medium">{clientInfo?.telephone || '-'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Email</p>
+                <p className="font-medium truncate">{clientInfo?.email || '-'}</p>
+              </div>
+              <div className="col-span-2">
+                <p className="text-xs text-muted-foreground">Adresse du sinistre</p>
+                <p className="font-medium">{clientInfo?.adresse_sinistre || '-'}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardContent>
+        </Card>
+
+        {/* Informations Sinistre */}
+        <Card className="border-l-4 border-l-orange-500">
+          <CardHeader>
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center flex-shrink-0">
+                <AlertCircle className="h-5 w-5 text-orange-500" />
+              </div>
+              <div className="flex-1">
+                <CardTitle className="text-base mb-1">Détails du Sinistre</CardTitle>
+                <CardDescription className="text-xs">
+                  Nature et date de l'événement
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <p className="text-sm font-medium">Date sinistre</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground">Type de sinistre</p>
+                <p className="font-medium">{clientInfo?.type_sinistre || '-'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Date du sinistre</p>
+                <p className="font-medium">
                   {clientInfo?.date_sinistre ? format(new Date(clientInfo.date_sinistre), 'dd/MM/yyyy') : '-'}
                 </p>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Progression du workflow avec barres détaillées */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Progression du workflow
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold">{progressPercentage}%</span>
-              <Badge variant="secondary">
-                {stats.completedSteps} / {stats.totalSteps} étapes
-              </Badge>
-            </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Barres de progression par étape */}
-          {workflowLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="space-y-2">
-                  <Skeleton className="h-4 w-1/3" />
-                  <Skeleton className="h-2 w-full" />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {workflowSteps.slice(0, 5).map((step) => {
-                const stepProgress = progress.find((p) => p.workflow_step_id === step.id);
-                const isCompleted = stepProgress?.status === 'completed';
-                const isInProgress = stepProgress?.status === 'in_progress';
-                const progressValue = isCompleted ? 100 : isInProgress ? 50 : 0;
-                
-                return (
-                  <div key={step.id} className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium">{step.step_name}</span>
-                      <Badge variant={isCompleted ? 'default' : isInProgress ? 'secondary' : 'outline'} className="text-xs">
-                        {isCompleted ? 'Terminée' : isInProgress ? 'En cours' : 'En attente'}
-                      </Badge>
-                    </div>
-                    <Progress value={progressValue} className="h-2" />
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Timeline verticale détaillée */}
-          <div className="pt-4 border-t">
-            <h4 className="text-sm font-medium mb-4">Détails des étapes</h4>
-            {workflowLoading ? (
-              <div className="space-y-4">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="flex items-center gap-4">
-                    <Skeleton className="h-12 w-12 rounded-full flex-shrink-0" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-4 w-3/4" />
-                      <Skeleton className="h-3 w-1/2" />
-                    </div>
-                  </div>
-                ))}
+        {/* Progression Globale */}
+        <Card className="border-l-4 border-l-blue-500">
+          <CardHeader>
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                <TrendingUp className="h-5 w-5 text-blue-500" />
               </div>
-            ) : workflowSteps.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                Aucun workflow configuré pour ce monde
-              </p>
-            ) : (
-              <VerticalWorkflowTimeline
-                steps={workflowSteps}
-                progress={progress}
-                dossierId={dossierId}
-                onUpdate={() => {
-                  fetchOverviewData();
-                  fetchWorkflowData();
-                }}
-              />
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Grille de résumé avec cartes d'information */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {/* Documents */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <FileText className="h-4 w-4 text-primary" />
-              Documents
-            </CardTitle>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-base mb-1">Progression Globale</CardTitle>
+                    <CardDescription className="text-xs">
+                      {stats.completedSteps} étapes terminées sur {stats.totalSteps}
+                    </CardDescription>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-blue-500">{progressPercentage}%</div>
+                    <Badge variant="secondary" className="mt-1">En cours</Badge>
+                  </div>
+                </div>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stats.documentsCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">Pièces jointes au dossier</p>
+            <Progress value={progressPercentage} className="h-2" />
           </CardContent>
         </Card>
 
-        {/* Rendez-vous */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-primary" />
-              Rendez-vous
-            </CardTitle>
+        {/* Statistiques */}
+        <Card className="border-l-4 border-l-purple-500">
+          <CardHeader>
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center flex-shrink-0">
+                <FileText className="h-5 w-5 text-purple-500" />
+              </div>
+              <div className="flex-1">
+                <CardTitle className="text-base mb-1">Statistiques</CardTitle>
+                <CardDescription className="text-xs">
+                  Documents, rendez-vous et commentaires
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stats.appointmentsCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">Planifiés et réalisés</p>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-500">{stats.documentsCount}</div>
+                <p className="text-xs text-muted-foreground mt-1">Documents</p>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-500">{stats.appointmentsCount}</div>
+                <p className="text-xs text-muted-foreground mt-1">Rendez-vous</p>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-500">{stats.commentsCount}</div>
+                <p className="text-xs text-muted-foreground mt-1">Commentaires</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        {/* Commentaires */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-primary" />
-              Commentaires
-            </CardTitle>
+        {/* Informations Assurance */}
+        <Card className="border-l-4 border-l-cyan-500">
+          <CardHeader>
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center flex-shrink-0">
+                <Shield className="h-5 w-5 text-cyan-500" />
+              </div>
+              <div className="flex-1">
+                <CardTitle className="text-base mb-1">Assurance</CardTitle>
+                <CardDescription className="text-xs">
+                  Compagnie et numéro de police
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{stats.commentsCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">Activités et notes</p>
-          </CardContent>
-        </Card>
-
-        {/* Informations assurance */}
-        <Card className="md:col-span-2">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Shield className="h-4 w-4 text-primary" />
-              Informations assurance
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 md:grid-cols-2">
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <p className="text-xs text-muted-foreground">Compagnie</p>
-                <p className="text-sm font-medium">{clientInfo?.compagnie_assurance || '-'}</p>
+                <p className="font-medium">{clientInfo?.compagnie_assurance || '-'}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Numéro de police</p>
-                <p className="text-sm font-medium">{clientInfo?.numero_police || '-'}</p>
+                <p className="text-xs text-muted-foreground">N° de police</p>
+                <p className="font-medium">{clientInfo?.numero_police || '-'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Durée du dossier */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Clock className="h-4 w-4 text-primary" />
-              Durée
-            </CardTitle>
+        {/* Informations Générales */}
+        <Card className="border-l-4 border-l-pink-500">
+          <CardHeader>
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-lg bg-pink-500/10 flex items-center justify-center flex-shrink-0">
+                <Clock className="h-5 w-5 text-pink-500" />
+              </div>
+              <div className="flex-1">
+                <CardTitle className="text-base mb-1">Informations Générales</CardTitle>
+                <CardDescription className="text-xs">
+                  Dates et durées importantes
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">
-              {dossierDetails?.created_at
-                ? Math.floor((new Date().getTime() - new Date(dossierDetails.created_at).getTime()) / (1000 * 60 * 60 * 24))
-                : 0}
+            <div className="grid grid-cols-3 gap-4 text-sm">
+              <div>
+                <p className="text-xs text-muted-foreground">Créé le</p>
+                <p className="font-medium">
+                  {dossierDetails?.created_at ? format(new Date(dossierDetails.created_at), 'dd/MM/yy') : '-'}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Durée</p>
+                <p className="font-medium">
+                  {dossierDetails?.created_at
+                    ? `${Math.floor((new Date().getTime() - new Date(dossierDetails.created_at).getTime()) / (1000 * 60 * 60 * 24))} j`
+                    : '-'}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Statut</p>
+                <Badge variant="secondary" className="text-xs">Actif</Badge>
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Jours depuis création</p>
           </CardContent>
         </Card>
+
       </div>
 
-      {/* Activité récente */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Activité récente</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {recentActivity.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Aucune activité récente</p>
-          ) : (
-            <div className="space-y-4">
-              {recentActivity.map((activity) => (
-                <div key={activity.id} className="flex gap-4 pb-4 border-b last:border-0 last:pb-0">
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm font-medium">{activity.user?.display_name}</p>
-                    <p className="text-sm text-muted-foreground">{activity.content}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {format(new Date(activity.created_at), 'dd MMM yyyy à HH:mm', { locale: fr })}
-                    </p>
-                  </div>
-                  <Badge variant="outline">{activity.comment_type}</Badge>
+      {/* COLONNE DROITE - Timeline du workflow */}
+      <div className="space-y-4">
+        <div className="sticky top-6">
+          <Card className="border-l-4 border-l-primary">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <TrendingUp className="h-4 w-4 text-primary" />
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                Étapes du Workflow
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {workflowLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="flex items-center gap-4">
+                      <Skeleton className="h-12 w-12 rounded-full flex-shrink-0" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-3 w-1/2" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : workflowSteps.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  Aucun workflow configuré pour ce monde
+                </p>
+              ) : (
+                <VerticalWorkflowTimeline
+                  steps={workflowSteps}
+                  progress={progress}
+                  dossierId={dossierId}
+                  onUpdate={() => {
+                    fetchOverviewData();
+                    fetchWorkflowData();
+                  }}
+                />
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };
