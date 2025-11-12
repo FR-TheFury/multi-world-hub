@@ -142,13 +142,36 @@ export function AddTaskDialog({ open, onOpenChange, dossierId, workflowStepId, o
         comment_type: "comment",
       });
 
-      // Send notification
+      // Send notification to assigned user
       if (assignedTo && assignedTo !== user.id) {
+        const { data: assigneeProfile } = await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("id", assignedTo)
+          .single();
+
         await supabase.from("notifications").insert({
           user_id: assignedTo,
           type: "task_assigned",
           title: "Nouvelle tâche assignée",
-          message: `La tâche "${title}" vous a été assignée`,
+          message: `${assigneeProfile?.display_name || "Quelqu'un"} vous a assigné la tâche "${title}"`,
+          related_id: task.id,
+        });
+      }
+
+      // Send notification to dossier owner if different from creator
+      const { data: dossierData } = await supabase
+        .from("dossiers")
+        .select("owner_id")
+        .eq("id", dossierId)
+        .single();
+
+      if (dossierData && dossierData.owner_id !== user.id && dossierData.owner_id !== assignedTo) {
+        await supabase.from("notifications").insert({
+          user_id: dossierData.owner_id,
+          type: "task_created",
+          title: "Nouvelle tâche sur votre dossier",
+          message: `Une tâche "${title}" a été créée sur votre dossier`,
           related_id: task.id,
         });
       }

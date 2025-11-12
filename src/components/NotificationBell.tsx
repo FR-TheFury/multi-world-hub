@@ -36,12 +36,25 @@ const NotificationBell = () => {
     fetchNotifications();
 
     // Subscribe to real-time notifications
-    const channel = supabase
+    const notificationsChannel = supabase
       .channel('notifications-changes')
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Nouvelle notification reçue:', payload);
+          fetchNotifications();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
           schema: 'public',
           table: 'notifications',
           filter: `user_id=eq.${user.id}`
@@ -52,8 +65,65 @@ const NotificationBell = () => {
       )
       .subscribe();
 
+    // Subscribe to tasks assigned to user
+    const tasksChannel = supabase
+      .channel('tasks-assigned')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'tasks',
+          filter: `assigned_to=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Nouvelle tâche assignée:', payload);
+          fetchNotifications();
+        }
+      )
+      .subscribe();
+
+    // Subscribe to comments on dossiers user has access to
+    const commentsChannel = supabase
+      .channel('dossier-comments')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'dossier_comments'
+        },
+        async (payload) => {
+          console.log('Nouveau commentaire:', payload);
+          // Check if user has access to this dossier
+          const comment = payload.new as any;
+          if (comment.user_id !== user.id) {
+            const { data: dossier } = await supabase
+              .from('dossiers')
+              .select('world_id, owner_id')
+              .eq('id', comment.dossier_id)
+              .single();
+
+            if (dossier && (dossier.owner_id === user.id)) {
+              // Create notification for dossier owner
+              await supabase.from('notifications').insert({
+                user_id: user.id,
+                type: 'comment_added',
+                title: 'Nouveau commentaire',
+                message: `Un commentaire a été ajouté à votre dossier`,
+                related_id: comment.dossier_id,
+              });
+              fetchNotifications();
+            }
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(notificationsChannel);
+      supabase.removeChannel(tasksChannel);
+      supabase.removeChannel(commentsChannel);
     };
   }, [user]);
 

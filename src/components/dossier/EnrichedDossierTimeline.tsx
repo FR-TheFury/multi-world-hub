@@ -23,6 +23,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AddTaskDialog } from "./AddTaskDialog";
 import { AddAnnotationDialog } from "./AddAnnotationDialog";
+import { AddCommentDialog } from "./AddCommentDialog";
 import { MarkDocumentStatusDialog } from "./MarkDocumentStatusDialog";
 import WorkflowStepDetails from "./WorkflowStepDetails";
 import { format } from "date-fns";
@@ -56,13 +57,93 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
   const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
   const [addTaskOpen, setAddTaskOpen] = useState(false);
   const [addAnnotationOpen, setAddAnnotationOpen] = useState(false);
+  const [addCommentOpen, setAddCommentOpen] = useState(false);
   const [markDocumentOpen, setMarkDocumentOpen] = useState(false);
   const [selectedStepForAction, setSelectedStepForAction] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchTimelineEvents();
-  }, [dossierId, progress]);
+
+    // Subscribe to real-time updates for this dossier
+    const channel = supabase
+      .channel(`dossier-${dossierId}-updates`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'dossier_comments',
+          filter: `dossier_id=eq.${dossierId}`
+        },
+        () => {
+          console.log('Nouveau commentaire détecté');
+          fetchTimelineEvents();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'tasks'
+        },
+        (payload) => {
+          const task = payload.new as any;
+          // Check if task is for this dossier's workflow steps
+          const isForThisDossier = steps.some(s => s.id === task.workflow_step_id);
+          if (isForThisDossier) {
+            console.log('Nouvelle tâche détectée');
+            fetchTimelineEvents();
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'dossier_step_annotations',
+          filter: `dossier_id=eq.${dossierId}`
+        },
+        () => {
+          console.log('Nouvelle annotation détectée');
+          fetchTimelineEvents();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'dossier_attachments',
+          filter: `dossier_id=eq.${dossierId}`
+        },
+        () => {
+          console.log('Nouveau document détecté');
+          fetchTimelineEvents();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'dossier_workflow_progress',
+          filter: `dossier_id=eq.${dossierId}`
+        },
+        () => {
+          console.log('Progression workflow mise à jour');
+          fetchTimelineEvents();
+          onUpdate();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [dossierId, progress, steps]);
 
   const fetchTimelineEvents = async () => {
     try {
@@ -427,6 +508,9 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Timeline du dossier</h3>
         <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => setAddCommentOpen(true)}>
+            <Plus className="h-4 w-4 mr-1" /> Commentaire
+          </Button>
           <Button size="sm" variant="outline" onClick={() => openAddTask()}>
             <Plus className="h-4 w-4 mr-1" /> Tâche
           </Button>
@@ -636,6 +720,16 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
         dossierId={dossierId}
         workflowStepId={selectedStepForAction}
         onAnnotationCreated={() => {
+          fetchTimelineEvents();
+          onUpdate();
+        }}
+      />
+
+      <AddCommentDialog
+        open={addCommentOpen}
+        onOpenChange={setAddCommentOpen}
+        dossierId={dossierId}
+        onCommentCreated={() => {
           fetchTimelineEvents();
           onUpdate();
         }}
