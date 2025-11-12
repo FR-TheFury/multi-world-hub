@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, FileText, MessageSquare, TrendingUp, User, MapPin, DollarSign, Clock, AlertCircle, Shield } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import VerticalWorkflowTimeline from './VerticalWorkflowTimeline';
+import { EnrichedDossierTimeline } from './EnrichedDossierTimeline';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 
@@ -415,7 +415,7 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                   <TrendingUp className="h-4 w-4 text-primary" />
                 </div>
-                Étapes du Workflow
+                Timeline Enrichie
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -436,10 +436,10 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
                   Aucun workflow configuré pour ce monde
                 </p>
               ) : (
-                <VerticalWorkflowTimeline
+                <EnrichedDossierTimeline
+                  dossierId={dossierId}
                   steps={workflowSteps}
                   progress={progress}
-                  dossierId={dossierId}
                   onUpdate={() => {
                     fetchOverviewData();
                     fetchWorkflowData();
