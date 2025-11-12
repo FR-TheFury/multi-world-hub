@@ -14,8 +14,13 @@ import {
   StickyNote,
   Plus,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+  User,
+  ArrowRight
 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AddTaskDialog } from "./AddTaskDialog";
 import { AddAnnotationDialog } from "./AddAnnotationDialog";
 import { MarkDocumentStatusDialog } from "./MarkDocumentStatusDialog";
@@ -34,6 +39,8 @@ interface TimelineEvent {
   metadata?: any;
   stepNumber?: number;
   workflowStepId?: string;
+  createdBy?: { display_name: string; avatar_url: string | null; email: string };
+  assignedTo?: { display_name: string; avatar_url: string | null; email: string };
 }
 
 interface EnrichedDossierTimelineProps {
@@ -46,6 +53,7 @@ interface EnrichedDossierTimelineProps {
 export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }: EnrichedDossierTimelineProps) {
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [selectedStep, setSelectedStep] = useState<string | null>(null);
+  const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
   const [addTaskOpen, setAddTaskOpen] = useState(false);
   const [addAnnotationOpen, setAddAnnotationOpen] = useState(false);
   const [markDocumentOpen, setMarkDocumentOpen] = useState(false);
@@ -95,10 +103,10 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
         });
       });
 
-      // Fetch comments
+      // Fetch comments with user profiles
       const { data: comments } = await supabase
         .from("dossier_comments")
-        .select("*, profiles(display_name)")
+        .select("*, profiles:user_id(display_name, avatar_url, email)")
         .eq("dossier_id", dossierId)
         .order("created_at", { ascending: false });
 
@@ -110,6 +118,11 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
           title: "Commentaire",
           description: comment.content,
           metadata: comment,
+          createdBy: comment.profiles ? {
+            display_name: comment.profiles.display_name,
+            avatar_url: comment.profiles.avatar_url,
+            email: comment.profiles.email
+          } : undefined,
         });
       });
 
@@ -117,11 +130,33 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
       const workflowStepIds = steps.map(s => s.id);
       const { data: tasks } = workflowStepIds.length > 0 ? await supabase
         .from("tasks")
-        .select("id, title, description, status, created_at, workflow_step_id")
+        .select("id, title, description, status, created_at, workflow_step_id, priority, due_date, created_by, assigned_to")
         .in("workflow_step_id", workflowStepIds)
         .order("created_at", { ascending: false }) : { data: [] };
 
+      // Fetch profiles for task users
+      const taskUserIds = new Set<string>();
       tasks?.forEach(task => {
+        if (task.created_by) taskUserIds.add(task.created_by);
+        if (task.assigned_to) taskUserIds.add(task.assigned_to);
+      });
+
+      let taskProfiles: Record<string, any> = {};
+      if (taskUserIds.size > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, display_name, avatar_url, email")
+          .in("id", Array.from(taskUserIds));
+        
+        if (profiles) {
+          taskProfiles = Object.fromEntries(profiles.map(p => [p.id, p]));
+        }
+      }
+
+      tasks?.forEach(task => {
+        const creator = task.created_by ? taskProfiles[task.created_by] : undefined;
+        const assignee = task.assigned_to ? taskProfiles[task.assigned_to] : undefined;
+
         timelineEvents.push({
           id: `task-${task.id}`,
           type: "task",
@@ -131,17 +166,47 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
           status: task.status,
           workflowStepId: task.workflow_step_id,
           metadata: task,
+          createdBy: creator ? {
+            display_name: creator.display_name,
+            avatar_url: creator.avatar_url,
+            email: creator.email
+          } : undefined,
+          assignedTo: assignee ? {
+            display_name: assignee.display_name,
+            avatar_url: assignee.avatar_url,
+            email: assignee.email
+          } : undefined,
         });
       });
 
       // Fetch appointments linked to this dossier
       const { data: appointments } = await supabase
         .from("appointments")
-        .select("id, title, description, status, start_time, workflow_step_id")
+        .select("id, title, description, status, start_time, workflow_step_id, user_id")
         .eq("dossier_id", dossierId)
         .order("start_time", { ascending: false });
 
+      // Fetch profiles for appointment users
+      const apptUserIds = new Set<string>();
       appointments?.forEach(appt => {
+        if (appt.user_id) apptUserIds.add(appt.user_id);
+      });
+
+      let apptProfiles: Record<string, any> = {};
+      if (apptUserIds.size > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, display_name, avatar_url, email")
+          .in("id", Array.from(apptUserIds));
+        
+        if (profiles) {
+          apptProfiles = Object.fromEntries(profiles.map(p => [p.id, p]));
+        }
+      }
+
+      appointments?.forEach(appt => {
+        const user = appt.user_id ? apptProfiles[appt.user_id] : undefined;
+
         timelineEvents.push({
           id: `appt-${appt.id}`,
           type: "appointment",
@@ -151,17 +216,42 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
           status: appt.status,
           workflowStepId: appt.workflow_step_id,
           metadata: appt,
+          assignedTo: user ? {
+            display_name: user.display_name,
+            avatar_url: user.avatar_url,
+            email: user.email
+          } : undefined,
         });
       });
 
       // Fetch annotations
       const { data: annotations } = await supabase
         .from("dossier_step_annotations")
-        .select("id, title, content, created_at, workflow_step_id, annotation_type")
+        .select("id, title, content, created_at, workflow_step_id, annotation_type, created_by")
         .eq("dossier_id", dossierId)
         .order("created_at", { ascending: false });
 
+      // Fetch profiles for annotation users
+      const annotationUserIds = new Set<string>();
       annotations?.forEach(annotation => {
+        if (annotation.created_by) annotationUserIds.add(annotation.created_by);
+      });
+
+      let annotationProfiles: Record<string, any> = {};
+      if (annotationUserIds.size > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, display_name, avatar_url, email")
+          .in("id", Array.from(annotationUserIds));
+        
+        if (profiles) {
+          annotationProfiles = Object.fromEntries(profiles.map(p => [p.id, p]));
+        }
+      }
+
+      annotations?.forEach(annotation => {
+        const creator = annotation.created_by ? annotationProfiles[annotation.created_by] : undefined;
+
         timelineEvents.push({
           id: `annotation-${annotation.id}`,
           type: "annotation",
@@ -170,6 +260,11 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
           description: annotation.content,
           workflowStepId: annotation.workflow_step_id,
           metadata: annotation,
+          createdBy: creator ? {
+            display_name: creator.display_name,
+            avatar_url: creator.avatar_url,
+            email: creator.email
+          } : undefined,
         });
       });
 
@@ -358,7 +453,7 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         {event.stepNumber && (
                           <Badge variant="outline" className="text-xs">
                             Étape {event.stepNumber}
@@ -367,21 +462,113 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
                         <h4 className="font-semibold">{event.title}</h4>
                         {event.status && (
                           <Badge variant={
-                            event.status === "completed" ? "default" :
-                            event.status === "in_progress" ? "secondary" :
+                            event.status === "completed" || event.status === "done" ? "default" :
+                            event.status === "in_progress" || event.status === "todo" ? "secondary" :
                             event.status === "blocked" ? "destructive" :
                             "outline"
                           }>
-                            {event.status}
+                            {event.status === "todo" ? "À faire" : 
+                             event.status === "done" ? "Terminée" :
+                             event.status}
                           </Badge>
                         )}
                       </div>
-                      {event.description && (
-                        <p className="text-sm text-muted-foreground mb-2">{event.description}</p>
+
+                      {/* User info for tasks, comments, annotations, appointments */}
+                      {(event.createdBy || event.assignedTo) && (
+                        <div className="flex items-center gap-3 mb-2 text-xs text-muted-foreground">
+                          {event.createdBy && (
+                            <div className="flex items-center gap-1.5">
+                              <Avatar className="h-5 w-5">
+                                <AvatarImage src={event.createdBy.avatar_url || ""} />
+                                <AvatarFallback className="text-[10px]">
+                                  <User className="h-3 w-3" />
+                                </AvatarFallback>
+                              </Avatar>
+                              <span>{event.createdBy.display_name || event.createdBy.email}</span>
+                            </div>
+                          )}
+                          {event.assignedTo && event.type === "task" && (
+                            <>
+                              <ArrowRight className="h-3 w-3" />
+                              <div className="flex items-center gap-1.5">
+                                <Avatar className="h-5 w-5">
+                                  <AvatarImage src={event.assignedTo.avatar_url || ""} />
+                                  <AvatarFallback className="text-[10px]">
+                                    <User className="h-3 w-3" />
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="font-medium">{event.assignedTo.display_name || event.assignedTo.email}</span>
+                              </div>
+                            </>
+                          )}
+                          {event.assignedTo && event.type === "appointment" && (
+                            <div className="flex items-center gap-1.5">
+                              <Avatar className="h-5 w-5">
+                                <AvatarImage src={event.assignedTo.avatar_url || ""} />
+                                <AvatarFallback className="text-[10px]">
+                                  <User className="h-3 w-3" />
+                                </AvatarFallback>
+                              </Avatar>
+                              <span>{event.assignedTo.display_name || event.assignedTo.email}</span>
+                            </div>
+                          )}
+                        </div>
                       )}
-                      <p className="text-xs text-muted-foreground">
-                        {format(new Date(event.timestamp), "PPP 'à' HH:mm", { locale: fr })}
-                      </p>
+
+                      {event.description && expandedEvent !== event.id && (
+                        <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{event.description}</p>
+                      )}
+                      {event.description && expandedEvent === event.id && (
+                        <p className="text-sm text-muted-foreground mb-2 whitespace-pre-wrap">{event.description}</p>
+                      )}
+
+                      {/* Expanded details for tasks */}
+                      {expandedEvent === event.id && event.type === "task" && event.metadata && (
+                        <div className="mt-3 pt-3 border-t space-y-2">
+                          {event.metadata.priority && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-medium">Priorité:</span>
+                              <Badge variant="outline" className="text-xs">
+                                {event.metadata.priority === "high" ? "Haute" :
+                                 event.metadata.priority === "medium" ? "Moyenne" : "Basse"}
+                              </Badge>
+                            </div>
+                          )}
+                          {event.metadata.due_date && (
+                            <div className="flex items-center gap-2 text-xs">
+                              <Clock className="h-3 w-3" />
+                              <span>Échéance: {format(new Date(event.metadata.due_date), "PPP 'à' HH:mm", { locale: fr })}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-2 mt-2">
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(event.timestamp), "PPP 'à' HH:mm", { locale: fr })}
+                        </p>
+                        {(event.description || (event.type === "task" && event.metadata)) && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-xs"
+                            onClick={() => setExpandedEvent(expandedEvent === event.id ? null : event.id)}
+                          >
+                            {expandedEvent === event.id ? (
+                              <>
+                                <ChevronUp className="h-3 w-3 mr-1" />
+                                Réduire
+                              </>
+                            ) : (
+                              <>
+                                <ChevronDown className="h-3 w-3 mr-1" />
+                                Voir plus
+                              </>
+                            )}
+                          </Button>
+                        )}
+                      </div>
                     </div>
 
                     {event.type === "step" && (

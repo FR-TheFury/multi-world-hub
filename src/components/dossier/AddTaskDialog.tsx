@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,8 +6,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { User } from "lucide-react";
 
 interface AddTaskDialogProps {
   open: boolean;
@@ -25,6 +27,48 @@ export function AddTaskDialog({ open, onOpenChange, dossierId, workflowStepId, o
   const [assignedTo, setAssignedTo] = useState("");
   const [createAppointment, setCreateAppointment] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [users, setUsers] = useState<Array<{ id: string; display_name: string; avatar_url: string | null; email: string }>>([]);
+
+  useEffect(() => {
+    if (open) {
+      fetchAvailableUsers();
+    }
+  }, [open, dossierId]);
+
+  const fetchAvailableUsers = async () => {
+    try {
+      // Get dossier world_id
+      const { data: dossier } = await supabase
+        .from("dossiers")
+        .select("world_id")
+        .eq("id", dossierId)
+        .single();
+
+      if (!dossier) return;
+
+      // Get users with access to this world
+      const { data: worldAccess } = await supabase
+        .from("user_world_access")
+        .select("user_id")
+        .eq("world_id", dossier.world_id);
+
+      if (!worldAccess || worldAccess.length === 0) return;
+
+      const userIds = worldAccess.map(ua => ua.user_id);
+
+      // Get profiles for these users
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url, email")
+        .in("id", userIds);
+
+      if (profiles) {
+        setUsers(profiles);
+      }
+    } catch (error) {
+      console.error("Erreur chargement utilisateurs:", error);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!title.trim()) {
@@ -165,6 +209,30 @@ export function AddTaskDialog({ open, onOpenChange, dossierId, workflowStepId, o
                 <SelectItem value="low">Basse</SelectItem>
                 <SelectItem value="medium">Moyenne</SelectItem>
                 <SelectItem value="high">Haute</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="assignedTo">Assigner à</Label>
+            <Select value={assignedTo} onValueChange={setAssignedTo}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un utilisateur" />
+              </SelectTrigger>
+              <SelectContent>
+                {users.map(user => (
+                  <SelectItem key={user.id} value={user.id}>
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src={user.avatar_url || ""} />
+                        <AvatarFallback className="text-xs">
+                          <User className="h-3 w-3" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <span>{user.display_name || user.email}</span>
+                    </div>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
