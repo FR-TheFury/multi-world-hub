@@ -37,6 +37,7 @@ const WorkflowStepDetails = ({
 }: WorkflowStepDetailsProps) => {
   const [notes, setNotes] = useState('');
   const [activeTab, setActiveTab] = useState('details');
+  const [savedFormData, setSavedFormData] = useState<Record<string, any>>(progress?.form_data || {});
   const canInteract = progress?.status !== 'completed';
 
   const getStatusInfo = (status: string) => {
@@ -128,10 +129,12 @@ const WorkflowStepDetails = ({
                       <h4 className="font-semibold">Formulaire de l'étape</h4>
                       <WorkflowStepForm
                         formFields={step.form_fields}
-                        initialData={progress?.form_data || {}}
+                        initialData={savedFormData}
                         onSubmit={(data) => {
                           if (step.requires_decision) {
-                            // Save form data and open decision
+                            // Save form data locally for decision
+                            setSavedFormData(data);
+                            toast.success("Données sauvegardées. Prenez maintenant une décision.");
                             return;
                           }
                           onComplete(step.id, data);
@@ -141,12 +144,12 @@ const WorkflowStepDetails = ({
                       />
                       
                       {/* Decision Step */}
-                      {step.requires_decision && progress?.form_data && Object.keys(progress.form_data).length > 0 && (
+                      {step.requires_decision && Object.keys(savedFormData).length > 0 && (
                         <DecisionStepForm
                           stepName="Prendre une décision"
                           stepDescription="Sélectionnez votre décision et ajoutez des notes"
                           onSubmit={async (decision, decisionNotes) => {
-                            await onDecision(step.id, decision, decisionNotes, progress.form_data);
+                            await onDecision(step.id, decision, decisionNotes, savedFormData);
                           }}
                           isSubmitting={isSubmitting}
                         />
