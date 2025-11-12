@@ -256,6 +256,13 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Non authentifié");
 
+      // Optimistic update
+      setEvents(prev => prev.map(e => 
+        e.workflowStepId === stepId && e.type === "step"
+          ? { ...e, status: "completed" }
+          : e
+      ));
+
       const { error } = await supabase.functions.invoke("workflow-engine", {
         body: {
           action: "complete_step",
@@ -269,11 +276,13 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
       if (error) throw error;
 
       toast.success("Étape complétée avec succès");
-      onUpdate();
-      fetchTimelineEvents();
+      await onUpdate();
+      await fetchTimelineEvents();
     } catch (error: any) {
       console.error("Erreur complétion étape:", error);
       toast.error(error.message || "Erreur lors de la complétion de l'étape");
+      // Revert optimistic update on error
+      await fetchTimelineEvents();
     }
   };
 
@@ -281,6 +290,13 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Non authentifié");
+
+      // Optimistic update
+      setEvents(prev => prev.map(e => 
+        e.workflowStepId === stepId && e.type === "step"
+          ? { ...e, status: "completed" }
+          : e
+      ));
 
       const { error } = await supabase.functions.invoke("workflow-engine", {
         body: {
@@ -297,11 +313,13 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
       if (error) throw error;
 
       toast.success(decision ? "Décision validée: Oui" : "Décision validée: Non");
-      onUpdate();
-      fetchTimelineEvents();
+      await onUpdate();
+      await fetchTimelineEvents();
     } catch (error: any) {
       console.error("Erreur décision:", error);
       toast.error(error.message || "Erreur lors de la prise de décision");
+      // Revert optimistic update on error
+      await fetchTimelineEvents();
     }
   };
 

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import WorkflowStepForm from './WorkflowStepForm';
 import { DecisionStepForm } from './DecisionStepForm';
+import { toast } from 'sonner';
 
 interface WorkflowStepDetailsProps {
   step: any;
@@ -37,6 +38,7 @@ const WorkflowStepDetails = ({
 }: WorkflowStepDetailsProps) => {
   const [notes, setNotes] = useState('');
   const [activeTab, setActiveTab] = useState('details');
+  const [savedFormData, setSavedFormData] = useState<Record<string, any>>(progress?.form_data || {});
   const canInteract = progress?.status !== 'completed';
 
   const getStatusInfo = (status: string) => {
@@ -128,25 +130,27 @@ const WorkflowStepDetails = ({
                       <h4 className="font-semibold">Formulaire de l'étape</h4>
                       <WorkflowStepForm
                         formFields={step.form_fields}
-                        initialData={progress?.form_data || {}}
+                        initialData={savedFormData}
                         onSubmit={(data) => {
                           if (step.requires_decision) {
-                            // Form data will be stored for decision
+                            // Save form data locally for decision
+                            setSavedFormData(data);
+                            toast.success("Données sauvegardées. Prenez maintenant une décision.");
                             return;
                           }
                           onComplete(step.id, data);
                         }}
-                        submitLabel={step.requires_decision ? undefined : "Compléter l'étape"}
+                        submitLabel={step.requires_decision ? "Sauvegarder les données" : "Compléter l'étape"}
                         isLoading={isSubmitting}
                       />
                       
                       {/* Decision Step */}
-                      {step.requires_decision && (
+                      {step.requires_decision && Object.keys(savedFormData).length > 0 && (
                         <DecisionStepForm
                           stepName="Prendre une décision"
                           stepDescription="Sélectionnez votre décision et ajoutez des notes"
                           onSubmit={async (decision, decisionNotes) => {
-                            await onDecision(step.id, decision, decisionNotes, progress?.form_data);
+                            await onDecision(step.id, decision, decisionNotes, savedFormData);
                           }}
                           isSubmitting={isSubmitting}
                         />
