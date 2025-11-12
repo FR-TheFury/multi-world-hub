@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, FileText, MessageSquare, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import HorizontalWorkflowTimeline from './HorizontalWorkflowTimeline';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface OverviewTabProps {
   dossierId: string;
@@ -21,9 +23,13 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
   });
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [workflowSteps, setWorkflowSteps] = useState<any[]>([]);
+  const [progress, setProgress] = useState<any[]>([]);
+  const [workflowLoading, setWorkflowLoading] = useState(true);
 
   useEffect(() => {
     fetchOverviewData();
+    fetchWorkflowData();
   }, [dossierId]);
 
   const fetchOverviewData = async () => {
@@ -79,6 +85,44 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
     }
   };
 
+  const fetchWorkflowData = async () => {
+    setWorkflowLoading(true);
+    try {
+      // Fetch workflow template
+      const { data: template } = await supabase
+        .from('workflow_templates')
+        .select('id')
+        .eq('world_id', worldId)
+        .eq('is_active', true)
+        .single();
+
+      if (!template) {
+        setWorkflowLoading(false);
+        return;
+      }
+
+      // Fetch workflow steps
+      const { data: steps } = await supabase
+        .from('workflow_steps')
+        .select('*')
+        .eq('workflow_template_id', template.id)
+        .order('step_number');
+
+      // Fetch dossier progress
+      const { data: progressData } = await supabase
+        .from('dossier_workflow_progress')
+        .select('*')
+        .eq('dossier_id', dossierId);
+
+      setWorkflowSteps(steps || []);
+      setProgress(progressData || []);
+    } catch (error) {
+      console.error('Error fetching workflow data:', error);
+    } finally {
+      setWorkflowLoading(false);
+    }
+  };
+
   const progressPercentage = stats.totalSteps > 0
     ? Math.round((stats.completedSteps / stats.totalSteps) * 100)
     : 0;
@@ -100,29 +144,47 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
 
   return (
     <div className="space-y-6">
-      {/* Progress Card */}
+      {/* Progress Card with Horizontal Timeline */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            Progression globale
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Progression globale
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold">{progressPercentage}%</span>
+              <Badge variant="secondary">
+                {stats.completedSteps} / {stats.totalSteps} étapes
+              </Badge>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-2xl font-bold">{progressPercentage}%</span>
-              <Badge variant="secondary">
-                {stats.completedSteps} / {stats.totalSteps} étapes complétées
-              </Badge>
+          {workflowLoading ? (
+            <div className="flex items-center gap-4 overflow-x-auto pb-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex items-center gap-4">
+                  <Skeleton className="h-12 w-12 rounded-full" />
+                  {i < 5 && <div className="w-16 h-0.5 bg-muted" />}
+                </div>
+              ))}
             </div>
-            <div className="w-full bg-muted rounded-full h-3">
-              <div
-                className="bg-primary rounded-full h-3 transition-all"
-                style={{ width: `${progressPercentage}%` }}
-              />
-            </div>
-          </div>
+          ) : workflowSteps.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Aucun workflow configuré pour ce monde
+            </p>
+          ) : (
+            <HorizontalWorkflowTimeline
+              steps={workflowSteps}
+              progress={progress}
+              dossierId={dossierId}
+              onUpdate={() => {
+                fetchOverviewData();
+                fetchWorkflowData();
+              }}
+            />
+          )}
         </CardContent>
       </Card>
 
