@@ -50,8 +50,11 @@ const AnimatedRoutes = () => {
         <Route path="/superadmin/analytics" element={<DashboardLayout><PageTransition><Analytics /></PageTransition></DashboardLayout>} />
         <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
         <Route path="/jde/dossiers" element={<DashboardLayout><PageTransition><DossiersJDE /></PageTransition></DashboardLayout>} />
+        <Route path="/jde/dossiers/:id" element={<DashboardLayout><PageTransition><DossierDetail /></PageTransition></DashboardLayout>} />
         <Route path="/jdmo/dossiers" element={<DashboardLayout><PageTransition><DossiersJDMO /></PageTransition></DashboardLayout>} />
+        <Route path="/jdmo/dossiers/:id" element={<DashboardLayout><PageTransition><DossierDetail /></PageTransition></DashboardLayout>} />
         <Route path="/dbcs/dossiers" element={<DashboardLayout><PageTransition><DossiersDBCS /></PageTransition></DashboardLayout>} />
+        <Route path="/dbcs/dossiers/:id" element={<DashboardLayout><PageTransition><DossierDetail /></PageTransition></DashboardLayout>} />
         <Route path=":worldCode/dossiers" element={<DashboardLayout><PageTransition><Dossiers /></PageTransition></DashboardLayout>} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
