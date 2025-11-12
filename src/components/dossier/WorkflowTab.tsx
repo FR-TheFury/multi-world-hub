@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import WorkflowTimeline from './WorkflowTimeline';
+import HorizontalWorkflowTimeline from './HorizontalWorkflowTimeline';
 import WorkflowDiagram from './WorkflowDiagram';
 
 interface WorkflowTabProps {
@@ -183,7 +183,7 @@ const WorkflowTab = ({ dossierId, worldId }: WorkflowTabProps) => {
               <CardTitle>Suivi du workflow</CardTitle>
             </CardHeader>
             <CardContent>
-              <WorkflowTimeline
+              <HorizontalWorkflowTimeline
                 steps={workflowSteps}
                 progress={progress}
                 dossierId={dossierId}
