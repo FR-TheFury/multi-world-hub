@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, FileText, MessageSquare, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import HorizontalWorkflowTimeline from './HorizontalWorkflowTimeline';
+import VerticalWorkflowTimeline from './VerticalWorkflowTimeline';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface OverviewTabProps {
@@ -162,11 +162,14 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
         </CardHeader>
         <CardContent>
           {workflowLoading ? (
-            <div className="flex items-center gap-4 overflow-x-auto pb-4">
+            <div className="space-y-4">
               {[1, 2, 3, 4, 5].map((i) => (
                 <div key={i} className="flex items-center gap-4">
-                  <Skeleton className="h-12 w-12 rounded-full" />
-                  {i < 5 && <div className="w-16 h-0.5 bg-muted" />}
+                  <Skeleton className="h-12 w-12 rounded-full flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
                 </div>
               ))}
             </div>
@@ -175,7 +178,7 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
               Aucun workflow configuré pour ce monde
             </p>
           ) : (
-            <HorizontalWorkflowTimeline
+            <VerticalWorkflowTimeline
               steps={workflowSteps}
               progress={progress}
               dossierId={dossierId}
