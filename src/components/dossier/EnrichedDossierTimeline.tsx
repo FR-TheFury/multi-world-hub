@@ -251,7 +251,7 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
     setMarkDocumentOpen(true);
   };
 
-  const handleCompleteStep = async (stepId: string) => {
+  const handleCompleteStep = async (stepId: string, formData?: any) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Non authentifié");
@@ -262,12 +262,13 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
           dossierId,
           stepId,
           userId: user.id,
+          formData: formData || {},
         },
       });
 
       if (error) throw error;
 
-      toast.success("Étape complétée");
+      toast.success("Étape complétée avec succès");
       onUpdate();
       fetchTimelineEvents();
     } catch (error: any) {
@@ -276,24 +277,26 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
     }
   };
 
-  const handleDecision = async (stepId: string, decision: boolean) => {
+  const handleDecision = async (stepId: string, decision: boolean, notes: string, formData?: any) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Non authentifié");
 
       const { error } = await supabase.functions.invoke("workflow-engine", {
         body: {
-          action: "make_decision",
+          action: "complete_step",
           dossierId,
           stepId,
-          decision,
           userId: user.id,
+          decision,
+          notes,
+          formData: formData || {},
         },
       });
 
       if (error) throw error;
 
-      toast.success(decision ? "Décision: Oui" : "Décision: Non");
+      toast.success(decision ? "Décision validée: Oui" : "Décision validée: Non");
       onUpdate();
       fetchTimelineEvents();
     } catch (error: any) {
@@ -396,8 +399,8 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
                       <WorkflowStepDetails
                         step={event.metadata.step}
                         progress={event.metadata.progress}
-                        onComplete={(stepId, formData) => handleCompleteStep(stepId)}
-                        onDecision={handleDecision}
+                        onComplete={(stepId, formData) => { handleCompleteStep(stepId, formData); }}
+                        onDecision={(stepId, decision, notes, formData) => { handleDecision(stepId, decision, notes, formData); }}
                         isSubmitting={false}
                         nextSteps={getNextSteps(event.metadata.step)}
                         onClose={() => setSelectedStep(null)}
