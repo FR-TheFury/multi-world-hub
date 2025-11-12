@@ -1,16 +1,30 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, FileText, MessageSquare, TrendingUp } from 'lucide-react';
+import { Calendar, FileText, MessageSquare, TrendingUp, User, MapPin, DollarSign, Clock, AlertCircle, Shield } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import VerticalWorkflowTimeline from './VerticalWorkflowTimeline';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Progress } from '@/components/ui/progress';
 
 interface OverviewTabProps {
   dossierId: string;
   worldId: string;
+}
+
+interface ClientInfo {
+  client_type: string;
+  nom: string;
+  prenom: string;
+  telephone: string;
+  email: string;
+  adresse_sinistre: string;
+  type_sinistre: string;
+  date_sinistre: string;
+  compagnie_assurance: string;
+  numero_police: string;
 }
 
 const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
@@ -26,6 +40,8 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
   const [workflowSteps, setWorkflowSteps] = useState<any[]>([]);
   const [progress, setProgress] = useState<any[]>([]);
   const [workflowLoading, setWorkflowLoading] = useState(true);
+  const [clientInfo, setClientInfo] = useState<ClientInfo | null>(null);
+  const [dossierDetails, setDossierDetails] = useState<any>(null);
 
   useEffect(() => {
     fetchOverviewData();
@@ -34,6 +50,24 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
 
   const fetchOverviewData = async () => {
     try {
+      // Fetch dossier details
+      const { data: dossier } = await supabase
+        .from('dossiers')
+        .select('*, worlds(name)')
+        .eq('id', dossierId)
+        .single();
+      
+      setDossierDetails(dossier);
+
+      // Fetch client info
+      const { data: client } = await supabase
+        .from('dossier_client_info')
+        .select('*')
+        .eq('dossier_id', dossierId)
+        .maybeSingle();
+      
+      setClientInfo(client);
+
       // Fetch workflow progress
       const { data: workflowData } = await supabase
         .from('dossier_workflow_progress')
@@ -142,15 +176,82 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
     );
   }
 
+  const getClientTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      locataire: 'Locataire',
+      proprietaire: 'Propriétaire',
+      proprietaire_non_occupant: 'Propriétaire non occupant',
+      professionnel: 'Professionnel',
+    };
+    return labels[type] || type;
+  };
+
   return (
     <div className="space-y-6">
-      {/* Progress Card with Horizontal Timeline */}
+      {/* En-tête du dossier avec infos client */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div className="space-y-1">
+              <CardTitle className="text-2xl">{dossierDetails?.reference || 'Chargement...'}</CardTitle>
+              <CardDescription>
+                {clientInfo ? `${clientInfo.prenom} ${clientInfo.nom}` : 'Aucune information client'}
+              </CardDescription>
+            </div>
+            <Badge variant="secondary" className="text-sm">
+              {dossierDetails?.worlds?.name || worldId}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-4">
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium">Type client</p>
+                <p className="text-xs text-muted-foreground">
+                  {clientInfo ? getClientTypeLabel(clientInfo.client_type) : '-'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium">Adresse sinistre</p>
+                <p className="text-xs text-muted-foreground line-clamp-1">
+                  {clientInfo?.adresse_sinistre || '-'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium">Type sinistre</p>
+                <p className="text-xs text-muted-foreground">
+                  {clientInfo?.type_sinistre || '-'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium">Date sinistre</p>
+                <p className="text-xs text-muted-foreground">
+                  {clientInfo?.date_sinistre ? format(new Date(clientInfo.date_sinistre), 'dd/MM/yyyy') : '-'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Progression du workflow avec barres détaillées */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
-              Progression globale
+              Progression du workflow
             </div>
             <div className="flex items-center gap-2">
               <span className="text-2xl font-bold">{progressPercentage}%</span>
@@ -160,74 +261,160 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
             </div>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
+          {/* Barres de progression par étape */}
           {workflowLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <Skeleton className="h-12 w-12 rounded-full flex-shrink-0" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-3 w-1/2" />
-                  </div>
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-2 w-full" />
                 </div>
               ))}
             </div>
-          ) : workflowSteps.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              Aucun workflow configuré pour ce monde
-            </p>
           ) : (
-            <VerticalWorkflowTimeline
-              steps={workflowSteps}
-              progress={progress}
-              dossierId={dossierId}
-              onUpdate={() => {
-                fetchOverviewData();
-                fetchWorkflowData();
-              }}
-            />
+            <div className="space-y-4">
+              {workflowSteps.slice(0, 5).map((step) => {
+                const stepProgress = progress.find((p) => p.workflow_step_id === step.id);
+                const isCompleted = stepProgress?.status === 'completed';
+                const isInProgress = stepProgress?.status === 'in_progress';
+                const progressValue = isCompleted ? 100 : isInProgress ? 50 : 0;
+                
+                return (
+                  <div key={step.id} className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium">{step.step_name}</span>
+                      <Badge variant={isCompleted ? 'default' : isInProgress ? 'secondary' : 'outline'} className="text-xs">
+                        {isCompleted ? 'Terminée' : isInProgress ? 'En cours' : 'En attente'}
+                      </Badge>
+                    </div>
+                    <Progress value={progressValue} className="h-2" />
+                  </div>
+                );
+              })}
+            </div>
           )}
+
+          {/* Timeline verticale détaillée */}
+          <div className="pt-4 border-t">
+            <h4 className="text-sm font-medium mb-4">Détails des étapes</h4>
+            {workflowLoading ? (
+              <div className="space-y-4">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="flex items-center gap-4">
+                    <Skeleton className="h-12 w-12 rounded-full flex-shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : workflowSteps.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Aucun workflow configuré pour ce monde
+              </p>
+            ) : (
+              <VerticalWorkflowTimeline
+                steps={workflowSteps}
+                progress={progress}
+                dossierId={dossierId}
+                onUpdate={() => {
+                  fetchOverviewData();
+                  fetchWorkflowData();
+                }}
+              />
+            )}
+          </div>
         </CardContent>
       </Card>
 
-      {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-3">
+      {/* Grille de résumé avec cartes d'information */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {/* Documents */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Documents</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <FileText className="h-4 w-4 text-primary" />
+              Documents
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.documentsCount}</div>
-            <p className="text-xs text-muted-foreground">Pièces jointes</p>
+            <div className="text-3xl font-bold">{stats.documentsCount}</div>
+            <p className="text-xs text-muted-foreground mt-1">Pièces jointes au dossier</p>
           </CardContent>
         </Card>
 
+        {/* Rendez-vous */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Rendez-vous</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-primary" />
+              Rendez-vous
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.appointmentsCount}</div>
-            <p className="text-xs text-muted-foreground">Planifiés</p>
+            <div className="text-3xl font-bold">{stats.appointmentsCount}</div>
+            <p className="text-xs text-muted-foreground mt-1">Planifiés et réalisés</p>
           </CardContent>
         </Card>
 
+        {/* Commentaires */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Commentaires</CardTitle>
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <MessageSquare className="h-4 w-4 text-primary" />
+              Commentaires
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.commentsCount}</div>
-            <p className="text-xs text-muted-foreground">Activités</p>
+            <div className="text-3xl font-bold">{stats.commentsCount}</div>
+            <p className="text-xs text-muted-foreground mt-1">Activités et notes</p>
+          </CardContent>
+        </Card>
+
+        {/* Informations assurance */}
+        <Card className="md:col-span-2">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Shield className="h-4 w-4 text-primary" />
+              Informations assurance
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div>
+                <p className="text-xs text-muted-foreground">Compagnie</p>
+                <p className="text-sm font-medium">{clientInfo?.compagnie_assurance || '-'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Numéro de police</p>
+                <p className="text-sm font-medium">{clientInfo?.numero_police || '-'}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Durée du dossier */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Clock className="h-4 w-4 text-primary" />
+              Durée
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">
+              {dossierDetails?.created_at
+                ? Math.floor((new Date().getTime() - new Date(dossierDetails.created_at).getTime()) / (1000 * 60 * 60 * 24))
+                : 0}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Jours depuis création</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Recent Activity */}
+      {/* Activité récente */}
       <Card>
         <CardHeader>
           <CardTitle>Activité récente</CardTitle>
