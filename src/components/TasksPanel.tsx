@@ -3,13 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, CheckCircle2, Clock, AlertCircle, Eye } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { Plus, CheckCircle2, Clock, AlertCircle, Eye, MoreVertical, UserCog, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/lib/store';
 import { format, startOfDay, endOfDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { TaskDetailDialog } from './TaskDetailDialog';
+import { toast } from 'sonner';
 
 interface Task {
   id: string;
@@ -27,7 +29,7 @@ interface TasksPanelProps {
 }
 
 const TasksPanel = ({ world }: TasksPanelProps = {}) => {
-  const { isSuperAdmin } = useAuthStore();
+  const { isSuperAdmin, user } = useAuthStore();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -152,12 +154,29 @@ const TasksPanel = ({ world }: TasksPanelProps = {}) => {
   };
 
   const updateTaskStatus = async (taskId: string, newStatus: string) => {
-    await supabase
+    const { error } = await supabase
       .from('tasks')
       .update({ status: newStatus })
       .eq('id', taskId);
     
+    if (error) {
+      toast.error('Erreur lors de la mise à jour de la tâche');
+      return;
+    }
+    
+    toast.success(newStatus === 'done' ? 'Tâche validée' : 'Tâche réactivée');
     fetchTasks();
+  };
+
+  const handleQuickValidate = async (taskId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await updateTaskStatus(taskId, 'done');
+  };
+
+  const handleQuickReassign = (task: Task, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedTask(task);
+    setDialogOpen(true);
   };
 
   const getPriorityColor = (priority: string) => {
@@ -261,18 +280,46 @@ const TasksPanel = ({ world }: TasksPanelProps = {}) => {
                     </p>
                   )}
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-shrink-0"
-                  onClick={() => {
-                    setSelectedTask(task);
-                    setDialogOpen(true);
-                  }}
-                >
-                  <Eye className="h-4 w-4 mr-1" />
-                  Détails
-                </Button>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedTask(task);
+                      setDialogOpen(true);
+                    }}
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    Détails
+                  </Button>
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      {user?.id === task.assigned_to && task.status !== 'done' && (
+                        <DropdownMenuItem onClick={(e) => handleQuickValidate(task.id, e)}>
+                          <Check className="h-4 w-4 mr-2" />
+                          Valider la tâche
+                        </DropdownMenuItem>
+                      )}
+                      {isSuperAdmin() && (
+                        <>
+                          {user?.id === task.assigned_to && task.status !== 'done' && (
+                            <DropdownMenuSeparator />
+                          )}
+                          <DropdownMenuItem onClick={(e) => handleQuickReassign(task, e)}>
+                            <UserCog className="h-4 w-4 mr-2" />
+                            Modifier / Réassigner
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
             ))}
           </div>
