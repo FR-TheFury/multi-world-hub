@@ -7,9 +7,9 @@ import NotificationBell from '@/components/NotificationBell';
 import AnimatedBackground from '@/components/AnimatedBackground';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAuthStore } from '@/lib/store';
-import JDELogo from '@/assets/JDE.svg';
-import JDMOLogo from '@/assets/JDMO.svg';
-import DBCSLogo from '@/assets/DBCS.svg';
+import JDELogo from '@/assets/JDE.png';
+import JDMOLogo from '@/assets/JDMO.png';
+import DBCSLogo from '@/assets/DBCS.png';
 
 interface DashboardLayoutProps {
   children: ReactNode;

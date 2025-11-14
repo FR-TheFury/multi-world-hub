@@ -8,9 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Lock, Mail } from 'lucide-react';
-import jdeLogo from '@/assets/JDE.svg';
-import jdmoLogo from '@/assets/JDMO.svg';
-import dbcsLogo from '@/assets/DBCS.svg';
+import jdeLogo from '@/assets/JDE.png';
+import jdmoLogo from '@/assets/JDMO.png';
+import dbcsLogo from '@/assets/DBCS.png';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
