@@ -2,14 +2,11 @@ import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/lib/store';
 import WorldCard3D from '@/components/WorldCard3D';
-import StatsCard from '@/components/StatsCard';
-import TasksPanel from '@/components/TasksPanel';
-import AppointmentsPanel from '@/components/AppointmentsPanel';
-import EmailsPanel from '@/components/EmailsPanel';
+import WorldInfoCard from '@/components/WorldInfoCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, FileText, FolderOpen, CheckSquare, Mail, Users } from 'lucide-react';
+import { ArrowRight, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -38,19 +35,11 @@ const Dashboard = () => {
 
   const [dossiersByWorld, setDossiersByWorld] = useState<Record<string, Dossier[]>>({});
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalInProgress: 0,
-    totalTasks: 0,
-    newEmails: 2, // Demo data
-    activeUsers: 12, // Demo data - nombre d'utilisateurs actifs
-    byWorld: {} as Record<string, number>
-  });
   const navigate = useNavigate();
 
   useEffect(() => {
     if (accessibleWorlds.length > 0) {
       fetchRecentDossiers();
-      fetchStats();
     }
   }, [accessibleWorlds.length]);
 
@@ -88,44 +77,6 @@ const Dashboard = () => {
       console.error('Error fetching dossiers:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchStats = async () => {
-    try {
-      // Total dossiers en cours
-      const { count: totalInProgress } = await supabase
-        .from('dossiers')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'en_cours')
-        .in('world_id', accessibleWorlds.map(w => w.id));
-
-      // Total tâches
-      const { count: totalTasks } = await supabase
-        .from('tasks')
-        .select('*', { count: 'exact', head: true });
-
-      // Dossiers en cours par monde
-      const byWorld: Record<string, number> = {};
-      for (const world of accessibleWorlds) {
-        const { count } = await supabase
-          .from('dossiers')
-          .select('*', { count: 'exact', head: true })
-          .eq('world_id', world.id)
-          .eq('status', 'en_cours');
-        
-        byWorld[world.code] = count || 0;
-      }
-
-      setStats({
-        totalInProgress: totalInProgress || 0,
-        totalTasks: totalTasks || 0,
-        newEmails: 2, // Demo data
-        activeUsers: 12, // Demo data - nombre d'utilisateurs actifs
-        byWorld
-      });
-    } catch (error) {
-      console.error('Error fetching stats:', error);
     }
   };
 
@@ -169,60 +120,18 @@ const Dashboard = () => {
         </p>
       </div>
 
-      {/* 3D World Cards */}
+      {/* 3D World Cards with Info */}
       <section>
         <h3 className="text-lg font-semibold mb-4 text-foreground">Vos Mondes</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {accessibleWorlds.map((world) => (
-            <WorldCard3D key={world.id} world={world} />
+            <div key={world.id} className="space-y-4">
+              <WorldCard3D world={world} />
+              <WorldInfoCard world={world} />
+            </div>
           ))}
         </div>
       </section>
-
-      {/* Statistics Cards */}
-      <section>
-        <h3 className="text-lg font-semibold mb-4 text-foreground">Statistiques</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatsCard
-            title="Dossiers en cours"
-            value={stats.totalInProgress}
-            icon={FolderOpen}
-            iconColor="#7c3aed"
-            iconBg="#7c3aed15"
-          />
-          <StatsCard
-            title="Tâches assignées"
-            value={stats.totalTasks}
-            icon={CheckSquare}
-            iconColor="#2563eb"
-            iconBg="#2563eb15"
-          />
-          <StatsCard
-            title="Nouveaux emails"
-            value={stats.newEmails}
-            icon={Mail}
-            iconColor="#10b981"
-            iconBg="#10b98115"
-          />
-          <StatsCard
-            title="Utilisateurs actifs"
-            value={stats.activeUsers}
-            icon={Users}
-            iconColor="#f59e0b"
-            iconBg="#f59e0b15"
-          />
-        </div>
-      </section>
-
-      {/* Tasks, Appointments and Emails */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <TasksPanel />
-        <AppointmentsPanel />
-      </div>
-      
-      <div className="grid grid-cols-1 gap-6">
-        <EmailsPanel />
-      </div>
 
       {/* Recent Dossiers by World */}
       {!loading && Object.keys(dossiersByWorld).length > 0 && (
