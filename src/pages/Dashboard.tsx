@@ -169,6 +169,16 @@ const Dashboard = () => {
         </p>
       </div>
 
+      {/* 3D World Cards */}
+      <section>
+        <h3 className="text-lg font-semibold mb-4 text-foreground">Vos Mondes</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {accessibleWorlds.map((world) => (
+            <WorldCard3D key={world.id} world={world} />
+          ))}
+        </div>
+      </section>
+
       {/* Statistics Cards */}
       <section>
         <h3 className="text-lg font-semibold mb-4 text-foreground">Statistiques</h3>
@@ -213,16 +223,6 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 gap-6">
         <EmailsPanel />
       </div>
-
-      {/* 3D World Cards */}
-      <section>
-        <h3 className="text-lg font-semibold mb-4 text-foreground">Vos Mondes</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {accessibleWorlds.map((world) => (
-            <WorldCard3D key={world.id} world={world} />
-          ))}
-        </div>
-      </section>
 
       {/* Recent Dossiers by World */}
       {!loading && Object.keys(dossiersByWorld).length > 0 && (
