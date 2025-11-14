@@ -224,15 +224,16 @@ const TasksPanel = () => {
                   )}
                 </div>
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                  className="flex-shrink-0"
                   onClick={() => {
                     setSelectedTask(task);
                     setDialogOpen(true);
                   }}
                 >
-                  <Eye className="h-4 w-4" />
+                  <Eye className="h-4 w-4 mr-1" />
+                  Détails
                 </Button>
               </div>
             ))}
