@@ -295,15 +295,22 @@ const Dashboard = () => {
         {accessibleWorlds.map((world) => (
           <div key={world.id} className="space-y-4">
             {/* World Stats Card */}
-            <Card className="border-0 shadow-vuexy-md hover:shadow-vuexy-lg transition-all">
+            <Card 
+              className="relative overflow-hidden shadow-vuexy-md hover:shadow-vuexy-lg transition-all duration-300 animate-fade-in"
+              style={{ 
+                borderLeft: `4px solid ${world.theme_colors.primary}`,
+                background: `linear-gradient(135deg, ${world.theme_colors.primary}05 0%, transparent 100%)`
+              }}
+            >
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div 
-                      className="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg"
+                      className="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg shadow-md"
                       style={{ 
-                        backgroundColor: `${world.theme_colors.primary}15`,
-                        color: world.theme_colors.primary 
+                        backgroundColor: `${world.theme_colors.primary}20`,
+                        color: world.theme_colors.primary,
+                        border: `2px solid ${world.theme_colors.primary}40`
                       }}
                     >
                       {world.code}
@@ -317,6 +324,7 @@ const Dashboard = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => navigate(`/${world.code.toLowerCase()}/dossiers`)}
+                    className="hover-scale"
                   >
                     Voir tout
                   </Button>
@@ -325,32 +333,56 @@ const Dashboard = () => {
               <CardContent className="space-y-4">
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 rounded-lg bg-secondary/30">
+                  <div 
+                    className="p-3 rounded-lg transition-all duration-200 hover:scale-105"
+                    style={{ 
+                      backgroundColor: `${world.theme_colors.primary}10`,
+                      border: `1px solid ${world.theme_colors.primary}20`
+                    }}
+                  >
                     <div className="flex items-center gap-2 mb-1">
-                      <Euro className="h-3.5 w-3.5 text-green-600" />
+                      <Euro className="h-3.5 w-3.5" style={{ color: world.theme_colors.primary }} />
                       <span className="text-xs text-muted-foreground">CA</span>
                     </div>
                     <p className="text-sm font-semibold">
                       {formatCurrency(worldStats[world.id]?.chiffreAffaires || 0)}
                     </p>
                   </div>
-                  <div className="p-3 rounded-lg bg-secondary/30">
+                  <div 
+                    className="p-3 rounded-lg transition-all duration-200 hover:scale-105"
+                    style={{ 
+                      backgroundColor: `${world.theme_colors.primary}10`,
+                      border: `1px solid ${world.theme_colors.primary}20`
+                    }}
+                  >
                     <div className="flex items-center gap-2 mb-1">
-                      <Clock className="h-3.5 w-3.5 text-amber-600" />
+                      <Clock className="h-3.5 w-3.5" style={{ color: world.theme_colors.primary }} />
                       <span className="text-xs text-muted-foreground">En cours</span>
                     </div>
                     <p className="text-sm font-semibold">{worldStats[world.id]?.dossiersEnCours || 0}</p>
                   </div>
-                  <div className="p-3 rounded-lg bg-secondary/30">
+                  <div 
+                    className="p-3 rounded-lg transition-all duration-200 hover:scale-105"
+                    style={{ 
+                      backgroundColor: `${world.theme_colors.primary}10`,
+                      border: `1px solid ${world.theme_colors.primary}20`
+                    }}
+                  >
                     <div className="flex items-center gap-2 mb-1">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-slate-600" />
+                      <CheckCircle2 className="h-3.5 w-3.5" style={{ color: world.theme_colors.primary }} />
                       <span className="text-xs text-muted-foreground">Clôturés</span>
                     </div>
                     <p className="text-sm font-semibold">{worldStats[world.id]?.dossiersClotures || 0}</p>
                   </div>
-                  <div className="p-3 rounded-lg bg-secondary/30">
+                  <div 
+                    className="p-3 rounded-lg transition-all duration-200 hover:scale-105"
+                    style={{ 
+                      backgroundColor: `${world.theme_colors.primary}10`,
+                      border: `1px solid ${world.theme_colors.primary}20`
+                    }}
+                  >
                     <div className="flex items-center gap-2 mb-1">
-                      <AlertTriangle className="h-3.5 w-3.5 text-red-600" />
+                      <AlertTriangle className="h-3.5 w-3.5" style={{ color: world.theme_colors.primary }} />
                       <span className="text-xs text-muted-foreground">Urgents</span>
                     </div>
                     <p className="text-sm font-semibold">{worldStats[world.id]?.dossiersUrgents || 0}</p>
@@ -360,15 +392,30 @@ const Dashboard = () => {
             </Card>
 
             {/* Tasks Card */}
-            <Card className="border-0 shadow-vuexy-md">
+            <Card 
+              className="shadow-vuexy-md hover:shadow-vuexy-lg transition-all duration-300 animate-fade-in"
+              style={{ 
+                borderLeft: `4px solid ${world.theme_colors.primary}`,
+                background: `linear-gradient(135deg, ${world.theme_colors.primary}05 0%, transparent 100%)`
+              }}
+            >
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Tâches à venir</CardTitle>
+                <CardTitle className="text-sm" style={{ color: world.theme_colors.primary }}>
+                  Tâches à venir
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {worldTasks[world.id] && worldTasks[world.id].length > 0 ? (
                   <div className="space-y-2">
                     {worldTasks[world.id].map((task) => (
-                      <div key={task.id} className="p-2 rounded-lg bg-secondary/30 flex items-center justify-between">
+                      <div 
+                        key={task.id} 
+                        className="p-2 rounded-lg flex items-center justify-between transition-all duration-200 hover:scale-102"
+                        style={{ 
+                          backgroundColor: `${world.theme_colors.primary}10`,
+                          border: `1px solid ${world.theme_colors.primary}20`
+                        }}
+                      >
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-medium truncate">{task.title}</p>
                           {task.due_date && (
@@ -390,9 +437,15 @@ const Dashboard = () => {
             </Card>
 
             {/* Emails Card */}
-            <Card className="border-0 shadow-vuexy-md">
+            <Card 
+              className="shadow-vuexy-md hover:shadow-vuexy-lg transition-all duration-300 animate-fade-in"
+              style={{ 
+                borderLeft: `4px solid ${world.theme_colors.primary}`,
+                background: `linear-gradient(135deg, ${world.theme_colors.primary}05 0%, transparent 100%)`
+              }}
+            >
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm flex items-center gap-2">
+                <CardTitle className="text-sm flex items-center gap-2" style={{ color: world.theme_colors.primary }}>
                   <Mail className="h-4 w-4" />
                   Emails
                 </CardTitle>
