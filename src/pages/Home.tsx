@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useAuthStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import jdeLogo from '@/assets/JDE.png';
-import jdmoLogo from '@/assets/JDMO.png';
-import dbcsLogo from '@/assets/DBCS.png';
+import jdeLogo from '@/assets/JDE.svg';
+import jdmoLogo from '@/assets/JDMO.svg';
+import dbcsLogo from '@/assets/DBCS.svg';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -94,11 +94,10 @@ const Home = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Sparkles className="h-8 w-8 text-primary" />
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-primary via-primary/80 to-accent bg-clip-text text-transparent">
-              Multi-World Hub
-            </h1>
+          <div className="flex items-center justify-center gap-6 mb-6">
+            <img src={jdeLogo} alt="JDE" className="h-16 w-auto" />
+            <img src={jdmoLogo} alt="JDMO" className="h-16 w-auto" />
+            <img src={dbcsLogo} alt="DBCS" className="h-16 w-auto" />
           </div>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Accédez à vos espaces de travail et gérez vos projets en toute simplicité
