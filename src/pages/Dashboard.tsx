@@ -1,15 +1,11 @@
 import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/lib/store';
-import WorldCard3D from '@/components/WorldCard3D';
-import StatsCard from '@/components/StatsCard';
-import TasksPanel from '@/components/TasksPanel';
-import AppointmentsPanel from '@/components/AppointmentsPanel';
-import EmailsPanel from '@/components/EmailsPanel';
+import WorldDashboardCard from '@/components/WorldDashboardCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, FileText, FolderOpen, CheckSquare, Mail, Users } from 'lucide-react';
+import { FileText, Euro, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -36,94 +32,78 @@ const Dashboard = () => {
     });
   }, [unsortedWorlds]);
 
-  const [dossiersByWorld, setDossiersByWorld] = useState<Record<string, Dossier[]>>({});
+  const [importantDossiers, setImportantDossiers] = useState<Dossier[]>([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalInProgress: 0,
-    totalTasks: 0,
-    newEmails: 2, // Demo data
-    byWorld: {} as Record<string, number>
+  const [globalStats, setGlobalStats] = useState({
+    caTotal: 0,
+    caJDE: 0,
+    caJDMO: 0,
+    caDBCS: 0,
   });
   const navigate = useNavigate();
 
   useEffect(() => {
     if (accessibleWorlds.length > 0) {
-      fetchRecentDossiers();
-      fetchStats();
+      fetchImportantDossiers();
+      fetchGlobalStats();
     }
   }, [accessibleWorlds.length]);
 
-  const fetchRecentDossiers = async () => {
+  const fetchImportantDossiers = async () => {
     try {
-      const worldMap: Record<string, Dossier[]> = {};
+      const { data } = await supabase
+        .from('dossiers')
+        .select(`
+          id,
+          title,
+          status,
+          created_at,
+          tags,
+          owner:profiles(display_name),
+          world:worlds(code, name, theme_colors)
+        `)
+        .eq('is_important', true)
+        .in('world_id', accessibleWorlds.map(w => w.id))
+        .order('created_at', { ascending: false })
+        .limit(6);
 
-      for (const world of accessibleWorlds) {
-        const { data } = await supabase
-          .from('dossiers')
-          .select(`
-            id,
-            title,
-            status,
-            created_at,
-            tags,
-            owner:profiles(display_name),
-            world:worlds(code)
-          `)
-          .eq('world_id', world.id)
-          .order('created_at', { ascending: false })
-          .limit(5);
-
-        if (data) {
-          worldMap[world.code] = data.map(d => ({
-            ...d,
-            owner: (d as any).owner,
-            world_code: (d as any).world.code,
-          }));
-        }
+      if (data) {
+        setImportantDossiers(data.map(d => ({
+          ...d,
+          owner: (d as any).owner,
+          world_code: (d as any).world.code,
+        })));
       }
-
-      setDossiersByWorld(worldMap);
     } catch (error) {
-      console.error('Error fetching dossiers:', error);
+      console.error('Error fetching important dossiers:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchStats = async () => {
+  const fetchGlobalStats = async () => {
     try {
-      // Total dossiers en cours
-      const { count: totalInProgress } = await supabase
+      const { data: allDossiers } = await supabase
         .from('dossiers')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'en_cours')
+        .select('chiffre_affaires, world:worlds(code)')
         .in('world_id', accessibleWorlds.map(w => w.id));
 
-      // Total tâches
-      const { count: totalTasks } = await supabase
-        .from('tasks')
-        .select('*', { count: 'exact', head: true });
+      if (allDossiers) {
+        const caTotal = allDossiers.reduce((sum, d) => sum + (Number(d.chiffre_affaires) || 0), 0);
+        const caJDE = allDossiers
+          .filter(d => (d.world as any)?.code === 'JDE')
+          .reduce((sum, d) => sum + (Number(d.chiffre_affaires) || 0), 0);
+        const caJDMO = allDossiers
+          .filter(d => (d.world as any)?.code === 'JDMO')
+          .reduce((sum, d) => sum + (Number(d.chiffre_affaires) || 0), 0);
+        const caDBCS = allDossiers
+          .filter(d => (d.world as any)?.code === 'DBCS')
+          .reduce((sum, d) => sum + (Number(d.chiffre_affaires) || 0), 0);
 
-      // Dossiers en cours par monde
-      const byWorld: Record<string, number> = {};
-      for (const world of accessibleWorlds) {
-        const { count } = await supabase
-          .from('dossiers')
-          .select('*', { count: 'exact', head: true })
-          .eq('world_id', world.id)
-          .eq('status', 'en_cours');
-        
-        byWorld[world.code] = count || 0;
+        setGlobalStats({ caTotal, caJDE, caJDMO, caDBCS });
       }
-
-      setStats({
-        totalInProgress: totalInProgress || 0,
-        totalTasks: totalTasks || 0,
-        newEmails: 2, // Demo data
-        byWorld
-      });
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      console.error('Error fetching global stats:', error);
     }
   };
 
@@ -153,6 +133,15 @@ const Dashboard = () => {
     }
   };
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
   return (
     <div className="space-y-8">
       <div>
@@ -163,135 +152,113 @@ const Dashboard = () => {
           {profile?.email}
         </p>
         <p className="text-sm text-muted-foreground mt-1">
-          Accédez à vos espaces de travail et consultez vos derniers dossiers
+          Accédez à vos espaces de travail et consultez vos statistiques
         </p>
       </div>
 
-      {/* Statistics Cards */}
+      {/* Statistiques Globales */}
       <section>
-        <h3 className="text-lg font-semibold mb-4 text-foreground">Statistiques</h3>
+        <h3 className="text-lg font-semibold mb-4 text-foreground">Statistiques Globales</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatsCard
-            title="Dossiers en cours"
-            value={stats.totalInProgress}
-            icon={FolderOpen}
-            iconColor="#7c3aed"
-            iconBg="#7c3aed15"
-          />
-          <StatsCard
-            title="Tâches assignées"
-            value={stats.totalTasks}
-            icon={CheckSquare}
-            iconColor="#2563eb"
-            iconBg="#2563eb15"
-          />
-          <StatsCard
-            title="Nouveaux emails"
-            value={stats.newEmails}
-            icon={Mail}
-            iconColor="#10b981"
-            iconBg="#10b98115"
-          />
+          <Card className="border-0 shadow-vuexy-md hover:shadow-vuexy-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">CA Total</CardTitle>
+              <div className="p-2 rounded-lg bg-green-50">
+                <Euro className="h-4 w-4 text-green-600" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatCurrency(globalStats.caTotal)}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-vuexy-md hover:shadow-vuexy-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">CA JDE</CardTitle>
+              <div className="p-2 rounded-lg" style={{ backgroundColor: '#ef444415' }}>
+                <Euro className="h-4 w-4" style={{ color: '#ef4444' }} />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatCurrency(globalStats.caJDE)}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-vuexy-md hover:shadow-vuexy-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">CA JDMO</CardTitle>
+              <div className="p-2 rounded-lg" style={{ backgroundColor: '#f9731615' }}>
+                <Euro className="h-4 w-4" style={{ color: '#f97316' }} />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatCurrency(globalStats.caJDMO)}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-vuexy-md hover:shadow-vuexy-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">CA DBCS</CardTitle>
+              <div className="p-2 rounded-lg" style={{ backgroundColor: '#10b98115' }}>
+                <Euro className="h-4 w-4" style={{ color: '#10b981' }} />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatCurrency(globalStats.caDBCS)}</div>
+            </CardContent>
+          </Card>
         </div>
       </section>
 
-      {/* Tasks, Appointments and Emails */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <TasksPanel />
-        <AppointmentsPanel />
-      </div>
-      
-      <div className="grid grid-cols-1 gap-6">
-        <EmailsPanel />
-      </div>
+      {/* Dossiers Importants */}
+      {!loading && importantDossiers.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-600" />
+              Dossiers Importants
+            </h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {importantDossiers.map((dossier) => (
+              <Card
+                key={dossier.id}
+                className="border-0 shadow-vuexy-md hover:shadow-vuexy-lg transition-all cursor-pointer"
+                onClick={() => navigate(`/${dossier.world_code.toLowerCase()}/dossiers/${dossier.id}`)}
+              >
+                <CardHeader>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge className="bg-red-50 text-red-700 border-red-200">Urgent</Badge>
+                    <Badge className={cn("text-xs", getStatusBadgeColor(dossier.status))}>
+                      {getStatusLabel(dossier.status)}
+                    </Badge>
+                  </div>
+                  <CardTitle className="text-base">{dossier.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span>
+                      {format(new Date(dossier.created_at), 'dd MMM yyyy', { locale: fr })}
+                    </span>
+                    <span>{dossier.owner?.display_name || 'Inconnu'}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+      )}
 
-      {/* 3D World Cards */}
+      {/* World Cards Verticales */}
       <section>
         <h3 className="text-lg font-semibold mb-4 text-foreground">Vos Mondes</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="space-y-6">
           {accessibleWorlds.map((world) => (
-            <WorldCard3D key={world.id} world={world} />
+            <WorldDashboardCard key={world.id} world={world} />
           ))}
         </div>
       </section>
 
-      {/* Recent Dossiers by World */}
-      {!loading && Object.keys(dossiersByWorld).length > 0 && (
-        <section className="space-y-5">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-foreground">Derniers Dossiers</h3>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/dossiers')}
-              className="h-9"
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              Voir tous les dossiers
-            </Button>
-          </div>
-
-          {Object.entries(dossiersByWorld).map(([worldCode, dossiers]) => {
-            const world = accessibleWorlds.find(w => w.code === worldCode);
-            if (!world || dossiers.length === 0) return null;
-
-            return (
-              <Card key={worldCode} className="shadow-vuexy-md border-0">
-                <CardHeader className="border-b">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg" style={{ backgroundColor: `${world.theme_colors.primary}15` }}>
-                        <FileText className="h-5 w-5" style={{ color: world.theme_colors.primary }} />
-                      </div>
-                      <span>{world.name}</span>
-                    </CardTitle>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => navigate(`/${worldCode.toLowerCase()}/dossiers`)}
-                      className="h-8"
-                    >
-                      Voir tout
-                      <ArrowRight className="ml-1 h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {dossiers.map((dossier) => (
-                      <div
-                        key={dossier.id}
-                        className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/30 transition-colors cursor-pointer"
-                        onClick={() => navigate(`/${worldCode.toLowerCase()}/dossiers/${dossier.id}`)}
-                      >
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-medium text-sm">{dossier.title}</h4>
-                            <Badge className={cn("text-xs", getStatusBadgeColor(dossier.status))}>
-                              {getStatusLabel(dossier.status)}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                            <span>
-                              {format(new Date(dossier.created_at), 'dd MMM yyyy', { locale: fr })}
-                            </span>
-                            <span>{dossier.owner?.display_name || 'Inconnu'}</span>
-                            {dossier.tags && dossier.tags.length > 0 && (
-                              <span className="text-xs">
-                                {dossier.tags.slice(0, 2).join(', ')}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </section>
-      )}
 
       {!loading && accessibleWorlds.length === 0 && (
         <Card className="text-center py-12 shadow-vuexy-md border-0">
