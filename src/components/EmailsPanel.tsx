@@ -16,6 +16,7 @@ interface Email {
   starred: boolean;
   hasAttachment: boolean;
   priority: 'high' | 'normal' | 'low';
+  labels: string[];
 }
 
 const DEMO_EMAILS: Email[] = [
@@ -29,7 +30,8 @@ const DEMO_EMAILS: Email[] = [
     unread: true,
     starred: false,
     hasAttachment: false,
-    priority: 'high'
+    priority: 'high',
+    labels: ['urgent', 'JDE']
   },
   {
     id: '2',
@@ -41,7 +43,8 @@ const DEMO_EMAILS: Email[] = [
     unread: true,
     starred: false,
     hasAttachment: true,
-    priority: 'normal'
+    priority: 'normal',
+    labels: ['JDE']
   },
   {
     id: '3',
@@ -53,7 +56,8 @@ const DEMO_EMAILS: Email[] = [
     unread: false,
     starred: false,
     hasAttachment: true,
-    priority: 'normal'
+    priority: 'normal',
+    labels: ['JDMO']
   },
   {
     id: '4',
@@ -65,7 +69,8 @@ const DEMO_EMAILS: Email[] = [
     unread: false,
     starred: true,
     hasAttachment: false,
-    priority: 'low'
+    priority: 'low',
+    labels: ['JDMO']
   }
 ];
 
@@ -104,7 +109,10 @@ const EmailsPanel = () => {
           {DEMO_EMAILS.map((email) => (
             <div
               key={email.id}
-              onClick={() => navigate('/mailbox')}
+              onClick={() => {
+                const worldLabel = email.labels.find(l => ['JDE', 'JDMO', 'DBCS'].includes(l));
+                navigate(`/mailbox${worldLabel ? `?label=${worldLabel}` : ''}`);
+              }}
               className={`p-3 rounded-lg border cursor-pointer transition-colors ${
                 email.unread
                   ? 'bg-primary/5 border-primary/20 hover:bg-primary/10'
@@ -118,9 +126,9 @@ const EmailsPanel = () => {
                     {email.senderAvatar}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1 min-w-0">
+                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2 mb-1">
-                    <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0 flex-wrap">
                       <p className={`text-sm truncate ${email.unread ? 'font-semibold' : 'font-medium'}`}>
                         {email.sender}
                       </p>
@@ -129,6 +137,11 @@ const EmailsPanel = () => {
                           Urgent
                         </Badge>
                       )}
+                      {email.labels.filter(l => ['JDE', 'JDMO', 'DBCS'].includes(l)).map(label => (
+                        <Badge key={label} variant="outline" className="text-[10px] h-4 px-1">
+                          {label}
+                        </Badge>
+                      ))}
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       {email.starred && (

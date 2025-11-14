@@ -3,12 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { Plus, CheckCircle2, Clock, AlertCircle, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/lib/store';
 import { format, startOfDay, endOfDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { TaskDetailDialog } from './TaskDetailDialog';
 
 interface Task {
   id: string;
@@ -25,6 +26,8 @@ const TasksPanel = () => {
   const { isSuperAdmin } = useAuthStore();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchTasks();
@@ -172,7 +175,7 @@ const TasksPanel = () => {
             {tasks.map((task) => (
               <div
                 key={task.id}
-                className="flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-muted/30 transition-colors"
+                className="flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-muted/30 transition-colors group"
               >
                 <Checkbox
                   checked={task.status === 'done'}
@@ -220,11 +223,29 @@ const TasksPanel = () => {
                     </p>
                   )}
                 </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                  onClick={() => {
+                    setSelectedTask(task);
+                    setDialogOpen(true);
+                  }}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
               </div>
             ))}
           </div>
         )}
       </CardContent>
+      
+      <TaskDetailDialog
+        task={selectedTask}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onTaskUpdated={fetchTasks}
+      />
     </Card>
   );
 };
