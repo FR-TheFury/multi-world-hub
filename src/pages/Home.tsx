@@ -35,14 +35,17 @@ const Home = () => {
     DBCS: 'from-red-500/20 to-rose-600/10',
   };
 
-  // Créer la liste des mondes à partir des mondes accessibles
-  const worlds = accessibleWorlds.map(world => ({
-    name: world.code,
-    fullName: world.name,
-    logo: logoMap[world.code],
-    color: world.theme_colors.primary,
-    gradient: gradientMap[world.code] || 'from-primary/20 to-accent/10',
-  }));
+  // Créer la liste des mondes à partir des mondes accessibles et les ordonner
+  const worldOrder = ['JDE', 'JDMO', 'DBCS'];
+  const worlds = accessibleWorlds
+    .map(world => ({
+      name: world.code,
+      fullName: world.name,
+      logo: logoMap[world.code],
+      color: world.theme_colors.primary,
+      gradient: gradientMap[world.code] || 'from-primary/20 to-accent/10',
+    }))
+    .sort((a, b) => worldOrder.indexOf(a.name) - worldOrder.indexOf(b.name));
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-secondary/10 to-accent/10 p-4 relative overflow-hidden">
@@ -127,12 +130,9 @@ const Home = () => {
                   whileHover={{ rotate: [0, -10, 10, -10, 0] }}
                   transition={{ duration: 0.5 }}
                 />
-                <h3 className="text-2xl font-bold text-center mb-2" style={{ color: world.color }}>
+                <h3 className="text-2xl font-bold text-center" style={{ color: world.color }}>
                   {world.name}
                 </h3>
-                <p className="text-sm text-center text-muted-foreground">
-                  {world.fullName}
-                </p>
               </div>
 
               {/* Decorative corner */}
