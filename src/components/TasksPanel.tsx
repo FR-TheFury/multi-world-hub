@@ -22,7 +22,11 @@ interface Task {
   world?: { code: string; name: string; theme_colors: any };
 }
 
-const TasksPanel = () => {
+interface TasksPanelProps {
+  world?: { id: string; code: string; name: string; theme_colors: any };
+}
+
+const TasksPanel = ({ world }: TasksPanelProps = {}) => {
   const { isSuperAdmin } = useAuthStore();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,6 +57,10 @@ const TasksPanel = () => {
         .lte('due_date', endDate)
         .order('due_date', { ascending: true, nullsFirst: false });
 
+      if (world) {
+        todayQuery = todayQuery.eq('world_id', world.id);
+      }
+
       if (!isSuperAdmin() && userId) {
         todayQuery = todayQuery.eq('assigned_to', userId);
       }
@@ -74,6 +82,10 @@ const TasksPanel = () => {
           .gt('due_date', endDate)
           .order('due_date', { ascending: true, nullsFirst: false })
           .limit(5);
+
+        if (world) {
+          nextQuery = nextQuery.eq('world_id', world.id);
+        }
 
         if (!isSuperAdmin() && userId) {
           nextQuery = nextQuery.eq('assigned_to', userId);
@@ -155,7 +167,7 @@ const TasksPanel = () => {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5 text-primary" />
-            Mes Tâches
+            {world ? world.name : 'Mes Tâches'}
           </CardTitle>
           <Button size="sm" className="h-8">
             <Plus className="h-4 w-4 mr-1" />
