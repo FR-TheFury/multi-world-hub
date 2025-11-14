@@ -18,7 +18,10 @@ import {
   ChevronDown,
   ChevronUp,
   User,
-  ArrowRight
+  ArrowRight,
+  Image,
+  FileCheck,
+  Navigation
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AddTaskDialog } from "./AddTaskDialog";
@@ -32,7 +35,7 @@ import { toast } from "sonner";
 
 interface TimelineEvent {
   id: string;
-  type: "step" | "document" | "comment" | "task" | "appointment" | "annotation";
+  type: "step" | "document" | "comment" | "task" | "appointment" | "annotation" | "photo" | "admin_document";
   timestamp: string;
   title: string;
   description?: string;
@@ -166,7 +169,7 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
         });
       });
 
-      // Fetch documents
+      // Fetch documents (admin documents separate from regular ones)
       const { data: documents } = await supabase
         .from("dossier_attachments")
         .select("*")
@@ -174,13 +177,35 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
         .order("created_at", { ascending: false });
 
       documents?.forEach(doc => {
+        const isAdminDoc = doc.is_admin_document === true;
         timelineEvents.push({
           id: `doc-${doc.id}`,
-          type: "document",
+          type: isAdminDoc ? "admin_document" : "document",
           timestamp: doc.created_at,
           title: doc.file_name,
-          description: doc.document_type || "Document",
+          description: isAdminDoc 
+            ? `Document administratif - ${doc.admin_doc_status || 'en attente'}`
+            : (doc.document_type || "Document"),
           metadata: doc,
+          status: doc.admin_doc_status,
+        });
+      });
+
+      // Fetch photos
+      const { data: photos } = await supabase
+        .from("dossier_photos")
+        .select("*")
+        .eq("dossier_id", dossierId)
+        .order("created_at", { ascending: false });
+
+      photos?.forEach(photo => {
+        timelineEvents.push({
+          id: `photo-${photo.id}`,
+          type: "photo",
+          timestamp: photo.created_at,
+          title: photo.caption || "Photo ajoutée",
+          description: photo.file_name,
+          metadata: photo,
         });
       });
 
@@ -349,8 +374,8 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
         });
       });
 
-      // Sort by timestamp
-      timelineEvents.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      // Sort by timestamp REVERSED (newest first = bottom to top)
+      timelineEvents.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
       setEvents(timelineEvents);
     } catch (error) {
@@ -365,11 +390,15 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
     switch (type) {
       case "step":
         if (status === "completed") return <CheckCircle2 className="h-5 w-5 text-green-500" />;
-        if (status === "in_progress") return <Clock className="h-5 w-5 text-blue-500" />;
+        if (status === "in_progress") return <Clock className="h-5 w-5 text-blue-500 animate-pulse" />;
         if (status === "blocked") return <XCircle className="h-5 w-5 text-red-500" />;
         return <Circle className="h-5 w-5 text-muted-foreground" />;
       case "document":
         return <FileText className="h-5 w-5 text-purple-500" />;
+      case "admin_document":
+        return <FileCheck className="h-5 w-5 text-indigo-500" />;
+      case "photo":
+        return <Image className="h-5 w-5 text-pink-500" />;
       case "comment":
         return <MessageSquare className="h-5 w-5 text-orange-500" />;
       case "task":
@@ -506,7 +535,12 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Timeline du dossier</h3>
+        <div>
+          <h3 className="text-lg font-semibold">Timeline du dossier</h3>
+          <p className="text-xs text-muted-foreground mt-1">
+            ⬆️ Plus récent en haut • ⬇️ Plus ancien en bas
+          </p>
+        </div>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={() => setAddCommentOpen(true)}>
             <Plus className="h-4 w-4 mr-1" /> Commentaire
@@ -526,16 +560,35 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
 
         {/* Events */}
         <div className="space-y-6">
-          {events.map((event, index) => (
-            <div key={event.id} className="relative pl-14">
-              {/* Icon */}
-              <div className="absolute left-0 top-1 bg-background p-1 rounded-full border-2 border-border">
-                {getEventIcon(event.type, event.status)}
-              </div>
+          {events.map((event, index) => {
+            const isCurrentStep = event.type === "step" && event.status === "in_progress";
+            
+            return (
+              <div key={event.id} className="relative pl-14">
+                {/* Icon */}
+                <div className={`absolute left-0 top-1 bg-background p-1 rounded-full border-2 ${
+                  isCurrentStep ? 'border-blue-500 shadow-lg shadow-blue-500/50' : 'border-border'
+                }`}>
+                  {getEventIcon(event.type, event.status)}
+                </div>
 
-              <Card className={`border-l-4 ${getEventColor(event.type, event.status)}`}>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-2">
+                {/* Current Step Indicator */}
+                {isCurrentStep && (
+                  <div className="absolute -left-3 -top-3 animate-pulse">
+                    <Badge className="bg-blue-500 text-white font-semibold shadow-lg">
+                      <Navigation className="h-3 w-3 mr-1" />
+                      ÉTAPE ACTUELLE
+                    </Badge>
+                  </div>
+                )}
+
+                <Card className={`border-l-4 ${
+                  isCurrentStep 
+                    ? 'border-blue-500 bg-blue-50/50 shadow-lg' 
+                    : getEventColor(event.type, event.status)
+                }`}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         {event.stepNumber && (
@@ -699,7 +752,8 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
                 </CardContent>
               </Card>
             </div>
-          ))}
+          );
+          })}
         </div>
       </div>
 
