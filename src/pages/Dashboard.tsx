@@ -42,7 +42,6 @@ const Dashboard = () => {
     totalInProgress: 0,
     totalTasks: 0,
     newEmails: 2, // Demo data
-    activeUsers: 12, // Demo data - nombre d'utilisateurs actifs
     byWorld: {} as Record<string, number>
   });
   const navigate = useNavigate();
@@ -121,7 +120,6 @@ const Dashboard = () => {
         totalInProgress: totalInProgress || 0,
         totalTasks: totalTasks || 0,
         newEmails: 2, // Demo data
-        activeUsers: 12, // Demo data - nombre d'utilisateurs actifs
         byWorld
       });
     } catch (error) {
@@ -193,13 +191,6 @@ const Dashboard = () => {
             icon={Mail}
             iconColor="#10b981"
             iconBg="#10b98115"
-          />
-          <StatsCard
-            title="Utilisateurs actifs"
-            value={stats.activeUsers}
-            icon={Users}
-            iconColor="#f59e0b"
-            iconBg="#f59e0b15"
           />
         </div>
       </section>
