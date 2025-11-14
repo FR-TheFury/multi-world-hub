@@ -7,13 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, CheckCircle2 } from 'lucide-react';
+import { CalendarIcon, CheckCircle2, Edit, Save, User, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/lib/store';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 interface Task {
   id: string;
@@ -124,17 +125,22 @@ export const TaskDetailDialog = ({ task, open, onOpenChange, onTaskUpdated }: Ta
   if (!task) return null;
 
   const getPriorityLabel = (priority: string) => {
-    const labels = { urgent: 'Urgent', high: 'Élevée', medium: 'Moyenne', low: 'Basse' };
+    const labels = { urgent: 'Urgente', high: 'Élevée', medium: 'Moyenne', low: 'Basse' };
     return labels[priority as keyof typeof labels] || priority;
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'urgent': return 'destructive';
-      case 'high': return 'default';
-      case 'medium': return 'secondary';
-      case 'low': return 'outline';
-      default: return 'secondary';
+      case 'urgent':
+        return 'bg-red-50 text-red-700 border-red-200';
+      case 'high':
+        return 'bg-orange-50 text-orange-700 border-orange-200';
+      case 'medium':
+        return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'low':
+        return 'bg-slate-100 text-slate-700 border-slate-200';
+      default:
+        return 'bg-slate-100 text-slate-700 border-slate-200';
     }
   };
 
@@ -234,7 +240,7 @@ export const TaskDetailDialog = ({ task, open, onOpenChange, onTaskUpdated }: Ta
                 <div>
                   <Label className="text-muted-foreground">Priorité</Label>
                   <div className="mt-1">
-                    <Badge variant={getPriorityColor(task.priority)}>
+                    <Badge className={cn("text-xs inline-flex", getPriorityColor(task.priority))}>
                       {getPriorityLabel(task.priority)}
                     </Badge>
                   </div>
