@@ -99,6 +99,32 @@ const TasksPanel = ({ world }: TasksPanelProps = {}) => {
         rows = nextTasks ?? [];
       }
 
+      // Fallback: If still empty, include tasks without due date
+      if (rows.length === 0) {
+        let fallbackQuery = supabase
+          .from('tasks')
+          .select(baseSelect)
+          .eq('status', 'todo')
+          .is('due_date', null)
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        if (world) {
+          fallbackQuery = fallbackQuery.eq('world_id', world.id);
+        }
+
+        if (!isSuperAdmin() && userId) {
+          fallbackQuery = fallbackQuery.eq('assigned_to', userId);
+        }
+
+        const { data: fallbackTasks, error: fallbackError } = await fallbackQuery;
+        if (fallbackError) {
+          console.error('Error fetching fallback tasks:', fallbackError);
+          return;
+        }
+        rows = fallbackTasks ?? [];
+      }
+
       // Enrich with worlds info via separate query
       if (rows.length > 0) {
         const worldIds = Array.from(new Set(rows.map(t => t.world_id).filter(Boolean)));
