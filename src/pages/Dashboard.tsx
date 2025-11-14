@@ -6,7 +6,7 @@ import WorldInfoCard from '@/components/WorldInfoCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, FileText } from 'lucide-react';
+import { ArrowRight, FileText, FolderOpen, Clock, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -22,6 +22,12 @@ interface Dossier {
   world_code: string;
 }
 
+interface WorldStats {
+  total: number;
+  en_cours: number;
+  en_attente: number;
+}
+
 const Dashboard = () => {
   const { accessibleWorlds: unsortedWorlds, profile } = useAuthStore();
   
@@ -34,14 +40,51 @@ const Dashboard = () => {
   }, [unsortedWorlds]);
 
   const [dossiersByWorld, setDossiersByWorld] = useState<Record<string, Dossier[]>>({});
+  const [worldStats, setWorldStats] = useState<Record<string, WorldStats>>({});
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     if (accessibleWorlds.length > 0) {
       fetchRecentDossiers();
+      fetchWorldStats();
     }
   }, [accessibleWorlds.length]);
+
+  const fetchWorldStats = async () => {
+    try {
+      const statsMap: Record<string, WorldStats> = {};
+
+      for (const world of accessibleWorlds) {
+        const { count: total } = await supabase
+          .from('dossiers')
+          .select('*', { count: 'exact', head: true })
+          .eq('world_id', world.id);
+
+        const { count: en_cours } = await supabase
+          .from('dossiers')
+          .select('*', { count: 'exact', head: true })
+          .eq('world_id', world.id)
+          .eq('status', 'en_cours');
+
+        const { count: nouveau } = await supabase
+          .from('dossiers')
+          .select('*', { count: 'exact', head: true })
+          .eq('world_id', world.id)
+          .eq('status', 'nouveau');
+
+        statsMap[world.code] = {
+          total: total || 0,
+          en_cours: en_cours || 0,
+          en_attente: nouveau || 0,
+        };
+      }
+
+      setWorldStats(statsMap);
+    } catch (error) {
+      console.error('Error fetching world stats:', error);
+    }
+  };
 
   const fetchRecentDossiers = async () => {
     try {
@@ -124,12 +167,53 @@ const Dashboard = () => {
       <section>
         <h3 className="text-lg font-semibold mb-4 text-foreground">Vos Mondes</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {accessibleWorlds.map((world) => (
-            <div key={world.id} className="space-y-4">
-              <WorldCard3D world={world} />
-              <WorldInfoCard world={world} />
-            </div>
-          ))}
+          {accessibleWorlds.map((world) => {
+            const stats = worldStats[world.code];
+            return (
+              <div key={world.id} className="space-y-4">
+                {/* Stats au-dessus de la carte */}
+                {stats && (
+                  <div className="grid grid-cols-3 gap-2">
+                    <Card className="border-0 shadow-sm">
+                      <CardContent className="p-3 flex items-center gap-2">
+                        <div className="p-2 rounded-lg bg-primary/10">
+                          <FolderOpen className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Total</p>
+                          <p className="text-lg font-bold">{stats.total}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-0 shadow-sm">
+                      <CardContent className="p-3 flex items-center gap-2">
+                        <div className="p-2 rounded-lg bg-amber-500/10">
+                          <Clock className="h-4 w-4 text-amber-600" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">En cours</p>
+                          <p className="text-lg font-bold">{stats.en_cours}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-0 shadow-sm">
+                      <CardContent className="p-3 flex items-center gap-2">
+                        <div className="p-2 rounded-lg bg-blue-500/10">
+                          <AlertCircle className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">En attente</p>
+                          <p className="text-lg font-bold">{stats.en_attente}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+                <WorldCard3D world={world} />
+                <WorldInfoCard world={world} />
+              </div>
+            );
+          })}
         </div>
       </section>
 
