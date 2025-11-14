@@ -7,6 +7,9 @@ import NotificationBell from '@/components/NotificationBell';
 import AnimatedBackground from '@/components/AnimatedBackground';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAuthStore } from '@/lib/store';
+import JDELogo from '@/assets/JDE.svg';
+import JDMOLogo from '@/assets/JDMO.svg';
+import DBCSLogo from '@/assets/DBCS.svg';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -37,9 +40,11 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <header className="h-16 border-b bg-card/80 backdrop-blur-md flex items-center justify-between px-6 shadow-sm sticky top-0 z-20">
             <div className="flex items-center gap-4">
               <SidebarTrigger />
-              <h1 className="ml-2 text-xl font-bold bg-gradient-to-r from-primary via-accent to-[hsl(145,65%,48%)] bg-clip-text text-transparent">
-                Multi-World Dashboard
-              </h1>
+              <div className="ml-2 flex items-center gap-3">
+                <img src={JDELogo} alt="JDE" className="h-8 w-auto" />
+                <img src={JDMOLogo} alt="JDMO" className="h-8 w-auto" />
+                <img src={DBCSLogo} alt="DBCS" className="h-8 w-auto" />
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <ThemeToggle />

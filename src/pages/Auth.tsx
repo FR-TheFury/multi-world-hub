@@ -8,6 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Lock, Mail } from 'lucide-react';
+import jdeLogo from '@/assets/JDE.svg';
+import jdmoLogo from '@/assets/JDMO.svg';
+import dbcsLogo from '@/assets/DBCS.svg';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -97,7 +100,11 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/20 to-accent/20 p-4">
       <Card className="w-full max-w-md shadow-vuexy-xl">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Multi-World Hub</CardTitle>
+          <div className="flex items-center justify-center gap-4 mb-2">
+            <img src={jdeLogo} alt="JDE" className="h-10 w-auto" />
+            <img src={jdmoLogo} alt="JDMO" className="h-10 w-auto" />
+            <img src={dbcsLogo} alt="DBCS" className="h-10 w-auto" />
+          </div>
           <CardDescription className="text-center">
             Accédez à vos espaces JDE, JDMO et DBCS
           </CardDescription>
