@@ -38,7 +38,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             <div className="flex items-center gap-4">
               <SidebarTrigger />
               <h1 className="ml-2 text-xl font-bold bg-gradient-to-r from-primary via-accent to-[hsl(145,65%,48%)] bg-clip-text text-transparent">
-                JD Expertises
+                Multi-World Dashboard
               </h1>
             </div>
             <div className="flex items-center gap-3">
