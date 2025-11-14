@@ -22,9 +22,11 @@ export type Database = {
           dossier_id: string | null
           end_time: string
           google_calendar_id: string | null
+          google_event_id: string | null
           id: string
           start_time: string
           status: string
+          synced_to_google: boolean | null
           title: string
           updated_at: string | null
           user_id: string
@@ -38,9 +40,11 @@ export type Database = {
           dossier_id?: string | null
           end_time: string
           google_calendar_id?: string | null
+          google_event_id?: string | null
           id?: string
           start_time: string
           status?: string
+          synced_to_google?: boolean | null
           title: string
           updated_at?: string | null
           user_id: string
@@ -54,9 +58,11 @@ export type Database = {
           dossier_id?: string | null
           end_time?: string
           google_calendar_id?: string | null
+          google_event_id?: string | null
           id?: string
           start_time?: string
           status?: string
+          synced_to_google?: boolean | null
           title?: string
           updated_at?: string | null
           user_id?: string
@@ -170,6 +176,7 @@ export type Database = {
       }
       dossier_attachments: {
         Row: {
+          admin_doc_status: string | null
           created_at: string | null
           document_type: string | null
           dossier_id: string
@@ -177,13 +184,16 @@ export type Database = {
           file_size: number
           file_type: string
           id: string
+          is_admin_document: boolean | null
           is_generated: boolean | null
+          is_visible_to_client: boolean | null
           metadata: Json | null
           storage_path: string
           uploaded_by: string
           workflow_step_id: string | null
         }
         Insert: {
+          admin_doc_status?: string | null
           created_at?: string | null
           document_type?: string | null
           dossier_id: string
@@ -191,13 +201,16 @@ export type Database = {
           file_size: number
           file_type: string
           id?: string
+          is_admin_document?: boolean | null
           is_generated?: boolean | null
+          is_visible_to_client?: boolean | null
           metadata?: Json | null
           storage_path: string
           uploaded_by: string
           workflow_step_id?: string | null
         }
         Update: {
+          admin_doc_status?: string | null
           created_at?: string | null
           document_type?: string | null
           dossier_id?: string
@@ -205,7 +218,9 @@ export type Database = {
           file_size?: number
           file_type?: string
           id?: string
+          is_admin_document?: boolean | null
           is_generated?: boolean | null
+          is_visible_to_client?: boolean | null
           metadata?: Json | null
           storage_path?: string
           uploaded_by?: string
@@ -237,6 +252,8 @@ export type Database = {
       }
       dossier_client_info: {
         Row: {
+          adresse_client: string | null
+          adresse_identique_sinistre: boolean | null
           adresse_sinistre: string | null
           client_type: Database["public"]["Enums"]["client_type"]
           compagnie_assurance: string | null
@@ -246,6 +263,9 @@ export type Database = {
           email: string | null
           id: string
           metadata: Json | null
+          montant_demolition_deblayage: number | null
+          montant_dommage_batiment: number | null
+          montant_mise_conformite: number | null
           nom: string | null
           numero_police: string | null
           prenom: string | null
@@ -254,6 +274,8 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          adresse_client?: string | null
+          adresse_identique_sinistre?: boolean | null
           adresse_sinistre?: string | null
           client_type: Database["public"]["Enums"]["client_type"]
           compagnie_assurance?: string | null
@@ -263,6 +285,9 @@ export type Database = {
           email?: string | null
           id?: string
           metadata?: Json | null
+          montant_demolition_deblayage?: number | null
+          montant_dommage_batiment?: number | null
+          montant_mise_conformite?: number | null
           nom?: string | null
           numero_police?: string | null
           prenom?: string | null
@@ -271,6 +296,8 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          adresse_client?: string | null
+          adresse_identique_sinistre?: boolean | null
           adresse_sinistre?: string | null
           client_type?: Database["public"]["Enums"]["client_type"]
           compagnie_assurance?: string | null
@@ -280,6 +307,9 @@ export type Database = {
           email?: string | null
           id?: string
           metadata?: Json | null
+          montant_demolition_deblayage?: number | null
+          montant_dommage_batiment?: number | null
+          montant_mise_conformite?: number | null
           nom?: string | null
           numero_police?: string | null
           prenom?: string | null
@@ -336,6 +366,63 @@ export type Database = {
           {
             foreignKeyName: "dossier_comments_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dossier_photos: {
+        Row: {
+          caption: string | null
+          created_at: string | null
+          display_order: number | null
+          dossier_id: string
+          file_name: string
+          file_size: number
+          id: string
+          metadata: Json | null
+          storage_path: string
+          taken_at: string | null
+          uploaded_by: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          dossier_id: string
+          file_name: string
+          file_size: number
+          id?: string
+          metadata?: Json | null
+          storage_path: string
+          taken_at?: string | null
+          uploaded_by: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          dossier_id?: string
+          file_name?: string
+          file_size?: number
+          id?: string
+          metadata?: Json | null
+          storage_path?: string
+          taken_at?: string | null
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dossier_photos_dossier_id_fkey"
+            columns: ["dossier_id"]
+            isOneToOne: false
+            referencedRelation: "dossiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dossier_photos_uploaded_by_fkey"
+            columns: ["uploaded_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -629,8 +716,11 @@ export type Database = {
       }
       dossiers: {
         Row: {
+          chiffre_affaires: number | null
           created_at: string | null
+          date_cloture: string | null
           id: string
+          is_important: boolean | null
           owner_id: string
           reference: string | null
           status: Database["public"]["Enums"]["dossier_status"]
@@ -640,8 +730,11 @@ export type Database = {
           world_id: string
         }
         Insert: {
+          chiffre_affaires?: number | null
           created_at?: string | null
+          date_cloture?: string | null
           id?: string
+          is_important?: boolean | null
           owner_id: string
           reference?: string | null
           status?: Database["public"]["Enums"]["dossier_status"]
@@ -651,8 +744,11 @@ export type Database = {
           world_id: string
         }
         Update: {
+          chiffre_affaires?: number | null
           created_at?: string | null
+          date_cloture?: string | null
           id?: string
+          is_important?: boolean | null
           owner_id?: string
           reference?: string | null
           status?: Database["public"]["Enums"]["dossier_status"]
@@ -1201,7 +1297,17 @@ export type Database = {
         | "step_completed"
         | "document_added"
         | "decision_made"
-      dossier_status: "nouveau" | "en_cours" | "cloture"
+      dossier_status:
+        | "nouveau"
+        | "en_cours"
+        | "cloture"
+        | "attente_validation_devis"
+        | "attente_devis"
+        | "attente_rdv"
+        | "attente_validation_compagnie"
+        | "attente_la"
+        | "attente_documents_admin"
+        | "procedure_judiciaire"
       workflow_progress_status:
         | "pending"
         | "in_progress"
@@ -1357,7 +1463,18 @@ export const Constants = {
         "document_added",
         "decision_made",
       ],
-      dossier_status: ["nouveau", "en_cours", "cloture"],
+      dossier_status: [
+        "nouveau",
+        "en_cours",
+        "cloture",
+        "attente_validation_devis",
+        "attente_devis",
+        "attente_rdv",
+        "attente_validation_compagnie",
+        "attente_la",
+        "attente_documents_admin",
+        "procedure_judiciaire",
+      ],
       workflow_progress_status: [
         "pending",
         "in_progress",
