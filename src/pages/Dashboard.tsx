@@ -11,8 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import TasksPanel from '@/components/TasksPanel';
-import EmailsPanel from '@/components/EmailsPanel';
+import UnifiedTasksPanel from '@/components/UnifiedTasksPanel';
 
 interface Dossier {
   id: string;
@@ -297,18 +296,11 @@ const Dashboard = () => {
         </section>
       )}
 
-      {/* Tasks and Emails Section */}
+      {/* Unified Tasks and Communications Section */}
       {!loading && accessibleWorlds.length > 0 && (
         <section className="space-y-5">
           <h3 className="text-lg font-semibold text-foreground">Tâches et Communications</h3>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            {accessibleWorlds.map((world) => (
-              <TasksPanel key={`tasks-${world.code}`} world={world} />
-            ))}
-          </div>
-          <div className="grid grid-cols-1 gap-5">
-            <EmailsPanel />
-          </div>
+          <UnifiedTasksPanel accessibleWorlds={accessibleWorlds} />
         </section>
       )}
 
