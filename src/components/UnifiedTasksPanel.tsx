@@ -1,0 +1,350 @@
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { Plus, CheckCircle2, Clock, AlertCircle, Eye, MoreVertical, UserCog, Check, Mail } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuthStore, World } from '@/lib/store';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+import { TaskDetailDialog } from './TaskDetailDialog';
+import { toast } from 'sonner';
+
+interface Task {
+  id: string;
+  title: string;
+  description: string | null;
+  priority: string;
+  status: string;
+  due_date: string | null;
+  assigned_to: string;
+  created_by: string;
+  world_id: string;
+  created_at: string;
+}
+
+interface UnifiedTasksPanelProps {
+  accessibleWorlds: World[];
+}
+
+const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
+  const { isSuperAdmin, user } = useAuthStore();
+  const [tasksByWorld, setTasksByWorld] = useState<Record<string, Task[]>>({});
+  const [loading, setLoading] = useState(true);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  useEffect(() => {
+    fetchAllTasks();
+    
+    const channel = supabase
+      .channel('unified-tasks-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => {
+        fetchAllTasks();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [accessibleWorlds]);
+
+  const fetchAllTasks = async () => {
+    try {
+      setLoading(true);
+      
+      let query = supabase
+        .from('tasks')
+        .select('*')
+        .in('world_id', accessibleWorlds.map(w => w.id))
+        .order('priority', { ascending: false })
+        .order('due_date', { ascending: true });
+
+      if (!isSuperAdmin()) {
+        query = query.eq('assigned_to', user?.id);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      // Grouper les tâches par monde
+      const grouped: Record<string, Task[]> = {};
+      accessibleWorlds.forEach(world => {
+        grouped[world.id] = [];
+      });
+
+      data?.forEach(task => {
+        if (grouped[task.world_id]) {
+          grouped[task.world_id].push(task);
+        }
+      });
+
+      setTasksByWorld(grouped);
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      toast.error('Erreur lors du chargement des tâches');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateTaskStatus = async (taskId: string, newStatus: string) => {
+    const { error } = await supabase
+      .from('tasks')
+      .update({ status: newStatus })
+      .eq('id', taskId);
+    
+    if (error) {
+      toast.error('Erreur lors de la mise à jour de la tâche');
+      return;
+    }
+    
+    toast.success(newStatus === 'done' ? 'Tâche validée' : 'Tâche réactivée');
+    fetchAllTasks();
+  };
+
+  const handleQuickValidate = async (taskId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await updateTaskStatus(taskId, 'done');
+  };
+
+  const handleQuickReassign = (task: Task, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedTask(task);
+    setDialogOpen(true);
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return 'bg-destructive/15 text-destructive border-destructive/30';
+      case 'medium':
+        return 'bg-primary/15 text-primary border-primary/30';
+      case 'low':
+        return 'bg-muted text-muted-foreground border-muted-foreground/30';
+      default:
+        return 'bg-muted text-muted-foreground border-muted-foreground/30';
+    }
+  };
+
+  const getPriorityIcon = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return <AlertCircle className="h-3 w-3" />;
+      case 'medium':
+        return <Clock className="h-3 w-3" />;
+      case 'low':
+        return <CheckCircle2 className="h-3 w-3" />;
+      default:
+        return <Clock className="h-3 w-3" />;
+    }
+  };
+
+  const getPriorityLabel = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return 'Élevée';
+      case 'medium':
+        return 'Moyenne';
+      case 'low':
+        return 'Basse';
+      default:
+        return priority;
+    }
+  };
+
+  const getWorldIcon = (worldCode: string) => {
+    try {
+      return `/src/assets/${worldCode}.svg`;
+    } catch {
+      return null;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {accessibleWorlds.map(world => (
+          <Card key={world.id} className="animate-pulse">
+            <CardHeader className="h-20 bg-muted/50" />
+            <CardContent className="h-64 bg-muted/20" />
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {accessibleWorlds.map(world => {
+          const worldTasks = tasksByWorld[world.id] || [];
+          const incompleteTasks = worldTasks.filter(t => t.status !== 'done');
+
+          return (
+            <Card key={world.id} className="flex flex-col">
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${world.theme_colors.primary}15` }}>
+                      <img 
+                        src={getWorldIcon(world.code)} 
+                        alt={world.code}
+                        className="w-6 h-6"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground">{world.name}</h3>
+                      <p className="text-xs text-muted-foreground">
+                        {incompleteTasks.length} tâche{incompleteTasks.length !== 1 ? 's' : ''} active{incompleteTasks.length !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  </div>
+                  {isSuperAdmin() && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled
+                      title="Création de tâche bientôt disponible"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Nouvelle
+                    </Button>
+                  )}
+                </div>
+              </CardHeader>
+
+              <CardContent className="flex-1 flex flex-col gap-4">
+                {/* Tasks Section */}
+                <div className="space-y-3 flex-1">
+                  {worldTasks.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-8 text-center">
+                      <CheckCircle2 className="h-12 w-12 text-muted-foreground/30 mb-3" />
+                      <p className="text-sm text-muted-foreground">Aucune tâche assignée</p>
+                    </div>
+                  ) : (
+                    worldTasks.map(task => (
+                      <div
+                        key={task.id}
+                        className={cn(
+                          "flex items-start gap-3 p-3 rounded-lg border transition-all hover:shadow-md",
+                          task.status === 'done' 
+                            ? 'bg-muted/30 border-border/50 opacity-60' 
+                            : 'bg-card border-border hover:border-primary/30'
+                        )}
+                      >
+                        <Checkbox
+                          checked={task.status === 'done'}
+                          onCheckedChange={(checked) => 
+                            updateTaskStatus(task.id, checked ? 'done' : 'todo')
+                          }
+                          className="mt-1"
+                        />
+                        <div className="flex-1 min-w-0 space-y-2">
+                          <div className="flex items-start gap-2 flex-wrap">
+                            <h4 className={cn(
+                              "text-sm font-medium flex-1 min-w-0",
+                              task.status === 'done' && 'line-through text-muted-foreground'
+                            )}>
+                              {task.title}
+                            </h4>
+                            <Badge variant="outline" className={cn("text-xs", getPriorityColor(task.priority))}>
+                              {getPriorityIcon(task.priority)}
+                              <span className="ml-1">{getPriorityLabel(task.priority)}</span>
+                            </Badge>
+                          </div>
+                          {task.description && (
+                            <p className="text-xs text-muted-foreground line-clamp-2">
+                              {task.description}
+                            </p>
+                          )}
+                          {task.due_date && (
+                            <p className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {format(new Date(task.due_date), 'dd MMM yyyy', { locale: fr })}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => {
+                              setSelectedTask(task);
+                              setDialogOpen(true);
+                            }}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              {user?.id === task.assigned_to && task.status !== 'done' && (
+                                <DropdownMenuItem onClick={(e) => handleQuickValidate(task.id, e)}>
+                                  <Check className="h-4 w-4 mr-2" />
+                                  Valider la tâche
+                                </DropdownMenuItem>
+                              )}
+                              {isSuperAdmin() && (
+                                <>
+                                  {user?.id === task.assigned_to && task.status !== 'done' && (
+                                    <DropdownMenuSeparator />
+                                  )}
+                                  <DropdownMenuItem onClick={(e) => handleQuickReassign(task, e)}>
+                                    <UserCog className="h-4 w-4 mr-2" />
+                                    Modifier / Réassigner
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Emails Section */}
+                <div className="pt-4 border-t border-border">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Mail className="h-4 w-4" />
+                    <p className="text-xs">Aucun email non lu</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {selectedTask && (
+        <TaskDetailDialog
+          task={selectedTask}
+          open={dialogOpen}
+          onOpenChange={(open) => {
+            setDialogOpen(open);
+            if (!open) {
+              setSelectedTask(null);
+            }
+          }}
+          onTaskUpdated={fetchAllTasks}
+        />
+      )}
+    </>
+  );
+};
+
+export default UnifiedTasksPanel;
