@@ -77,14 +77,14 @@ const AppSidebar = () => {
                   onClick={() => navigate('/jde/dossiers')}
                   className={`relative transition-all duration-200 ${
                     isActive('/jde/dossiers') 
-                      ? 'bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 font-semibold border-l-4 border-emerald-600 shadow-md' 
+                      ? 'bg-gradient-to-r from-red-100 to-red-50 text-red-700 font-semibold border-l-4 border-red-600 shadow-md' 
                       : 'hover:bg-accent hover:translate-x-1'
                   }`}
                 >
-                  <Scale className={`h-5 w-5 ${isActive('/jde/dossiers') ? 'text-emerald-600' : ''}`} />
+                  <Scale className={`h-5 w-5 ${isActive('/jde/dossiers') ? 'text-red-600' : ''}`} />
                   {!isCollapsed && <span>Dossiers JDE</span>}
                   {isActive('/jde/dossiers') && (
-                    <div className="absolute right-2 w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+                    <div className="absolute right-2 w-2 h-2 rounded-full bg-red-600 animate-pulse" />
                   )}
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -109,14 +109,14 @@ const AppSidebar = () => {
                   onClick={() => navigate('/dbcs/dossiers')}
                   className={`relative transition-all duration-200 ${
                     isActive('/dbcs/dossiers') 
-                      ? 'bg-gradient-to-r from-purple-100 to-pink-50 text-purple-700 font-semibold border-l-4 border-purple-600 shadow-md' 
+                      ? 'bg-gradient-to-r from-green-100 to-green-50 text-green-700 font-semibold border-l-4 border-green-600 shadow-md' 
                       : 'hover:bg-accent hover:translate-x-1'
                   }`}
                 >
-                  <Archive className={`h-5 w-5 ${isActive('/dbcs/dossiers') ? 'text-purple-600' : ''}`} />
+                  <Archive className={`h-5 w-5 ${isActive('/dbcs/dossiers') ? 'text-green-600' : ''}`} />
                   {!isCollapsed && <span>Dossiers DBCS</span>}
                   {isActive('/dbcs/dossiers') && (
-                    <div className="absolute right-2 w-2 h-2 rounded-full bg-purple-600 animate-pulse" />
+                    <div className="absolute right-2 w-2 h-2 rounded-full bg-green-600 animate-pulse" />
                   )}
                 </SidebarMenuButton>
               </SidebarMenuItem>
