@@ -217,8 +217,7 @@ const Home = () => {
                     delay: index * 0.2 + 0.1,
                   }}
                   whileHover={{ scale: 1.05, y: -10 }}
-                  className={`relative p-8 rounded-3xl bg-gradient-to-br ${world.gradient} backdrop-blur-sm border-2 border-white/20 shadow-2xl overflow-hidden group cursor-pointer`}
-                  onClick={() => navigate(`/${world.name.toLowerCase()}/dossiers`)}
+                  className={`relative p-8 rounded-3xl bg-gradient-to-br ${world.gradient} backdrop-blur-sm border-2 border-white/20 shadow-2xl overflow-hidden group`}
                 >
                   {/* Glow effect */}
                   <div
@@ -236,9 +235,24 @@ const Home = () => {
                       whileHover={{ rotate: [0, -10, 10, -10, 0] }}
                       transition={{ duration: 0.5 }}
                     />
-                    <h3 className="text-2xl font-bold text-center" style={{ color: world.color }}>
+                    <h3 className="text-2xl font-bold text-center mb-6" style={{ color: world.color }}>
                       {world.name}
                     </h3>
+                    
+                    <Button
+                      onClick={() => navigate(`/${world.name.toLowerCase()}/dossiers`)}
+                      variant="ghost"
+                      className={`w-full ${
+                        world.name === 'JDE' 
+                          ? '!bg-red-600 hover:!bg-red-700' 
+                          : world.name === 'JDMO'
+                          ? '!bg-orange-600 hover:!bg-orange-700'
+                          : '!bg-green-600 hover:!bg-green-700'
+                      } text-white shadow-md`}
+                    >
+                      Entrer dans le Monde
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
                   </div>
 
                   {/* Decorative corner */}
