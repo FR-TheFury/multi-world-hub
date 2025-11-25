@@ -241,13 +241,12 @@ const Home = () => {
                     
                     <Button
                       onClick={() => navigate(`/${world.name.toLowerCase()}/dossiers`)}
-                      variant="ghost"
                       className={`w-full ${
                         world.name === 'JDE' 
-                          ? '!bg-red-600 hover:!bg-red-700' 
+                          ? 'bg-red-600 hover:bg-red-700' 
                           : world.name === 'JDMO'
-                          ? '!bg-orange-600 hover:!bg-orange-700'
-                          : '!bg-green-600 hover:!bg-green-700'
+                          ? 'bg-orange-600 hover:bg-orange-700'
+                          : 'bg-green-600 hover:bg-green-700'
                       } text-white shadow-md`}
                     >
                       Entrer dans le Monde

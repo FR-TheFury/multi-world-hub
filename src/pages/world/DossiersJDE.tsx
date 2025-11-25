@@ -157,6 +157,7 @@ const DossiersJDE = () => {
   }
 
   return (
+    <div className="min-h-screen bg-gradient-to-br from-red-50/50 via-background to-red-50/30 dark:from-red-950/20 dark:via-background dark:to-red-950/10 p-6">
     <div className="space-y-6">
       {/* Header avec logo JDE */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -405,6 +406,7 @@ const DossiersJDE = () => {
           onSuccess={fetchWorldAndDossiers}
         />
       )}
+    </div>
     </div>
   );
 };
