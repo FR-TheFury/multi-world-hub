@@ -253,6 +253,19 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                       style={{
                         borderColor: world.theme_colors.primary,
                         color: world.theme_colors.primary,
+                        backgroundColor: 'transparent',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!e.currentTarget.disabled) {
+                          e.currentTarget.style.backgroundColor = world.theme_colors.primary;
+                          e.currentTarget.style.color = 'white';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!e.currentTarget.disabled) {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                          e.currentTarget.style.color = world.theme_colors.primary;
+                        }
                       }}
                     >
                       <Plus className="h-4 w-4 mr-1" />
@@ -266,8 +279,8 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                   <span className="text-xs text-muted-foreground mr-1">Filtrer:</span>
                   <Button
                     size="sm"
-                    variant={priorityFilter === 'high' ? 'default' : 'outline'}
-                    className="h-7 px-2 text-xs"
+                    variant="outline"
+                    className="h-7 px-2 text-xs transition-all"
                     style={priorityFilter === 'high' ? {
                       backgroundColor: world.theme_colors.primary,
                       color: 'white',
@@ -275,16 +288,29 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                     } : {
                       borderColor: world.theme_colors.primary,
                       color: world.theme_colors.primary,
+                      backgroundColor: 'transparent',
                     }}
                     onClick={() => setPriorityFilter(priorityFilter === 'high' ? null : 'high')}
+                    onMouseEnter={(e) => {
+                      if (priorityFilter !== 'high') {
+                        e.currentTarget.style.backgroundColor = world.theme_colors.primary;
+                        e.currentTarget.style.color = 'white';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (priorityFilter !== 'high') {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.color = world.theme_colors.primary;
+                      }
+                    }}
                   >
                     <AlertCircle className="h-3 w-3 mr-1" />
                     Urgent
                   </Button>
                   <Button
                     size="sm"
-                    variant={priorityFilter === 'medium' ? 'default' : 'outline'}
-                    className="h-7 px-2 text-xs"
+                    variant="outline"
+                    className="h-7 px-2 text-xs transition-all"
                     style={priorityFilter === 'medium' ? {
                       backgroundColor: world.theme_colors.primary,
                       color: 'white',
@@ -292,16 +318,29 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                     } : {
                       borderColor: world.theme_colors.primary,
                       color: world.theme_colors.primary,
+                      backgroundColor: 'transparent',
                     }}
                     onClick={() => setPriorityFilter(priorityFilter === 'medium' ? null : 'medium')}
+                    onMouseEnter={(e) => {
+                      if (priorityFilter !== 'medium') {
+                        e.currentTarget.style.backgroundColor = world.theme_colors.primary;
+                        e.currentTarget.style.color = 'white';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (priorityFilter !== 'medium') {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.color = world.theme_colors.primary;
+                      }
+                    }}
                   >
                     <Clock className="h-3 w-3 mr-1" />
                     Moyen
                   </Button>
                   <Button
                     size="sm"
-                    variant={priorityFilter === 'low' ? 'default' : 'outline'}
-                    className="h-7 px-2 text-xs"
+                    variant="outline"
+                    className="h-7 px-2 text-xs transition-all"
                     style={priorityFilter === 'low' ? {
                       backgroundColor: world.theme_colors.primary,
                       color: 'white',
@@ -309,8 +348,21 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                     } : {
                       borderColor: world.theme_colors.primary,
                       color: world.theme_colors.primary,
+                      backgroundColor: 'transparent',
                     }}
                     onClick={() => setPriorityFilter(priorityFilter === 'low' ? null : 'low')}
+                    onMouseEnter={(e) => {
+                      if (priorityFilter !== 'low') {
+                        e.currentTarget.style.backgroundColor = world.theme_colors.primary;
+                        e.currentTarget.style.color = 'white';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (priorityFilter !== 'low') {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.color = world.theme_colors.primary;
+                      }
+                    }}
                   >
                     <CheckCircle2 className="h-3 w-3 mr-1" />
                     Bas
@@ -318,10 +370,22 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                   {priorityFilter && (
                     <Button
                       size="sm"
-                      variant="ghost"
-                      className="h-7 px-2 text-xs"
-                      style={{ color: world.theme_colors.primary }}
+                      variant="outline"
+                      className="h-7 px-2 text-xs transition-all"
+                      style={{ 
+                        color: world.theme_colors.primary,
+                        borderColor: world.theme_colors.primary,
+                        backgroundColor: 'transparent',
+                      }}
                       onClick={() => setPriorityFilter(null)}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = world.theme_colors.primary;
+                        e.currentTarget.style.color = 'white';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.color = world.theme_colors.primary;
+                      }}
                     >
                       Réinitialiser
                     </Button>
