@@ -221,13 +221,9 @@ const Home = () => {
                 >
                   {/* Glow effect */}
                   <div
-                    className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300"
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                     style={{
-                      background: world.name === 'JDE' 
-                        ? 'radial-gradient(circle, rgb(220, 38, 38) 0%, transparent 70%)'
-                        : world.name === 'JDMO'
-                        ? 'radial-gradient(circle, rgb(237, 125, 49) 0%, transparent 70%)'
-                        : 'radial-gradient(circle, rgb(34, 197, 94) 0%, transparent 70%)'
+                      background: `radial-gradient(circle at 50% 50%, ${world.color}20 0%, transparent 70%)`,
                     }}
                   />
 

@@ -161,7 +161,7 @@ const DossiersDBCS = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-100/60 via-background to-green-100/40 dark:from-green-950/30 dark:via-background dark:to-green-950/20 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-green-50/50 via-background to-green-50/30 dark:from-green-950/20 dark:via-background dark:to-green-950/10 p-6">
     <div className="space-y-6">
       {/* Header avec logo DBCS */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

@@ -157,7 +157,7 @@ const DossiersJDMO = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-100/60 via-background to-orange-100/40 dark:from-orange-950/30 dark:via-background dark:to-orange-950/20 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50/50 via-background to-orange-50/30 dark:from-orange-950/20 dark:via-background dark:to-orange-950/10 p-6">
     <div className="space-y-6">
       {/* Header avec logo JDMO */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
