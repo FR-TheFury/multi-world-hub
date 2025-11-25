@@ -202,7 +202,7 @@ const DossiersDBCS = () => {
           <Button
             onClick={() => setCreateDialogOpen(true)}
             size="sm"
-            className="bg-green-600 hover:bg-green-700"
+            className="bg-green-600 hover:bg-green-700 text-white"
           >
             <Plus className="h-4 w-4 mr-2" />
             Nouveau dossier DBCS
@@ -328,7 +328,7 @@ const DossiersDBCS = () => {
                   <Button
                     onClick={() => navigate(`/dossier/${dossier.id}`)}
                     size="sm"
-                    className="bg-green-600 hover:bg-green-700"
+                    className="bg-green-600 hover:bg-green-700 text-white"
                   >
                     <Eye className="h-4 w-4 mr-2" />
                     Voir le détail
@@ -380,7 +380,7 @@ const DossiersDBCS = () => {
                 {!searchQuery && statusFilter === 'all' && (
                   <Button
                     onClick={() => setCreateDialogOpen(true)}
-                    className="mt-4 bg-green-600 hover:bg-green-700"
+                    className="mt-4 bg-green-600 hover:bg-green-700 text-white"
                     size="sm"
                   >
                     <Plus className="h-4 w-4 mr-2" />

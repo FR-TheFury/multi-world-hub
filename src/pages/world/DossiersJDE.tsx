@@ -162,7 +162,7 @@ const DossiersJDE = () => {
         <div className="flex items-center gap-4">
           <img src={JDELogo} alt="JDE" className="h-16 w-16" />
           <div>
-            <h2 className="text-3xl font-bold mb-1 text-emerald-600">
+            <h2 className="text-3xl font-bold mb-1 text-red-600">
               JDE - Justice et Droit des Expertises
             </h2>
             <p className="text-sm text-muted-foreground">
@@ -198,7 +198,7 @@ const DossiersJDE = () => {
           <Button
             onClick={() => setCreateDialogOpen(true)}
             size="sm"
-            className="bg-emerald-600 hover:bg-emerald-700"
+            className="bg-red-600 hover:bg-red-700 text-white"
           >
             <Plus className="h-4 w-4 mr-2" />
             Nouveau dossier JDE
@@ -208,13 +208,13 @@ const DossiersJDE = () => {
 
       {/* Stats cards */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="hover:shadow-md transition-shadow cursor-pointer border-emerald-200" onClick={() => setStatusFilter('all')}>
+        <Card className="hover:shadow-md transition-shadow cursor-pointer border-red-200" onClick={() => setStatusFilter('all')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Dossiers</CardTitle>
-            <Scale className="h-4 w-4 text-emerald-600" />
+            <Scale className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-600">{stats.total}</div>
+            <div className="text-2xl font-bold text-red-600">{stats.total}</div>
             <p className="text-xs text-muted-foreground">Tous les dossiers</p>
           </CardContent>
         </Card>
@@ -258,8 +258,8 @@ const DossiersJDE = () => {
         <CardHeader className="border-b bg-card">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-              <div className="p-2 rounded-lg bg-emerald-600/10">
-                <FileText className="h-5 w-5 text-emerald-600" />
+              <div className="p-2 rounded-lg bg-red-600/10">
+                <FileText className="h-5 w-5 text-red-600" />
               </div>
               {statusFilter === 'all' ? 'Tous les dossiers JDE' : `Dossiers ${getStatusLabel(statusFilter)}`}
               <Badge variant="secondary">{filteredDossiers.length}</Badge>
@@ -324,7 +324,7 @@ const DossiersJDE = () => {
                   <Button
                     onClick={() => navigate(`/dossier/${dossier.id}`)}
                     size="sm"
-                    className="bg-emerald-600 hover:bg-emerald-700"
+                    className="bg-red-600 hover:bg-red-700 text-white"
                   >
                     <Eye className="h-4 w-4 mr-2" />
                     Voir le détail
@@ -364,8 +364,8 @@ const DossiersJDE = () => {
 
             {filteredDossiers.length === 0 && (
               <div className="text-center py-16 text-muted-foreground">
-                <div className="p-4 rounded-full bg-emerald-50 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                  <Scale className="h-10 w-10 text-emerald-600 opacity-40" />
+                <div className="p-4 rounded-full bg-red-50 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                  <Scale className="h-10 w-10 text-red-600 opacity-40" />
                 </div>
                 <p className="text-sm font-medium">Aucun dossier JDE trouvé</p>
                 <p className="text-xs mt-1">
@@ -376,7 +376,7 @@ const DossiersJDE = () => {
                 {!searchQuery && statusFilter === 'all' && (
                   <Button
                     onClick={() => setCreateDialogOpen(true)}
-                    className="mt-4 bg-emerald-600 hover:bg-emerald-700"
+                    className="mt-4 bg-red-600 hover:bg-red-700 text-white"
                     size="sm"
                   >
                     <Plus className="h-4 w-4 mr-2" />
