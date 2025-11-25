@@ -9,15 +9,15 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* Base colors - Modern clean design with warm undertones */
-    --background: 0 0% 98%;
+    --background: 0 0% 94%;
     --foreground: 0 0% 15%;
 
-    /* Card system - Crisp white with depth */
-    --card: 0 0% 100%;
+    /* Card system - Softer white with depth */
+    --card: 0 0% 97%;
     --card-foreground: 0 0% 15%;
 
     /* Popover */
-    --popover: 0 0% 100%;
+    --popover: 0 0% 97%;
     --popover-foreground: 0 0% 15%;
 
     /* Primary - Vibrant Red (JDE color) */
@@ -26,11 +26,11 @@ All colors MUST be HSL.
     --primary-hover: 0 85% 52%;
     
     /* Secondary - Modern Grey */
-    --secondary: 0 0% 95%;
+    --secondary: 0 0% 90%;
     --secondary-foreground: 0 0% 20%;
 
     /* Muted - Soft neutral grey */
-    --muted: 0 0% 96%;
+    --muted: 0 0% 92%;
     --muted-foreground: 0 0% 45%;
 
     /* Accent - Energetic Orange (JDMO color) */
@@ -42,21 +42,21 @@ All colors MUST be HSL.
     --destructive-foreground: 0 0% 100%;
 
     /* Border & Input - Clean grey tones */
-    --border: 0 0% 90%;
-    --input: 0 0% 94%;
+    --border: 0 0% 85%;
+    --input: 0 0% 90%;
     --ring: 0 85% 58%;
 
     /* Radius - Modern rounded corners */
     --radius: 1.25rem;
 
     /* Sidebar tokens - Clean with red accents */
-    --sidebar-background: 0 0% 100%;
+    --sidebar-background: 0 0% 97%;
     --sidebar-foreground: 0 0% 40%;
     --sidebar-primary: 0 85% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 85% 97%;
+    --sidebar-accent: 0 85% 93%;
     --sidebar-accent-foreground: 0 85% 45%;
-    --sidebar-border: 0 0% 92%;
+    --sidebar-border: 0 0% 88%;
     --sidebar-ring: 0 85% 58%;
 
     /* World-specific colors - JDE (Red theme) */
