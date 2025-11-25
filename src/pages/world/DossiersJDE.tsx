@@ -202,7 +202,8 @@ const DossiersJDE = () => {
           <Button
             onClick={() => setCreateDialogOpen(true)}
             size="sm"
-            className="bg-red-600 hover:bg-red-700 text-white shadow-md"
+            variant="ghost"
+            className="!bg-red-600 hover:!bg-red-700 text-white shadow-md"
           >
             <Plus className="h-4 w-4 mr-2" />
             Nouveau dossier JDE
@@ -328,7 +329,8 @@ const DossiersJDE = () => {
                   <Button
                     onClick={() => navigate(`/dossier/${dossier.id}`)}
                     size="sm"
-                    className="bg-red-600 hover:bg-red-700 text-white shadow-md"
+                    variant="ghost"
+                    className="!bg-red-600 hover:!bg-red-700 text-white shadow-md"
                   >
                     <Eye className="h-4 w-4 mr-2" />
                     Voir le détail
@@ -380,7 +382,8 @@ const DossiersJDE = () => {
                 {!searchQuery && statusFilter === 'all' && (
                   <Button
                     onClick={() => setCreateDialogOpen(true)}
-                    className="mt-4 bg-red-600 hover:bg-red-700 text-white"
+                    variant="ghost"
+                    className="mt-4 !bg-red-600 hover:!bg-red-700 text-white"
                     size="sm"
                   >
                     <Plus className="h-4 w-4 mr-2" />
