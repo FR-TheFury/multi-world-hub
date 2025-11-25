@@ -174,23 +174,26 @@ const DossiersJDE = () => {
         <div className="flex flex-wrap items-center gap-2">
           <Button
             onClick={() => navigate('/mailbox')}
-            variant="outline"
             size="sm"
+            className="border-red-600 text-red-600 hover:bg-red-50"
+            variant="outline"
           >
             <Mail className="h-4 w-4 mr-2" />
             Messages
           </Button>
           <Button
             onClick={() => navigate('/dashboard')}
-            variant="outline"
             size="sm"
+            className="border-red-600 text-red-600 hover:bg-red-50"
+            variant="outline"
           >
             <Calendar className="h-4 w-4 mr-2" />
             Agenda
           </Button>
           <Button
-            variant="outline"
             size="sm"
+            className="border-red-600 text-red-600 hover:bg-red-50"
+            variant="outline"
           >
             <BarChart3 className="h-4 w-4 mr-2" />
             Statistiques
@@ -266,11 +269,11 @@ const DossiersJDE = () => {
             </CardTitle>
             
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm">
+              <Button size="sm" className="border-red-600 text-red-600 hover:bg-red-50" variant="outline">
                 <Filter className="h-4 w-4 mr-2" />
                 Filtrer
               </Button>
-              <Button variant="outline" size="sm">
+              <Button size="sm" className="border-red-600 text-red-600 hover:bg-red-50" variant="outline">
                 <Download className="h-4 w-4 mr-2" />
                 Exporter
               </Button>
