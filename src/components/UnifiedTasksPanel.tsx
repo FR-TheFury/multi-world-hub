@@ -34,12 +34,13 @@ interface UnifiedTasksPanelProps {
 }
 
 const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
-  const { isSuperAdmin, user } = useAuthStore();
+  const { isSuperAdmin, user, roles } = useAuthStore();
   const navigate = useNavigate();
   const [tasksByWorld, setTasksByWorld] = useState<Record<string, Task[]>>({});
   const [loading, setLoading] = useState(true);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAllTasks();
@@ -54,7 +55,7 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [accessibleWorlds]);
+  }, [accessibleWorlds, priorityFilter]);
 
   const fetchAllTasks = async () => {
     try {
@@ -63,19 +64,21 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
       let query = supabase
         .from('tasks')
         .select('*')
-        .in('world_id', accessibleWorlds.map(w => w.id))
-        .order('priority', { ascending: false })
-        .order('due_date', { ascending: true });
+        .in('world_id', accessibleWorlds.map(w => w.id));
 
       if (!isSuperAdmin()) {
         query = query.eq('assigned_to', user?.id);
+      }
+
+      if (priorityFilter) {
+        query = query.eq('priority', priorityFilter);
       }
 
       const { data, error } = await query;
 
       if (error) throw error;
 
-      // Grouper les tâches par monde
+      // Grouper et trier les tâches par monde
       const grouped: Record<string, Task[]> = {};
       accessibleWorlds.forEach(world => {
         grouped[world.id] = [];
@@ -85,6 +88,16 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
         if (grouped[task.world_id]) {
           grouped[task.world_id].push(task);
         }
+      });
+
+      // Trier les tâches par date d'échéance dans chaque monde
+      Object.keys(grouped).forEach(worldId => {
+        grouped[worldId].sort((a, b) => {
+          if (!a.due_date && !b.due_date) return 0;
+          if (!a.due_date) return 1;
+          if (!b.due_date) return -1;
+          return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+        });
       });
 
       setTasksByWorld(grouped);
@@ -191,7 +204,7 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
 
           return (
             <Card key={world.id} className="flex flex-col">
-              <CardHeader className="pb-4">
+              <CardHeader className="pb-4 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${world.theme_colors.primary}15` }}>
@@ -220,6 +233,57 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                     >
                       <Plus className="h-4 w-4 mr-1" />
                       Nouvelle
+                    </Button>
+                  )}
+                </div>
+                
+                {/* Priority Filters */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs text-muted-foreground mr-1">Filtrer:</span>
+                  <Button
+                    size="sm"
+                    variant={priorityFilter === 'high' ? 'default' : 'outline'}
+                    className={cn(
+                      "h-7 px-2 text-xs",
+                      priorityFilter === 'high' && "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    )}
+                    onClick={() => setPriorityFilter(priorityFilter === 'high' ? null : 'high')}
+                  >
+                    <AlertCircle className="h-3 w-3 mr-1" />
+                    Urgent
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={priorityFilter === 'medium' ? 'default' : 'outline'}
+                    className={cn(
+                      "h-7 px-2 text-xs",
+                      priorityFilter === 'medium' && "bg-primary text-primary-foreground hover:bg-primary/90"
+                    )}
+                    onClick={() => setPriorityFilter(priorityFilter === 'medium' ? null : 'medium')}
+                  >
+                    <Clock className="h-3 w-3 mr-1" />
+                    Moyen
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={priorityFilter === 'low' ? 'default' : 'outline'}
+                    className={cn(
+                      "h-7 px-2 text-xs",
+                      priorityFilter === 'low' && "bg-muted text-muted-foreground hover:bg-muted/90"
+                    )}
+                    onClick={() => setPriorityFilter(priorityFilter === 'low' ? null : 'low')}
+                  >
+                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                    Bas
+                  </Button>
+                  {priorityFilter && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 px-2 text-xs"
+                      onClick={() => setPriorityFilter(null)}
+                    >
+                      Réinitialiser
                     </Button>
                   )}
                 </div>
