@@ -164,59 +164,13 @@ const Dashboard = () => {
         </p>
       </div>
 
-      {/* 3D World Cards with Info */}
-      <section>
-        <h3 className="text-lg font-semibold mb-4 text-foreground">Vos Mondes</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {accessibleWorlds.map((world) => {
-            const stats = worldStats[world.code];
-            return (
-              <div key={world.id} className="space-y-4">
-                {/* Stats au-dessus de la carte */}
-                {stats && (
-                  <div className="grid grid-cols-3 gap-2">
-                    <Card className="border-0 shadow-sm">
-                      <CardContent className="p-3 flex items-center gap-2">
-                        <div className="p-2 rounded-lg bg-primary/10">
-                          <FolderOpen className="h-4 w-4 text-primary" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Total</p>
-                          <p className="text-lg font-bold">{stats.total}</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card className="border-0 shadow-sm">
-                      <CardContent className="p-3 flex items-center gap-2">
-                        <div className="p-2 rounded-lg bg-amber-500/10">
-                          <Clock className="h-4 w-4 text-amber-600" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">En cours</p>
-                          <p className="text-lg font-bold">{stats.en_cours}</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card className="border-0 shadow-sm">
-                      <CardContent className="p-3 flex items-center gap-2">
-                        <div className="p-2 rounded-lg bg-blue-500/10">
-                          <AlertCircle className="h-4 w-4 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">En attente</p>
-                          <p className="text-lg font-bold">{stats.en_attente}</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                )}
-                <WorldCard3D world={world} />
-                <WorldInfoCard world={world} />
-              </div>
-            );
-          })}
-        </div>
-      </section>
+      {/* Unified Tasks and Communications Section */}
+      {!loading && accessibleWorlds.length > 0 && (
+        <section className="space-y-5">
+          <h3 className="text-lg font-semibold text-foreground">Tâches et Communications</h3>
+          <UnifiedTasksPanel accessibleWorlds={accessibleWorlds} />
+        </section>
+      )}
 
       {/* Recent Dossiers by World */}
       {!loading && Object.keys(dossiersByWorld).length > 0 && (
@@ -293,14 +247,6 @@ const Dashboard = () => {
               </Card>
             );
           })}
-        </section>
-      )}
-
-      {/* Unified Tasks and Communications Section */}
-      {!loading && accessibleWorlds.length > 0 && (
-        <section className="space-y-5">
-          <h3 className="text-lg font-semibold text-foreground">Tâches et Communications</h3>
-          <UnifiedTasksPanel accessibleWorlds={accessibleWorlds} />
         </section>
       )}
 
