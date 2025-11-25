@@ -2,7 +2,6 @@ import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/lib/store';
 import WorldCard3D from '@/components/WorldCard3D';
-import WorldInfoCard from '@/components/WorldInfoCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -211,11 +210,17 @@ const Dashboard = () => {
                   </div>
                 )}
                 <WorldCard3D world={world} />
-                <WorldInfoCard world={world} />
               </div>
             );
           })}
         </div>
+
+        {/* Unified Tasks Panel */}
+        {!loading && accessibleWorlds.length > 0 && (
+          <div className="mt-8">
+            <UnifiedTasksPanel accessibleWorlds={accessibleWorlds} />
+          </div>
+        )}
       </section>
 
       {/* Recent Dossiers by World */}
@@ -293,14 +298,6 @@ const Dashboard = () => {
               </Card>
             );
           })}
-        </section>
-      )}
-
-      {/* Unified Tasks and Communications Section */}
-      {!loading && accessibleWorlds.length > 0 && (
-        <section className="space-y-5">
-          <h3 className="text-lg font-semibold text-foreground">Tâches et Communications</h3>
-          <UnifiedTasksPanel accessibleWorlds={accessibleWorlds} />
         </section>
       )}
 
