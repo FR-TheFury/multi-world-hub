@@ -203,11 +203,26 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
           const incompleteTasks = worldTasks.filter(t => t.status !== 'done');
 
           return (
-            <Card key={world.id} className="flex flex-col">
-              <CardHeader className="pb-4 space-y-4">
+            <Card 
+              key={world.id} 
+              className="flex flex-col transition-all"
+              style={{
+                borderColor: world.theme_colors.primary,
+                borderWidth: '2px',
+              }}
+            >
+              <CardHeader 
+                className="pb-4 space-y-4"
+                style={{
+                  background: `linear-gradient(135deg, ${world.theme_colors.primary}08 0%, ${world.theme_colors.accent}05 100%)`,
+                }}
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${world.theme_colors.primary}15` }}>
+                    <div 
+                      className="w-10 h-10 rounded-lg flex items-center justify-center" 
+                      style={{ backgroundColor: `${world.theme_colors.primary}20` }}
+                    >
                       <img 
                         src={getWorldIcon(world.code)} 
                         alt={world.code}
@@ -218,7 +233,12 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                       />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-foreground">{world.name}</h3>
+                      <h3 
+                        className="font-semibold"
+                        style={{ color: world.theme_colors.primary }}
+                      >
+                        {world.name}
+                      </h3>
                       <p className="text-xs text-muted-foreground">
                         {incompleteTasks.length} tâche{incompleteTasks.length !== 1 ? 's' : ''} active{incompleteTasks.length !== 1 ? 's' : ''}
                       </p>
@@ -230,6 +250,10 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                       variant="outline"
                       disabled
                       title="Création de tâche bientôt disponible"
+                      style={{
+                        borderColor: world.theme_colors.primary,
+                        color: world.theme_colors.primary,
+                      }}
                     >
                       <Plus className="h-4 w-4 mr-1" />
                       Nouvelle
@@ -243,10 +267,15 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                   <Button
                     size="sm"
                     variant={priorityFilter === 'high' ? 'default' : 'outline'}
-                    className={cn(
-                      "h-7 px-2 text-xs",
-                      priorityFilter === 'high' && "bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    )}
+                    className="h-7 px-2 text-xs"
+                    style={priorityFilter === 'high' ? {
+                      backgroundColor: world.theme_colors.primary,
+                      color: 'white',
+                      borderColor: world.theme_colors.primary,
+                    } : {
+                      borderColor: world.theme_colors.primary,
+                      color: world.theme_colors.primary,
+                    }}
                     onClick={() => setPriorityFilter(priorityFilter === 'high' ? null : 'high')}
                   >
                     <AlertCircle className="h-3 w-3 mr-1" />
@@ -255,10 +284,15 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                   <Button
                     size="sm"
                     variant={priorityFilter === 'medium' ? 'default' : 'outline'}
-                    className={cn(
-                      "h-7 px-2 text-xs",
-                      priorityFilter === 'medium' && "bg-primary text-primary-foreground hover:bg-primary/90"
-                    )}
+                    className="h-7 px-2 text-xs"
+                    style={priorityFilter === 'medium' ? {
+                      backgroundColor: world.theme_colors.primary,
+                      color: 'white',
+                      borderColor: world.theme_colors.primary,
+                    } : {
+                      borderColor: world.theme_colors.primary,
+                      color: world.theme_colors.primary,
+                    }}
                     onClick={() => setPriorityFilter(priorityFilter === 'medium' ? null : 'medium')}
                   >
                     <Clock className="h-3 w-3 mr-1" />
@@ -267,10 +301,15 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                   <Button
                     size="sm"
                     variant={priorityFilter === 'low' ? 'default' : 'outline'}
-                    className={cn(
-                      "h-7 px-2 text-xs",
-                      priorityFilter === 'low' && "bg-muted text-muted-foreground hover:bg-muted/90"
-                    )}
+                    className="h-7 px-2 text-xs"
+                    style={priorityFilter === 'low' ? {
+                      backgroundColor: world.theme_colors.primary,
+                      color: 'white',
+                      borderColor: world.theme_colors.primary,
+                    } : {
+                      borderColor: world.theme_colors.primary,
+                      color: world.theme_colors.primary,
+                    }}
                     onClick={() => setPriorityFilter(priorityFilter === 'low' ? null : 'low')}
                   >
                     <CheckCircle2 className="h-3 w-3 mr-1" />
@@ -281,6 +320,7 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                       size="sm"
                       variant="ghost"
                       className="h-7 px-2 text-xs"
+                      style={{ color: world.theme_colors.primary }}
                       onClick={() => setPriorityFilter(null)}
                     >
                       Réinitialiser
@@ -299,15 +339,16 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                     </div>
                   ) : (
                     worldTasks.map(task => (
-                      <div
-                        key={task.id}
-                        className={cn(
-                          "flex items-start gap-3 p-3 rounded-lg border transition-all hover:shadow-md",
-                          task.status === 'done' 
-                            ? 'bg-muted/30 border-border/50 opacity-60' 
-                            : 'bg-card border-border hover:border-primary/30'
-                        )}
-                      >
+                        <div
+                          key={task.id}
+                          className={cn(
+                            "flex items-start gap-3 p-3 rounded-lg border transition-all hover:shadow-md",
+                            task.status === 'done' && 'bg-muted/30 border-border/50 opacity-60'
+                          )}
+                          style={task.status !== 'done' ? {
+                            borderColor: `${world.theme_colors.primary}30`,
+                          } : undefined}
+                        >
                         <Checkbox
                           checked={task.status === 'done'}
                           onCheckedChange={(checked) => 
@@ -416,11 +457,21 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                           {recentUnreadEmails.map(email => (
                             <div
                               key={email.id}
-                              className="flex items-start gap-3 p-2 rounded-lg border border-border bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer"
+                              className="flex items-start gap-3 p-2 rounded-lg border transition-colors cursor-pointer"
+                              style={{
+                                borderColor: `${world.theme_colors.primary}30`,
+                                backgroundColor: `${world.theme_colors.primary}08`,
+                              }}
                               onClick={() => navigate('/mailbox')}
                             >
                               <Avatar className="h-8 w-8 flex-shrink-0">
-                                <AvatarFallback className="text-xs bg-primary/20 text-primary font-semibold">
+                                <AvatarFallback 
+                                  className="text-xs font-semibold"
+                                  style={{
+                                    backgroundColor: `${world.theme_colors.primary}20`,
+                                    color: world.theme_colors.primary,
+                                  }}
+                                >
                                   {email.senderAvatar}
                                 </AvatarFallback>
                               </Avatar>
