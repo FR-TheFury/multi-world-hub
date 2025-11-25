@@ -201,7 +201,7 @@ const DossiersJDMO = () => {
           <Button
             onClick={() => setCreateDialogOpen(true)}
             size="sm"
-            className="bg-orange-600 hover:bg-orange-700 text-white"
+            className="bg-orange-600 hover:bg-orange-700 text-white shadow-md"
           >
             <Plus className="h-4 w-4 mr-2" />
             Nouveau dossier JDMO
@@ -327,7 +327,7 @@ const DossiersJDMO = () => {
                   <Button
                     onClick={() => navigate(`/dossier/${dossier.id}`)}
                     size="sm"
-                    className="bg-orange-600 hover:bg-orange-700 text-white"
+                    className="bg-orange-600 hover:bg-orange-700 text-white shadow-md"
                   >
                     <Eye className="h-4 w-4 mr-2" />
                     Voir le détail
@@ -379,7 +379,7 @@ const DossiersJDMO = () => {
                 {!searchQuery && statusFilter === 'all' && (
                   <Button
                     onClick={() => setCreateDialogOpen(true)}
-                    className="mt-4 bg-orange-600 hover:bg-orange-700 text-white"
+                    className="mt-4 bg-orange-600 hover:bg-orange-700 text-white shadow-md"
                     size="sm"
                   >
                     <Plus className="h-4 w-4 mr-2" />
