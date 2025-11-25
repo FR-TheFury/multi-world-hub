@@ -37,6 +37,7 @@ interface World {
 }
 
 const DossiersJDMO = () => {
+  // JDMO uses orange color theme
   const navigate = useNavigate();
   const [dossiers, setDossiers] = useState<Dossier[]>([]);
   const [world, setWorld] = useState<World | null>(null);

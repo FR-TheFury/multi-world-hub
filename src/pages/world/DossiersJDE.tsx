@@ -37,6 +37,7 @@ interface World {
 }
 
 const DossiersJDE = () => {
+  // JDE uses red color theme
   const navigate = useNavigate();
   const [dossiers, setDossiers] = useState<Dossier[]>([]);
   const [world, setWorld] = useState<World | null>(null);
