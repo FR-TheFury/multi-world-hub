@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { Plus, CheckCircle2, Clock, AlertCircle, Eye, MoreVertical, UserCog, Check, Mail } from 'lucide-react';
+import { Plus, CheckCircle2, Clock, AlertCircle, Eye, MoreVertical, UserCog, Check, Mail, Paperclip } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore, World } from '@/lib/store';
 import { format } from 'date-fns';
@@ -12,6 +12,9 @@ import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { TaskDetailDialog } from './TaskDetailDialog';
 import { toast } from 'sonner';
+import { DEMO_EMAILS } from '@/data/emails';
+import { useNavigate } from 'react-router-dom';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 interface Task {
   id: string;
@@ -32,6 +35,7 @@ interface UnifiedTasksPanelProps {
 
 const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
   const { isSuperAdmin, user } = useAuthStore();
+  const navigate = useNavigate();
   const [tasksByWorld, setTasksByWorld] = useState<Record<string, Task[]>>({});
   const [loading, setLoading] = useState(true);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -318,11 +322,82 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                 </div>
 
                 {/* Emails Section */}
-                <div className="pt-4 border-t border-border">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Mail className="h-4 w-4" />
-                    <p className="text-xs">Aucun email non lu</p>
-                  </div>
+                <div className="pt-4 border-t border-border space-y-3">
+                  {(() => {
+                    const worldEmails = DEMO_EMAILS.filter(email => email.labels.includes(world.code));
+                    const unreadEmails = worldEmails.filter(e => e.unread);
+                    const recentUnreadEmails = unreadEmails.slice(0, 3);
+
+                    if (unreadEmails.length === 0) {
+                      return (
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Mail className="h-4 w-4" />
+                          <p className="text-xs">Aucun email non lu</p>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4 text-foreground" />
+                            <p className="text-sm font-medium text-foreground">
+                              Emails ({unreadEmails.length} non lu{unreadEmails.length !== 1 ? 's' : ''})
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          {recentUnreadEmails.map(email => (
+                            <div
+                              key={email.id}
+                              className="flex items-start gap-3 p-2 rounded-lg border border-border bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer"
+                              onClick={() => navigate('/mailbox')}
+                            >
+                              <Avatar className="h-8 w-8 flex-shrink-0">
+                                <AvatarFallback className="text-xs bg-primary/20 text-primary font-semibold">
+                                  {email.senderAvatar}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-start justify-between gap-2 mb-1">
+                                  <p className="text-sm font-semibold text-foreground truncate">
+                                    {email.sender}
+                                  </p>
+                                  <div className="flex items-center gap-1 flex-shrink-0">
+                                    {email.priority === 'high' && (
+                                      <Badge variant="destructive" className="text-[10px] h-4 px-1.5">
+                                        Urgent
+                                      </Badge>
+                                    )}
+                                    {email.hasAttachment && (
+                                      <Paperclip className="h-3 w-3 text-muted-foreground" />
+                                    )}
+                                  </div>
+                                </div>
+                                <p className="text-xs text-foreground truncate mb-0.5">
+                                  {email.subject}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {email.time}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full text-xs"
+                          onClick={() => navigate('/mailbox')}
+                        >
+                          → Voir tous les emails
+                        </Button>
+                      </>
+                    );
+                  })()}
                 </div>
               </CardContent>
             </Card>
