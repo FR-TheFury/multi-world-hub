@@ -33,18 +33,18 @@ const WorldCard3D = ({ world }: WorldCard3DProps) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      whileHover={{ scale: 1.06, y: -8 }}
+      whileHover={{ scale: 1.02, y: -4 }}
     >
       <motion.div
         whileHover={{
-          rotateY: 6,
-          rotateX: -6,
+          rotateY: 2,
+          rotateX: -2,
         }}
         transition={{ 
-          duration: 0.4,
+          duration: 0.3,
           type: "spring",
-          stiffness: 200,
-          damping: 15
+          stiffness: 150,
+          damping: 20
         }}
         style={{
           transformStyle: 'preserve-3d',
@@ -87,10 +87,9 @@ const WorldCard3D = ({ world }: WorldCard3DProps) => {
 
             <div className="pt-4">
               <Button
-                className="w-full group relative overflow-hidden"
+                className="w-full group relative overflow-hidden text-white"
                 style={{
                   backgroundColor: colors.primary,
-                  color: 'white',
                   borderRadius: '0.875rem',
                 }}
               >
