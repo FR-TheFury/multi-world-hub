@@ -307,8 +307,10 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                       size="sm"
                       variant="outline"
                       onClick={() => {
+                        console.log('Nouvelle tâche clicked for world:', world.id);
                         setSelectedWorldForTask(world.id);
                         setCreateTaskDialogOpen(true);
+                        console.log('Dialog state set to true');
                       }}
                       style={{
                         borderColor: world.theme_colors.primary,
@@ -713,12 +715,24 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
         />
       )}
 
-      <CreateTaskDialog
-        open={createTaskDialogOpen}
-        onOpenChange={setCreateTaskDialogOpen}
-        worldId={selectedWorldForTask}
-        onTaskCreated={fetchAllTasks}
-      />
+      {createTaskDialogOpen && selectedWorldForTask && (
+        <CreateTaskDialog
+          open={createTaskDialogOpen}
+          onOpenChange={(open) => {
+            console.log('Dialog onOpenChange called with:', open);
+            setCreateTaskDialogOpen(open);
+            if (!open) {
+              setSelectedWorldForTask('');
+            }
+          }}
+          worldId={selectedWorldForTask}
+          onTaskCreated={() => {
+            fetchAllTasks();
+            setCreateTaskDialogOpen(false);
+            setSelectedWorldForTask('');
+          }}
+        />
+      )}
     </>
   );
 };
