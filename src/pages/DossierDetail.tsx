@@ -126,8 +126,8 @@ const DossierDetail = () => {
   };
 
   return (
-    <div className={`min-h-screen p-6 ${getWorldGradient(dossier.world.code)}`}>
-      <div className="space-y-6">
+    <div className={`min-h-screen w-full ${getWorldGradient(dossier.world.code)}`}>
+      <div className="space-y-6 p-6">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="space-y-2">
