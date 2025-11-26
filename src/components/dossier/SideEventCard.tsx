@@ -65,11 +65,16 @@ const SideEventCard = ({ event, side, onClick }: SideEventCardProps) => {
   };
 
   return (
-    <div className={cn("flex items-center gap-2", side === "left" ? "flex-row" : "flex-row-reverse")}>
+    <div className="relative">
       {/* Dotted connection line */}
-      <div className={cn("flex-1 border-t-2 border-dashed border-muted animate-fade-in", side === "left" ? "mr-2" : "ml-2")} />
+      <div 
+        className={cn(
+          "absolute top-1/2 -translate-y-1/2 w-6 border-t-2 border-dashed border-muted-foreground/40",
+          side === "left" ? "right-full" : "left-full"
+        )} 
+      />
       
-      {/* Readable card */}
+      {/* Event card */}
       <Card
         className={cn(
           "w-full cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] border-l-4 shadow-sm",
