@@ -367,9 +367,10 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
     }
   };
 
-  // Group events between workflow steps
+  // Group events chronologically between workflow steps
   const groupEventsBetweenSteps = () => {
-    const stepEvents = events.filter(e => e.type === "step");
+    const stepEvents = events.filter(e => e.type === "step")
+      .sort((a, b) => b.stepNumber! - a.stepNumber!); // Sort inverted: highest step number first
     const sideEvents = events.filter(e => e.type !== "step");
     
     const grouped: Array<{
@@ -380,26 +381,34 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
     }> = [];
 
     stepEvents.forEach((step, index) => {
-      const nextStep = stepEvents[index + 1];
+      const nextStep = stepEvents[index + 1]; // Next in inverted order (chronologically previous)
       
-      // Get events between this step and next step
+      // Get timestamps
       const stepTime = new Date(step.timestamp).getTime();
-      const nextStepTime = nextStep ? new Date(nextStep.timestamp).getTime() : Infinity;
+      const nextStepTime = nextStep ? new Date(nextStep.timestamp).getTime() : 0; // 0 = beginning of time
       
+      // Get events that occurred chronologically BETWEEN this step and the next (previous in time)
       const eventsInRange = sideEvents.filter(e => {
         const eventTime = new Date(e.timestamp).getTime();
-        // Include events that belong to this workflow step or fall in time range
-        return (e.workflowStepId === step.workflowStepId) || 
-               (eventTime >= stepTime && eventTime < nextStepTime);
+        
+        // For the last step (first chronologically, bottom of display), include all events before it
+        if (!nextStep) {
+          return eventTime <= stepTime;
+        }
+        
+        // Otherwise, include events between nextStep and current step
+        return eventTime > nextStepTime && eventTime <= stepTime;
       });
       
       // Separate into left (documents, comments, annotations) and right (appointments, tasks)
-      const leftEvents = eventsInRange.filter(e => 
-        e.type === "document" || e.type === "comment" || e.type === "annotation"
-      );
-      const rightEvents = eventsInRange.filter(e => 
-        e.type === "appointment" || e.type === "task"
-      );
+      // Sort each side chronologically (reversed for display top to bottom)
+      const leftEvents = eventsInRange
+        .filter(e => e.type === "document" || e.type === "comment" || e.type === "annotation")
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        
+      const rightEvents = eventsInRange
+        .filter(e => e.type === "appointment" || e.type === "task")
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
       
       grouped.push({
         step,
@@ -629,60 +638,123 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
 
             <div className="space-y-4 relative">
               {groupedEvents.map((group, groupIndex) => (
-                <div key={group.step.id} className="relative">
-                  {/* Step Circle and Card */}
-                  <div className="flex flex-col items-center relative">
-                    {/* Vertical connecting line from previous step */}
-                    {groupIndex > 0 && (
-                      <div className="absolute bottom-full w-0.5 h-4 bg-border" />
+                 <div key={group.step.id} className="relative">
+                  {/* Vertical connecting line from previous step */}
+                  {groupIndex > 0 && (
+                    <div className="w-0.5 h-4 bg-border mx-auto mb-2" />
+                  )}
+
+                  {/* Step Card - Full information card */}
+                  <Card 
+                    className={cn(
+                      "w-full max-w-2xl mx-auto border-l-4 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer",
+                      group.step.status === "completed" && "border-l-green-500 bg-green-50/30",
+                      group.step.status === "in_progress" && "border-l-blue-500 bg-blue-50/30",
+                      group.step.status === "pending" && "border-l-muted-foreground",
+                      group.step.status === "blocked" && "border-l-red-500 bg-red-50/30",
+                      selectedStep === group.step.workflowStepId && "ring-2 ring-primary ring-offset-2"
                     )}
-                    
-                    {/* Step Circle */}
-                    <div
-                      className={cn(
-                        "relative w-16 h-16 rounded-full border-4 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 hover:scale-110 hover:shadow-lg z-10 bg-background",
-                        group.step.status === "completed" && "border-green-500 bg-green-50",
-                        group.step.status === "in_progress" && "border-blue-500 bg-blue-50 animate-pulse",
-                        group.step.status === "pending" && "border-muted-foreground",
-                        group.step.status === "blocked" && "border-red-500 bg-red-50",
-                        selectedStep === group.step.workflowStepId && "ring-4 ring-primary ring-offset-2 scale-110"
-                      )}
-                      onClick={() => handleStepClick(group.step.workflowStepId!)}
-                    >
-                      {group.step.status === "completed" ? (
-                        <CheckCircle2 className="h-8 w-8 text-green-500" />
-                      ) : (
-                        <>
-                          <span className="text-xl font-bold">{group.step.stepNumber}</span>
-                          <div className="absolute -bottom-2 -right-2 bg-background rounded-full p-1 border-2 border-border">
-                            {getEventIcon(group.step.type, group.step.status)}
+                    onClick={() => handleStepClick(group.step.workflowStepId!)}
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4">
+                        {/* Circle with step number */}
+                        <div
+                          className={cn(
+                            "flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-2xl shadow-lg transition-all",
+                            group.step.status === "completed" && "bg-green-500",
+                            group.step.status === "in_progress" && "bg-blue-500 animate-pulse",
+                            group.step.status === "pending" && "bg-gray-400",
+                            group.step.status === "blocked" && "bg-red-500"
+                          )}
+                        >
+                          {group.step.status === "completed" ? (
+                            <CheckCircle2 className="h-8 w-8" />
+                          ) : (
+                            group.step.stepNumber
+                          )}
+                        </div>
+
+                        {/* Step details */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <h3 className="font-bold text-lg line-clamp-2">
+                              {group.step.title}
+                            </h3>
+                            <Badge
+                              variant={
+                                group.step.status === "completed"
+                                  ? "default"
+                                  : group.step.status === "in_progress"
+                                  ? "secondary"
+                                  : "outline"
+                              }
+                              className={cn(
+                                "text-xs flex-shrink-0",
+                                group.step.status === "completed" && "bg-green-500",
+                                group.step.status === "in_progress" && "bg-blue-500",
+                                group.step.status === "blocked" && "bg-red-500"
+                              )}
+                            >
+                              {group.step.status === "completed" && "✓ Complété"}
+                              {group.step.status === "in_progress" && "⏳ En cours"}
+                              {group.step.status === "pending" && "⏸ En attente"}
+                              {group.step.status === "blocked" && "⚠ Bloqué"}
+                            </Badge>
                           </div>
-                        </>
-                      )}
-                    </div>
+                          
+                          {group.step.description && (
+                            <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                              {group.step.description}
+                            </p>
+                          )}
 
-                    {/* Step Name */}
-                    <div className="mt-3 text-center max-w-[180px]">
-                      <p className="text-sm font-semibold line-clamp-2">{group.step.title}</p>
-                      {group.step.status && (
-                        <Badge variant="outline" className="mt-1 text-xs">
-                          {group.step.status === "completed" ? "Complété" :
-                           group.step.status === "in_progress" ? "En cours" :
-                           group.step.status === "blocked" ? "Bloqué" : "En attente"}
-                        </Badge>
-                      )}
-                    </div>
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                            {group.step.metadata?.progress?.completed_at && (
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                <span>
+                                  Complété le {format(new Date(group.step.metadata.progress.completed_at), "dd MMM yyyy 'à' HH:mm", { locale: fr })}
+                                </span>
+                              </div>
+                            )}
+                            
+                            {group.step.metadata?.progress?.started_at && !group.step.metadata?.progress?.completed_at && (
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                <span>
+                                  Démarré le {format(new Date(group.step.metadata.progress.started_at), "dd MMM yyyy", { locale: fr })}
+                                </span>
+                              </div>
+                            )}
 
-                    {/* Vertical line to next step */}
-                    {group.nextStep && (
-                      <div className="absolute top-full w-0.5 h-4 bg-border" />
-                    )}
-                  </div>
+                            {group.step.metadata?.progress?.assigned_to && (
+                              <Badge variant="outline" className="text-xs">
+                                <User className="h-3 w-3 mr-1" />
+                                Assigné
+                              </Badge>
+                            )}
+                          </div>
+
+                          {group.step.metadata?.progress?.notes && (
+                            <p className="text-xs text-muted-foreground mt-2 italic line-clamp-2 border-l-2 border-muted pl-2">
+                              {group.step.metadata.progress.notes}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Vertical line to next step */}
+                  {group.nextStep && (
+                    <div className="w-0.5 h-4 bg-border mx-auto mt-2" />
+                  )}
 
                   {/* Step Details Panel (when selected) */}
                   {selectedStep === group.step.workflowStepId && (
                     <div className="mt-4 animate-fade-in">
-                      <Card className="border-l-4 border-primary">
+                      <Card className="border-l-4 border-primary max-w-2xl mx-auto">
                         <CardContent className="p-6">
                           <WorkflowStepDetails
                             step={group.step.metadata.step}
@@ -701,7 +773,7 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
                   {/* Expanded Event Details */}
                   {group.leftEvents.concat(group.rightEvents).map((event) => (
                     expandedEvent === event.id && (
-                      <Card key={`expanded-${event.id}`} className="mt-4 border-l-4 border-primary animate-fade-in">
+                      <Card key={`expanded-${event.id}`} className="mt-4 border-l-4 border-primary animate-fade-in max-w-2xl mx-auto">
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between mb-2">
                             <div className="flex items-center gap-2">
