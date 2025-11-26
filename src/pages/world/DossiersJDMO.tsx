@@ -18,7 +18,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import CreateDossierDialog from '@/components/dossier/CreateDossierDialog';
 import { toast } from 'sonner';
-import JDMOLogo from '@/assets/JDMO.svg';
+import JDMOLogo from '@/assets/JDMO.png';
 
 interface Dossier {
   id: string;
