@@ -349,8 +349,8 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
         });
       });
 
-      // Sort by timestamp
-      timelineEvents.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      // Sort by timestamp (reversed - newest first, so step 1 appears at bottom)
+      timelineEvents.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
       setEvents(timelineEvents);
     } catch (error) {
