@@ -30,6 +30,7 @@ import { AddCommentDialog } from "./AddCommentDialog";
 import { MarkDocumentStatusDialog } from "./MarkDocumentStatusDialog";
 import WorkflowStepDetails from "./WorkflowStepDetails";
 import SideEventCard from "./SideEventCard";
+import { EventDetailDialog } from "./EventDetailDialog";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
@@ -67,6 +68,9 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
   const [loading, setLoading] = useState(true);
   const [showLeftColumn, setShowLeftColumn] = useState(true);
   const [showRightColumn, setShowRightColumn] = useState(true);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [eventDetailOpen, setEventDetailOpen] = useState(false);
+  const [selectedEventForDetail, setSelectedEventForDetail] = useState<TimelineEvent | null>(null);
 
   useEffect(() => {
     fetchTimelineEvents();
@@ -584,22 +588,23 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
 
       {/* 3-Column Timeline Layout - Line by line */}
       <div className="relative space-y-4">
-        {/* Toggle buttons */}
+        {/* Toggle buttons with counts */}
         <div className="flex justify-between">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setShowLeftColumn(!showLeftColumn)}
+            className="transition-all"
           >
             {showLeftColumn ? (
               <>
                 <ChevronLeft className="h-4 w-4 mr-1" />
-                Masquer gauche
+                📄 Masquer ({groupedEvents.reduce((sum, g) => sum + g.leftEvents.length, 0)})
               </>
             ) : (
               <>
                 <ChevronRight className="h-4 w-4 mr-1" />
-                Documents ({groupedEvents.reduce((sum, g) => sum + g.leftEvents.length, 0)})
+                📄 Afficher docs ({groupedEvents.reduce((sum, g) => sum + g.leftEvents.length, 0)})
               </>
             )}
           </Button>
@@ -608,15 +613,16 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
             variant="outline"
             size="sm"
             onClick={() => setShowRightColumn(!showRightColumn)}
+            className="transition-all"
           >
             {showRightColumn ? (
               <>
-                Masquer droite
+                📅 Masquer ({groupedEvents.reduce((sum, g) => sum + g.rightEvents.length, 0)})
                 <ChevronRight className="h-4 w-4 ml-1" />
               </>
             ) : (
               <>
-                RDV & Tâches ({groupedEvents.reduce((sum, g) => sum + g.rightEvents.length, 0)})
+                📅 Afficher RDV ({groupedEvents.reduce((sum, g) => sum + g.rightEvents.length, 0)})
                 <ChevronLeft className="h-4 w-4 ml-1" />
               </>
             )}
@@ -626,29 +632,73 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
         {/* Main grid - render each group as a row */}
         {groupedEvents.map((group, groupIndex) => {
           const isExpanded = selectedStep === group.step.workflowStepId;
+          const isGroupExpanded = expandedGroups.has(group.step.id);
+          const MAX_VISIBLE = 3;
+          
+          const visibleLeftEvents = isGroupExpanded ? group.leftEvents : group.leftEvents.slice(0, MAX_VISIBLE);
+          const hiddenLeftCount = group.leftEvents.length - MAX_VISIBLE;
+          
+          const visibleRightEvents = isGroupExpanded ? group.rightEvents : group.rightEvents.slice(0, MAX_VISIBLE);
+          const hiddenRightCount = group.rightEvents.length - MAX_VISIBLE;
+          
+          const toggleGroupExpand = () => {
+            setExpandedGroups(prev => {
+              const next = new Set(prev);
+              if (next.has(group.step.id)) {
+                next.delete(group.step.id);
+              } else {
+                next.add(group.step.id);
+              }
+              return next;
+            });
+          };
           
           return (
             <div 
               key={group.step.id}
               className={cn(
-                "grid gap-6 items-start",
+                "grid gap-6 items-center",
                 !showLeftColumn && !showRightColumn && "grid-cols-[1fr]",
-                showLeftColumn && !showRightColumn && "grid-cols-[260px_1fr]",
-                !showLeftColumn && showRightColumn && "grid-cols-[1fr_260px]",
-                showLeftColumn && showRightColumn && "grid-cols-[260px_1fr_260px]"
+                showLeftColumn && !showRightColumn && "grid-cols-[220px_1fr]",
+                !showLeftColumn && showRightColumn && "grid-cols-[1fr_220px]",
+                showLeftColumn && showRightColumn && "grid-cols-[220px_1fr_220px]"
               )}
             >
               {/* LEFT COLUMN - Documents, Comments, Annotations */}
               {showLeftColumn && (
-                <div className="space-y-3 pr-2">
-                  {group.leftEvents.map((event) => (
+                <div className="space-y-2 pr-2">
+                  {visibleLeftEvents.map((event) => (
                     <SideEventCard
                       key={event.id}
                       event={event as any}
                       side="left"
-                      onClick={() => setExpandedEvent(expandedEvent === event.id ? null : event.id)}
+                      onClick={() => {
+                        setSelectedEventForDetail(event);
+                        setEventDetailOpen(true);
+                      }}
                     />
                   ))}
+                  {hiddenLeftCount > 0 && !isGroupExpanded && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-xs text-muted-foreground hover:text-foreground"
+                      onClick={toggleGroupExpand}
+                    >
+                      Voir {hiddenLeftCount} autre{hiddenLeftCount > 1 ? 's' : ''}...
+                    </Button>
+                  )}
+                  {isGroupExpanded && group.leftEvents.length > MAX_VISIBLE && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-xs text-muted-foreground hover:text-foreground"
+                      onClick={toggleGroupExpand}
+                    >
+                      <ChevronUp className="h-3 w-3 mr-1" />
+                      Réduire
+                    </Button>
+                  )}
                 </div>
               )}
 
@@ -865,15 +915,39 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
 
               {/* RIGHT COLUMN - Appointments, Tasks */}
               {showRightColumn && (
-                <div className="space-y-3 pl-2">
-                  {group.rightEvents.map((event) => (
+                <div className="space-y-2 pl-2">
+                  {visibleRightEvents.map((event) => (
                     <SideEventCard
                       key={event.id}
                       event={event as any}
                       side="right"
-                      onClick={() => setExpandedEvent(expandedEvent === event.id ? null : event.id)}
+                      onClick={() => {
+                        setSelectedEventForDetail(event);
+                        setEventDetailOpen(true);
+                      }}
                     />
                   ))}
+                  {hiddenRightCount > 0 && !isGroupExpanded && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-xs text-muted-foreground hover:text-foreground"
+                      onClick={toggleGroupExpand}
+                    >
+                      Voir {hiddenRightCount} autre{hiddenRightCount > 1 ? 's' : ''}...
+                    </Button>
+                  )}
+                  {isGroupExpanded && group.rightEvents.length > MAX_VISIBLE && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-xs text-muted-foreground hover:text-foreground"
+                      onClick={toggleGroupExpand}
+                    >
+                      <ChevronUp className="h-3 w-3 mr-1" />
+                      Réduire
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
@@ -922,6 +996,14 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
           fetchTimelineEvents();
         }}
       />
+
+      {selectedEventForDetail && (
+        <EventDetailDialog
+          open={eventDetailOpen}
+          onOpenChange={setEventDetailOpen}
+          event={selectedEventForDetail as any}
+        />
+      )}
     </div>
   );
 }
