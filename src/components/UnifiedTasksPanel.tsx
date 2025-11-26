@@ -16,6 +16,9 @@ import { toast } from 'sonner';
 import { DEMO_EMAILS } from '@/data/emails';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import JDELogo from '@/assets/JDE.svg';
+import JDMOLogo from '@/assets/JDMO.svg';
+import DBCSLogo from '@/assets/DBCS.svg';
 
 interface Task {
   id: string;
@@ -231,12 +234,14 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
     }
   };
 
+  const worldIcons: Record<string, string> = {
+    'JDE': JDELogo,
+    'JDMO': JDMOLogo,
+    'DBCS': DBCSLogo,
+  };
+
   const getWorldIcon = (worldCode: string) => {
-    try {
-      return `/src/assets/${worldCode}.svg`;
-    } catch {
-      return null;
-    }
+    return worldIcons[worldCode] || null;
   };
 
   if (loading) {
@@ -281,14 +286,13 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                       className="w-10 h-10 rounded-lg flex items-center justify-center" 
                       style={{ backgroundColor: `${world.theme_colors.primary}20` }}
                     >
-                      <img 
-                        src={getWorldIcon(world.code)} 
-                        alt={world.code}
-                        className="w-6 h-6"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
+                      {getWorldIcon(world.code) && (
+                        <img 
+                          src={getWorldIcon(world.code)!} 
+                          alt={world.code}
+                          className="w-7 h-7 object-contain"
+                        />
+                      )}
                     </div>
                     <div>
                       <h3 
