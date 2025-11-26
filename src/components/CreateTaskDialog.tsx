@@ -28,6 +28,8 @@ interface User {
 }
 
 const CreateTaskDialog = ({ open, onOpenChange, worldId, onTaskCreated }: CreateTaskDialogProps) => {
+  console.log('CreateTaskDialog rendered with worldId:', worldId, 'open:', open);
+  
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
@@ -41,6 +43,7 @@ const CreateTaskDialog = ({ open, onOpenChange, worldId, onTaskCreated }: Create
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    console.log('useEffect triggered, open:', open);
     if (open) {
       fetchUsers();
     }
@@ -48,17 +51,20 @@ const CreateTaskDialog = ({ open, onOpenChange, worldId, onTaskCreated }: Create
 
   const fetchUsers = async () => {
     try {
+      console.log('Fetching users for worldId:', worldId);
       const { data, error } = await supabase
         .from('user_world_access')
         .select('user_id, profiles(id, display_name, email)')
         .eq('world_id', worldId);
 
+      console.log('Fetch users result:', { data, error });
       if (error) throw error;
 
       const usersList = data
         .map((item: any) => item.profiles)
         .filter(Boolean) as User[];
 
+      console.log('Users list:', usersList);
       setUsers(usersList);
     } catch (error) {
       console.error('Error fetching users:', error);
