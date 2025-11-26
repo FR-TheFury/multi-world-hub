@@ -881,7 +881,7 @@ export type Database = {
       }
       tasks: {
         Row: {
-          assigned_to: string
+          assigned_to: string | null
           created_at: string | null
           created_by: string
           description: string | null
@@ -895,7 +895,7 @@ export type Database = {
           world_id: string
         }
         Insert: {
-          assigned_to: string
+          assigned_to?: string | null
           created_at?: string | null
           created_by: string
           description?: string | null
@@ -909,7 +909,7 @@ export type Database = {
           world_id: string
         }
         Update: {
-          assigned_to?: string
+          assigned_to?: string | null
           created_at?: string | null
           created_by?: string
           description?: string | null
