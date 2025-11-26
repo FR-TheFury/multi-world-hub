@@ -4,13 +4,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { Plus, CheckCircle2, Clock, AlertCircle, Eye, MoreVertical, UserCog, Check, Mail, Paperclip } from 'lucide-react';
+import { Plus, CheckCircle2, Clock, AlertCircle, Eye, MoreVertical, UserCog, Check, Mail, Paperclip, Calendar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore, World } from '@/lib/store';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { TaskDetailDialog } from './TaskDetailDialog';
+import CreateTaskDialog from './CreateTaskDialog';
 import { toast } from 'sonner';
 import { DEMO_EMAILS } from '@/data/emails';
 import { useNavigate } from 'react-router-dom';
@@ -23,10 +24,18 @@ interface Task {
   priority: string;
   status: string;
   due_date: string | null;
-  assigned_to: string;
+  assigned_to: string | null;
   created_by: string;
   world_id: string;
   created_at: string;
+}
+
+interface Appointment {
+  id: string;
+  title: string;
+  start_time: string;
+  end_time: string;
+  world_id: string;
 }
 
 interface UnifiedTasksPanelProps {
@@ -37,23 +46,35 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
   const { isSuperAdmin, user, roles } = useAuthStore();
   const navigate = useNavigate();
   const [tasksByWorld, setTasksByWorld] = useState<Record<string, Task[]>>({});
+  const [appointmentsByWorld, setAppointmentsByWorld] = useState<Record<string, Appointment[]>>({});
   const [loading, setLoading] = useState(true);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [createTaskDialogOpen, setCreateTaskDialogOpen] = useState(false);
+  const [selectedWorldForTask, setSelectedWorldForTask] = useState<string>('');
   const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAllTasks();
+    fetchAllAppointments();
     
-    const channel = supabase
+    const tasksChannel = supabase
       .channel('unified-tasks-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => {
         fetchAllTasks();
       })
       .subscribe();
 
+    const appointmentsChannel = supabase
+      .channel('unified-appointments-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, () => {
+        fetchAllAppointments();
+      })
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(tasksChannel);
+      supabase.removeChannel(appointmentsChannel);
     };
   }, [accessibleWorlds, priorityFilter]);
 
@@ -67,7 +88,8 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
         .in('world_id', accessibleWorlds.map(w => w.id));
 
       if (!isSuperAdmin()) {
-        query = query.eq('assigned_to', user?.id);
+        // Les utilisateurs non super admin voient les tâches assignées à eux OU non assignées
+        query = query.or(`assigned_to.eq.${user?.id},assigned_to.is.null`);
       }
 
       if (priorityFilter) {
@@ -106,6 +128,41 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
       toast.error('Erreur lors du chargement des tâches');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAllAppointments = async () => {
+    try {
+      const worldIds = accessibleWorlds.map(w => w.id);
+      if (worldIds.length === 0) return;
+
+      const now = new Date().toISOString();
+      
+      const { data: appointments, error } = await supabase
+        .from('appointments')
+        .select('id, title, start_time, end_time, world_id')
+        .in('world_id', worldIds)
+        .gte('start_time', now)
+        .eq('status', 'scheduled')
+        .order('start_time', { ascending: true })
+        .limit(15);
+
+      if (error) throw error;
+
+      // Group appointments by world and limit to 3 per world
+      const grouped = appointments?.reduce((acc, appointment) => {
+        if (!acc[appointment.world_id]) {
+          acc[appointment.world_id] = [];
+        }
+        if (acc[appointment.world_id].length < 3) {
+          acc[appointment.world_id].push(appointment);
+        }
+        return acc;
+      }, {} as Record<string, Appointment[]>) || {};
+
+      setAppointmentsByWorld(grouped);
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
     }
   };
 
@@ -201,6 +258,7 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
         {accessibleWorlds.map(world => {
           const worldTasks = tasksByWorld[world.id] || [];
           const incompleteTasks = worldTasks.filter(t => t.status !== 'done');
+          const worldAppointments = appointmentsByWorld[world.id] || [];
 
           return (
             <Card 
@@ -248,24 +306,22 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                     <Button
                       size="sm"
                       variant="outline"
-                      disabled
-                      title="Création de tâche bientôt disponible"
+                      onClick={() => {
+                        setSelectedWorldForTask(world.id);
+                        setCreateTaskDialogOpen(true);
+                      }}
                       style={{
                         borderColor: world.theme_colors.primary,
                         color: world.theme_colors.primary,
                         backgroundColor: 'transparent',
                       }}
                       onMouseEnter={(e) => {
-                        if (!e.currentTarget.disabled) {
-                          e.currentTarget.style.backgroundColor = world.theme_colors.primary;
-                          e.currentTarget.style.color = 'white';
-                        }
+                        e.currentTarget.style.backgroundColor = world.theme_colors.primary;
+                        e.currentTarget.style.color = 'white';
                       }}
                       onMouseLeave={(e) => {
-                        if (!e.currentTarget.disabled) {
-                          e.currentTarget.style.backgroundColor = 'transparent';
-                          e.currentTarget.style.color = world.theme_colors.primary;
-                        }
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.color = world.theme_colors.primary;
                       }}
                     >
                       <Plus className="h-4 w-4 mr-1" />
@@ -428,10 +484,17 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                             )}>
                               {task.title}
                             </h4>
-                            <Badge variant="outline" className={cn("text-xs", getPriorityColor(task.priority))}>
-                              {getPriorityIcon(task.priority)}
-                              <span className="ml-1">{getPriorityLabel(task.priority)}</span>
-                            </Badge>
+                            <div className="flex items-center gap-1.5">
+                              {!task.assigned_to && (
+                                <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
+                                  Non assignée
+                                </Badge>
+                              )}
+                              <Badge variant="outline" className={cn("text-xs", getPriorityColor(task.priority))}>
+                                {getPriorityIcon(task.priority)}
+                                <span className="ml-1">{getPriorityLabel(task.priority)}</span>
+                              </Badge>
+                            </div>
                           </div>
                           {task.description && (
                             <p className="text-xs text-muted-foreground line-clamp-2">
@@ -578,6 +641,58 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                     );
                   })()}
                 </div>
+
+                {/* Appointments Section */}
+                <div className="pt-4 border-t border-border space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-foreground" />
+                      <p className="text-sm font-medium text-foreground">
+                        Rendez-vous à venir
+                      </p>
+                    </div>
+                  </div>
+
+                  {worldAppointments.length === 0 ? (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <p className="text-xs">Aucun rendez-vous planifié</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="space-y-2">
+                        {worldAppointments.map(appointment => (
+                          <div
+                            key={appointment.id}
+                            className="flex items-start gap-3 p-2 rounded-lg border transition-colors"
+                            style={{
+                              borderColor: `${world.theme_colors.primary}30`,
+                              backgroundColor: `${world.theme_colors.primary}05`,
+                            }}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-foreground truncate mb-1">
+                                {appointment.title}
+                              </p>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <Clock className="h-3 w-3" />
+                                {format(new Date(appointment.start_time), 'dd MMM yyyy', { locale: fr })} à{' '}
+                                {format(new Date(appointment.start_time), 'HH:mm', { locale: fr })}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full text-xs"
+                      >
+                        → Voir tous les rendez-vous
+                      </Button>
+                    </>
+                  )}
+                </div>
               </CardContent>
             </Card>
           );
@@ -597,6 +712,13 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
           onTaskUpdated={fetchAllTasks}
         />
       )}
+
+      <CreateTaskDialog
+        open={createTaskDialogOpen}
+        onOpenChange={setCreateTaskDialogOpen}
+        worldId={selectedWorldForTask}
+        onTaskCreated={fetchAllTasks}
+      />
     </>
   );
 };
