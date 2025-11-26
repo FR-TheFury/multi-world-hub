@@ -50,6 +50,17 @@ const DossiersDBCS = () => {
     fetchWorldAndDossiers();
   }, []);
 
+  // Apply world-specific background to body
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.remove('world-jde', 'world-jdmo', 'world-dbcs');
+    root.classList.add('world-dbcs');
+    
+    return () => {
+      root.classList.remove('world-dbcs');
+    };
+  }, []);
+
   const fetchWorldAndDossiers = async () => {
     try {
       // Fetch DBCS world data
