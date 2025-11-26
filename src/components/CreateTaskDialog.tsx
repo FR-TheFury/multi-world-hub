@@ -34,7 +34,7 @@ const CreateTaskDialog = ({ open, onOpenChange, worldId, onTaskCreated }: Create
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [dueDate, setDueDate] = useState<Date>();
-  const [assignedTo, setAssignedTo] = useState<string>('');
+  const [assignedTo, setAssignedTo] = useState<string>('unassigned');
   const [createAppointment, setCreateAppointment] = useState(false);
   const [appointmentDate, setAppointmentDate] = useState<Date>();
   const [startTime, setStartTime] = useState('09:00');
@@ -91,7 +91,7 @@ const CreateTaskDialog = ({ open, onOpenChange, worldId, onTaskCreated }: Create
           description: description.trim() || null,
           priority,
           due_date: dueDate?.toISOString() || null,
-          assigned_to: assignedTo || null,
+          assigned_to: assignedTo === 'unassigned' ? null : (assignedTo || null),
           world_id: worldId,
           created_by: user.id,
           status: 'todo'
@@ -160,14 +160,12 @@ const CreateTaskDialog = ({ open, onOpenChange, worldId, onTaskCreated }: Create
     setDescription('');
     setPriority('medium');
     setDueDate(undefined);
-    setAssignedTo('');
+    setAssignedTo('unassigned');
     setCreateAppointment(false);
     setAppointmentDate(undefined);
     setStartTime('09:00');
     setEndTime('10:00');
   };
-
-  if (!open) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -244,7 +242,7 @@ const CreateTaskDialog = ({ open, onOpenChange, worldId, onTaskCreated }: Create
                 <SelectValue placeholder="Non assignée (visible par tous)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Non assignée (visible par tous)</SelectItem>
+                <SelectItem value="unassigned">Non assignée (visible par tous)</SelectItem>
                 {users.map((user) => (
                   <SelectItem key={user.id} value={user.id}>
                     {user.display_name || user.email}
