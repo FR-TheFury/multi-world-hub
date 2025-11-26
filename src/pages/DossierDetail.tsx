@@ -111,8 +111,23 @@ const DossierDetail = () => {
     );
   }
 
+  // Déterminer la couleur du background selon le monde
+  const getWorldGradient = (worldCode: string) => {
+    switch (worldCode) {
+      case 'JDE':
+        return 'bg-gradient-to-br from-red-100 via-red-50/50 to-background dark:from-red-950/40 dark:via-red-900/20 dark:to-background';
+      case 'JDMO':
+        return 'bg-gradient-to-br from-orange-100 via-orange-50/50 to-background dark:from-orange-950/40 dark:via-orange-900/20 dark:to-background';
+      case 'DBCS':
+        return 'bg-gradient-to-br from-green-100 via-green-50/50 to-background dark:from-green-950/40 dark:via-green-900/20 dark:to-background';
+      default:
+        return 'bg-background';
+    }
+  };
+
   return (
-    <div className="space-y-6">
+    <div className={`min-h-screen p-6 ${getWorldGradient(dossier.world.code)}`}>
+      <div className="space-y-6">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="space-y-2">
@@ -236,6 +251,7 @@ const DossierDetail = () => {
           currentWorldCode={dossier.world.code}
         />
       </div>
+    </div>
   );
 };
 
