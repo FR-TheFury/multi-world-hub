@@ -247,69 +247,6 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
         </Card>
       </div>
 
-      {/* TIMELINE ENRICHIE - ZONE PRINCIPALE CENTRALE EN GRAND */}
-      {workflowLoading ? (
-        <Card className="border-l-4 border-l-primary">
-          <CardHeader>
-            <CardTitle className="text-xl flex items-center gap-2">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 text-primary" />
-              </div>
-              Timeline Enrichie du Dossier
-            </CardTitle>
-            <CardDescription>
-              Historique complet avec tableau blanc interactif
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <Skeleton className="h-16 w-16 rounded-full flex-shrink-0" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-5 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      ) : workflowSteps.length === 0 ? (
-        <Card className="border-l-4 border-l-primary">
-          <CardContent className="py-12">
-            <p className="text-sm text-muted-foreground text-center">
-              Aucun workflow configuré pour ce monde
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card className="border-l-4 border-l-primary">
-          <CardHeader>
-            <CardTitle className="text-xl flex items-center gap-2">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 text-primary" />
-              </div>
-              Timeline Enrichie du Dossier
-            </CardTitle>
-            <CardDescription>
-              Historique complet avec tableau blanc interactif - Étapes, documents, rendez-vous, annotations
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <EnrichedDossierTimeline
-              dossierId={dossierId}
-              steps={workflowSteps}
-              progress={progress}
-              onUpdate={() => {
-                fetchOverviewData();
-                fetchWorkflowData();
-              }}
-            />
-          </CardContent>
-        </Card>
-      )}
-
       {/* Informations détaillées en grille */}
       {clientInfo && (
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -417,6 +354,69 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* TIMELINE ENRICHIE - ZONE PRINCIPALE CENTRALE EN GRAND */}
+      {workflowLoading ? (
+        <Card className="border-l-4 border-l-primary">
+          <CardHeader>
+            <CardTitle className="text-xl flex items-center gap-2">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <TrendingUp className="h-5 w-5 text-primary" />
+              </div>
+              Timeline Enrichie du Dossier
+            </CardTitle>
+            <CardDescription>
+              Historique complet avec tableau blanc interactif
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex items-center gap-4">
+                  <Skeleton className="h-16 w-16 rounded-full flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-5 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ) : workflowSteps.length === 0 ? (
+        <Card className="border-l-4 border-l-primary">
+          <CardContent className="py-12">
+            <p className="text-sm text-muted-foreground text-center">
+              Aucun workflow configuré pour ce monde
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="border-l-4 border-l-primary">
+          <CardHeader>
+            <CardTitle className="text-xl flex items-center gap-2">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <TrendingUp className="h-5 w-5 text-primary" />
+              </div>
+              Timeline Enrichie du Dossier
+            </CardTitle>
+            <CardDescription>
+              Historique complet avec tableau blanc interactif - Étapes, documents, rendez-vous, annotations
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <EnrichedDossierTimeline
+              dossierId={dossierId}
+              steps={workflowSteps}
+              progress={progress}
+              onUpdate={() => {
+                fetchOverviewData();
+                fetchWorkflowData();
+              }}
+            />
+          </CardContent>
+        </Card>
       )}
     </div>
   );
