@@ -18,6 +18,8 @@ import {
   AlertCircle,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   User,
   ArrowRight
 } from "lucide-react";
@@ -63,6 +65,8 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
   const [markDocumentOpen, setMarkDocumentOpen] = useState(false);
   const [selectedStepForAction, setSelectedStepForAction] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+  const [showLeftColumn, setShowLeftColumn] = useState(true);
+  const [showRightColumn, setShowRightColumn] = useState(true);
 
   useEffect(() => {
     fetchTimelineEvents();
@@ -554,7 +558,7 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold">Timeline du dossier</h3>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={() => setAddCommentOpen(true)}>
@@ -569,189 +573,258 @@ export function EnrichedDossierTimeline({ dossierId, steps, progress, onUpdate }
         </div>
       </div>
 
-      {/* 3-Column Timeline Layout */}
+      {/* 3-Column Timeline Layout with collapsible sides */}
       <div className="relative">
-        {groupedEvents.map((group, groupIndex) => (
-          <div key={group.step.id} className="mb-8">
-            {/* Grid: Left Events | Center Step | Right Events */}
-            <div className="grid grid-cols-[1fr_auto_1fr] gap-4 items-start relative">
-              {/* LEFT COLUMN - Documents, Comments, Annotations */}
-              <div className="flex flex-col gap-3 justify-center items-end pr-2">
-                {group.leftEvents.map((event) => (
-                  <SideEventCard
-                    key={event.id}
-                    event={event as any}
-                    side="left"
-                    onClick={() => setExpandedEvent(expandedEvent === event.id ? null : event.id)}
-                  />
+        <div className={cn(
+          "grid gap-6 transition-all duration-300",
+          !showLeftColumn && !showRightColumn && "grid-cols-[auto_1fr_auto]",
+          showLeftColumn && !showRightColumn && "grid-cols-[220px_1fr_auto]",
+          !showLeftColumn && showRightColumn && "grid-cols-[auto_1fr_220px]",
+          showLeftColumn && showRightColumn && "grid-cols-[220px_1fr_220px]"
+        )}>
+          {/* LEFT COLUMN TOGGLE */}
+          <div className="flex flex-col items-end pt-8">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowLeftColumn(!showLeftColumn)}
+              className="sticky top-4 mb-2"
+            >
+              {showLeftColumn ? (
+                <>
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Masquer
+                </>
+              ) : (
+                <>
+                  <ChevronRight className="h-4 w-4 mr-1" />
+                  {groupedEvents.reduce((sum, g) => sum + g.leftEvents.length, 0)}
+                </>
+              )}
+            </Button>
+
+            {/* LEFT COLUMN - Documents, Comments, Annotations */}
+            {showLeftColumn && (
+              <div className="space-y-2 w-full">
+                {groupedEvents.map((group, groupIndex) => (
+                  <div key={`left-${groupIndex}`} className="space-y-2 mb-4">
+                    {group.leftEvents.map((event) => (
+                      <SideEventCard
+                        key={event.id}
+                        event={event as any}
+                        side="left"
+                        onClick={() => setExpandedEvent(expandedEvent === event.id ? null : event.id)}
+                      />
+                    ))}
+                  </div>
                 ))}
-              </div>
-
-              {/* CENTER COLUMN - Main Step */}
-              <div className="flex flex-col items-center relative">
-                {/* Vertical connecting line from previous step */}
-                {groupIndex > 0 && (
-                  <div className="absolute bottom-full w-0.5 h-8 bg-border" />
-                )}
-                
-                {/* Step Circle */}
-                <div
-                  className={cn(
-                    "relative w-16 h-16 rounded-full border-4 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 hover:scale-110 hover:shadow-lg z-10 bg-background",
-                    group.step.status === "completed" && "border-green-500 bg-green-50",
-                    group.step.status === "in_progress" && "border-blue-500 bg-blue-50 animate-pulse",
-                    group.step.status === "pending" && "border-muted-foreground",
-                    group.step.status === "blocked" && "border-red-500 bg-red-50",
-                    selectedStep === group.step.workflowStepId && "ring-4 ring-primary ring-offset-2 scale-110"
-                  )}
-                  onClick={() => handleStepClick(group.step.workflowStepId!)}
-                >
-                  {group.step.status === "completed" ? (
-                    <CheckCircle2 className="h-8 w-8 text-green-500" />
-                  ) : (
-                    <>
-                      <span className="text-xl font-bold">{group.step.stepNumber}</span>
-                      <div className="absolute -bottom-2 -right-2 bg-background rounded-full p-1 border-2 border-border">
-                        {getEventIcon(group.step.type, group.step.status)}
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {/* Step Name */}
-                <div className="mt-3 text-center max-w-[150px]">
-                  <p className="text-sm font-semibold line-clamp-2">{group.step.title}</p>
-                  {group.step.status && (
-                    <Badge variant="outline" className="mt-1 text-xs">
-                      {group.step.status === "completed" ? "Complété" :
-                       group.step.status === "in_progress" ? "En cours" :
-                       group.step.status === "blocked" ? "Bloqué" : "En attente"}
-                    </Badge>
-                  )}
-                </div>
-
-                {/* Vertical line to next step */}
-                {group.nextStep && (
-                  <div className="absolute top-full w-0.5 h-8 bg-border" />
-                )}
-              </div>
-
-              {/* RIGHT COLUMN - Appointments, Tasks */}
-              <div className="flex flex-col gap-3 justify-center items-start pl-2">
-                {group.rightEvents.map((event) => (
-                  <SideEventCard
-                    key={event.id}
-                    event={event as any}
-                    side="right"
-                    onClick={() => setExpandedEvent(expandedEvent === event.id ? null : event.id)}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Step Details Panel (when selected) */}
-            {selectedStep === group.step.workflowStepId && (
-              <div className="mt-6 animate-fade-in">
-                <Card className="border-l-4 border-primary">
-                  <CardContent className="p-6">
-                    <WorkflowStepDetails
-                      step={group.step.metadata.step}
-                      progress={group.step.metadata.progress}
-                      onComplete={(stepId, formData) => { handleCompleteStep(stepId, formData); }}
-                      onDecision={(stepId, decision, notes, formData) => { handleDecision(stepId, decision, notes, formData); }}
-                      isSubmitting={false}
-                      nextSteps={getNextSteps(group.step.metadata.step)}
-                      onClose={() => setSelectedStep(null)}
-                    />
-                  </CardContent>
-                </Card>
               </div>
             )}
-
-            {/* Expanded Event Details */}
-            {group.leftEvents.concat(group.rightEvents).map((event) => (
-              expandedEvent === event.id && (
-                <Card key={`expanded-${event.id}`} className="mt-4 border-l-4 border-primary animate-fade-in">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        {getEventIcon(event.type, event.status)}
-                        <h4 className="font-semibold">{event.title}</h4>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setExpandedEvent(null)}
-                      >
-                        <ChevronUp className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    
-                    {event.description && (
-                      <p className="text-sm text-muted-foreground mb-3 whitespace-pre-wrap">{event.description}</p>
-                    )}
-                    
-                    {/* User info */}
-                    {(event.createdBy || event.assignedTo) && (
-                      <div className="flex items-center gap-3 mb-2 text-sm">
-                        {event.createdBy && (
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-6 w-6">
-                              <AvatarImage src={event.createdBy.avatar_url || ""} />
-                              <AvatarFallback>
-                                <User className="h-3 w-3" />
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="text-muted-foreground">Créé par {event.createdBy.display_name}</span>
-                          </div>
-                        )}
-                        {event.assignedTo && event.type === "task" && (
-                          <>
-                            <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-6 w-6">
-                                <AvatarImage src={event.assignedTo.avatar_url || ""} />
-                                <AvatarFallback>
-                                  <User className="h-3 w-3" />
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="font-medium">Assigné à {event.assignedTo.display_name}</span>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    )}
-                    
-                    {/* Task metadata */}
-                    {event.type === "task" && event.metadata && (
-                      <div className="space-y-2 border-t pt-2 mt-2">
-                        {event.metadata.priority && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-medium">Priorité:</span>
-                            <Badge variant="outline" className="text-xs">
-                              {event.metadata.priority === "high" ? "Haute" :
-                               event.metadata.priority === "medium" ? "Moyenne" : "Basse"}
-                            </Badge>
-                          </div>
-                        )}
-                        {event.metadata.due_date && (
-                          <div className="flex items-center gap-2 text-xs">
-                            <Clock className="h-3 w-3" />
-                            <span>Échéance: {format(new Date(event.metadata.due_date), "PPP 'à' HH:mm", { locale: fr })}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {format(new Date(event.timestamp), "PPP 'à' HH:mm", { locale: fr })}
-                    </p>
-                  </CardContent>
-                </Card>
-              )
-            ))}
           </div>
-        ))}
+
+          {/* CENTER COLUMN - Workflow Steps */}
+          <div className="relative px-4">
+            {/* Vertical continuous line */}
+            <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary/50 via-primary/30 to-primary/50 -translate-x-1/2" />
+
+            <div className="space-y-4 relative">
+              {groupedEvents.map((group, groupIndex) => (
+                <div key={group.step.id} className="relative">
+                  {/* Step Circle and Card */}
+                  <div className="flex flex-col items-center relative">
+                    {/* Vertical connecting line from previous step */}
+                    {groupIndex > 0 && (
+                      <div className="absolute bottom-full w-0.5 h-4 bg-border" />
+                    )}
+                    
+                    {/* Step Circle */}
+                    <div
+                      className={cn(
+                        "relative w-16 h-16 rounded-full border-4 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 hover:scale-110 hover:shadow-lg z-10 bg-background",
+                        group.step.status === "completed" && "border-green-500 bg-green-50",
+                        group.step.status === "in_progress" && "border-blue-500 bg-blue-50 animate-pulse",
+                        group.step.status === "pending" && "border-muted-foreground",
+                        group.step.status === "blocked" && "border-red-500 bg-red-50",
+                        selectedStep === group.step.workflowStepId && "ring-4 ring-primary ring-offset-2 scale-110"
+                      )}
+                      onClick={() => handleStepClick(group.step.workflowStepId!)}
+                    >
+                      {group.step.status === "completed" ? (
+                        <CheckCircle2 className="h-8 w-8 text-green-500" />
+                      ) : (
+                        <>
+                          <span className="text-xl font-bold">{group.step.stepNumber}</span>
+                          <div className="absolute -bottom-2 -right-2 bg-background rounded-full p-1 border-2 border-border">
+                            {getEventIcon(group.step.type, group.step.status)}
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Step Name */}
+                    <div className="mt-3 text-center max-w-[180px]">
+                      <p className="text-sm font-semibold line-clamp-2">{group.step.title}</p>
+                      {group.step.status && (
+                        <Badge variant="outline" className="mt-1 text-xs">
+                          {group.step.status === "completed" ? "Complété" :
+                           group.step.status === "in_progress" ? "En cours" :
+                           group.step.status === "blocked" ? "Bloqué" : "En attente"}
+                        </Badge>
+                      )}
+                    </div>
+
+                    {/* Vertical line to next step */}
+                    {group.nextStep && (
+                      <div className="absolute top-full w-0.5 h-4 bg-border" />
+                    )}
+                  </div>
+
+                  {/* Step Details Panel (when selected) */}
+                  {selectedStep === group.step.workflowStepId && (
+                    <div className="mt-4 animate-fade-in">
+                      <Card className="border-l-4 border-primary">
+                        <CardContent className="p-6">
+                          <WorkflowStepDetails
+                            step={group.step.metadata.step}
+                            progress={group.step.metadata.progress}
+                            onComplete={(stepId, formData) => { handleCompleteStep(stepId, formData); }}
+                            onDecision={(stepId, decision, notes, formData) => { handleDecision(stepId, decision, notes, formData); }}
+                            isSubmitting={false}
+                            nextSteps={getNextSteps(group.step.metadata.step)}
+                            onClose={() => setSelectedStep(null)}
+                          />
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
+
+                  {/* Expanded Event Details */}
+                  {group.leftEvents.concat(group.rightEvents).map((event) => (
+                    expandedEvent === event.id && (
+                      <Card key={`expanded-${event.id}`} className="mt-4 border-l-4 border-primary animate-fade-in">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              {getEventIcon(event.type, event.status)}
+                              <h4 className="font-semibold">{event.title}</h4>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setExpandedEvent(null)}
+                            >
+                              <ChevronUp className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          
+                          {event.description && (
+                            <p className="text-sm text-muted-foreground mb-3 whitespace-pre-wrap">{event.description}</p>
+                          )}
+                          
+                          {/* User info */}
+                          {(event.createdBy || event.assignedTo) && (
+                            <div className="flex items-center gap-3 mb-2 text-sm">
+                              {event.createdBy && (
+                                <div className="flex items-center gap-2">
+                                  <Avatar className="h-6 w-6">
+                                    <AvatarImage src={event.createdBy.avatar_url || ""} />
+                                    <AvatarFallback>
+                                      <User className="h-3 w-3" />
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span className="text-muted-foreground">Créé par {event.createdBy.display_name}</span>
+                                </div>
+                              )}
+                              {event.assignedTo && event.type === "task" && (
+                                <>
+                                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                                  <div className="flex items-center gap-2">
+                                    <Avatar className="h-6 w-6">
+                                      <AvatarImage src={event.assignedTo.avatar_url || ""} />
+                                      <AvatarFallback>
+                                        <User className="h-3 w-3" />
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <span className="font-medium">Assigné à {event.assignedTo.display_name}</span>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          )}
+                          
+                          {/* Task metadata */}
+                          {event.type === "task" && event.metadata && (
+                            <div className="space-y-2 border-t pt-2 mt-2">
+                              {event.metadata.priority && (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-medium">Priorité:</span>
+                                  <Badge variant="outline" className="text-xs">
+                                    {event.metadata.priority === "high" ? "Haute" :
+                                     event.metadata.priority === "medium" ? "Moyenne" : "Basse"}
+                                  </Badge>
+                                </div>
+                              )}
+                              {event.metadata.due_date && (
+                                <div className="flex items-center gap-2 text-xs">
+                                  <Clock className="h-3 w-3" />
+                                  <span>Échéance: {format(new Date(event.metadata.due_date), "PPP 'à' HH:mm", { locale: fr })}</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          
+                          <p className="text-xs text-muted-foreground mt-2">
+                            {format(new Date(event.timestamp), "PPP 'à' HH:mm", { locale: fr })}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    )
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* RIGHT COLUMN - Appointments, Tasks */}
+          <div className="flex flex-col items-start pt-8">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowRightColumn(!showRightColumn)}
+              className="sticky top-4 mb-2"
+            >
+              {showRightColumn ? (
+                <>
+                  Masquer
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </>
+              ) : (
+                <>
+                  {groupedEvents.reduce((sum, g) => sum + g.rightEvents.length, 0)}
+                  <ChevronLeft className="h-4 w-4 ml-1" />
+                </>
+              )}
+            </Button>
+
+            {/* RIGHT COLUMN CONTENT */}
+            {showRightColumn && (
+              <div className="space-y-2 w-full">
+                {groupedEvents.map((group, groupIndex) => (
+                  <div key={`right-${groupIndex}`} className="space-y-2 mb-4">
+                    {group.rightEvents.map((event) => (
+                      <SideEventCard
+                        key={event.id}
+                        event={event as any}
+                        side="right"
+                        onClick={() => setExpandedEvent(expandedEvent === event.id ? null : event.id)}
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       <AddTaskDialog
