@@ -51,6 +51,25 @@ const DossierDetail = () => {
     fetchDossier();
   }, [id]);
 
+  // Apply world-specific background to body
+  useEffect(() => {
+    if (!dossier) return;
+    
+    const root = document.documentElement;
+    const worldCode = dossier.world.code;
+    
+    // Remove any existing world classes
+    root.classList.remove('world-jde', 'world-jdmo', 'world-dbcs');
+    
+    // Add current world class
+    root.classList.add(`world-${worldCode.toLowerCase()}`);
+    
+    // Cleanup on unmount
+    return () => {
+      root.classList.remove('world-jde', 'world-jdmo', 'world-dbcs');
+    };
+  }, [dossier]);
+
   const fetchDossier = async () => {
     try {
       const { data, error } = await supabase

@@ -50,6 +50,17 @@ const DossiersJDMO = () => {
     fetchWorldAndDossiers();
   }, []);
 
+  // Apply world-specific background to body
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.remove('world-jde', 'world-jdmo', 'world-dbcs');
+    root.classList.add('world-jdmo');
+    
+    return () => {
+      root.classList.remove('world-jdmo');
+    };
+  }, []);
+
   const fetchWorldAndDossiers = async () => {
     try {
       // Fetch JDMO world data
