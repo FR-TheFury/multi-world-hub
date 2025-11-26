@@ -16,9 +16,9 @@ import { toast } from 'sonner';
 import { DEMO_EMAILS } from '@/data/emails';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import JDELogo from '@/assets/JDE.svg';
-import JDMOLogo from '@/assets/JDMO.svg';
-import DBCSLogo from '@/assets/DBCS.svg';
+import JDELogo from '@/assets/JDE.png';
+import JDMOLogo from '@/assets/JDMO.png';
+import DBCSLogo from '@/assets/DBCS.png';
 
 interface Task {
   id: string;
