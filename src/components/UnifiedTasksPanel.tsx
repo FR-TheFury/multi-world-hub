@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { Plus, CheckCircle2, Clock, AlertCircle, Eye, MoreVertical, UserCog, Check, Mail, Paperclip, Calendar } from 'lucide-react';
+import { Plus, CheckCircle2, Clock, AlertCircle, Eye, MoreVertical, UserCog, Check, Mail, Paperclip, Calendar, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore, World } from '@/lib/store';
 import { format } from 'date-fns';
@@ -189,10 +189,22 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
     await updateTaskStatus(taskId, 'done');
   };
 
-  const handleQuickReassign = (task: Task, e: React.MouseEvent) => {
+  const handleDeleteTask = async (taskId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setSelectedTask(task);
-    setDialogOpen(true);
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', taskId);
+
+      if (error) throw error;
+
+      toast.success('Tâche supprimée avec succès');
+      await fetchAllTasks();
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      toast.error('Erreur lors de la suppression de la tâche');
+    }
   };
 
   const getPriorityColor = (priority: string) => {
@@ -534,23 +546,19 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48">
-                              {user?.id === task.assigned_to && task.status !== 'done' && (
+                              {task.status !== 'done' && (
                                 <DropdownMenuItem onClick={(e) => handleQuickValidate(task.id, e)}>
                                   <Check className="h-4 w-4 mr-2" />
-                                  Valider la tâche
+                                  Valider tâche
                                 </DropdownMenuItem>
                               )}
-                              {isSuperAdmin() && (
-                                <>
-                                  {user?.id === task.assigned_to && task.status !== 'done' && (
-                                    <DropdownMenuSeparator />
-                                  )}
-                                  <DropdownMenuItem onClick={(e) => handleQuickReassign(task, e)}>
-                                    <UserCog className="h-4 w-4 mr-2" />
-                                    Modifier / Réassigner
-                                  </DropdownMenuItem>
-                                </>
-                              )}
+                              <DropdownMenuItem 
+                                onClick={(e) => handleDeleteTask(task.id, e)}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Supprimer tâche
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
