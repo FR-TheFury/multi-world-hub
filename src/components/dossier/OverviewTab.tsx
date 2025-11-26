@@ -187,7 +187,7 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
   };
 
   return (
-    <div className="space-y-6 p-6 max-w-7xl mx-auto">
+    <div className="space-y-6 p-4">{/* Removed max-w-7xl for full width */}
       {/* En-tête du dossier avec informations client */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card className="border-l-4 border-l-primary">
