@@ -167,9 +167,11 @@ const CreateTaskDialog = ({ open, onOpenChange, worldId, onTaskCreated }: Create
     setEndTime('10:00');
   };
 
+  if (!open) return null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-background">
         <DialogHeader>
           <DialogTitle>Créer une nouvelle tâche</DialogTitle>
         </DialogHeader>
