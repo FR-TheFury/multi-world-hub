@@ -74,10 +74,10 @@ const SideEventCard = ({ event, side, onClick }: SideEventCardProps) => {
         )} 
       />
       
-      {/* Event card */}
+      {/* Compact Event card */}
       <Card
         className={cn(
-          "w-full cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] border-l-4 shadow-sm",
+          "w-full cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-[1.01] border-l-2 shadow-sm",
           event.type === "document" && "border-l-purple-500",
           event.type === "comment" && "border-l-orange-500",
           event.type === "task" && "border-l-blue-500",
@@ -86,33 +86,12 @@ const SideEventCard = ({ event, side, onClick }: SideEventCardProps) => {
         )}
         onClick={onClick}
       >
-        <CardContent className="p-4">
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 flex-shrink-0">{getIcon()}</div>
+        <CardContent className="p-2.5">
+          <div className="flex items-center gap-2">
+            <div className="flex-shrink-0">{getIcon()}</div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-2">
-                <Badge variant="outline" className="text-xs px-2 py-0.5">
-                  {getTypeLabel()}
-                </Badge>
-              </div>
-              <p className="text-sm font-medium line-clamp-2 mb-2">{event.title}</p>
-              
-              {/* User avatar for tasks/appointments */}
-              {(event.assignedTo || event.createdBy) && (
-                <div className="flex items-center gap-2 mb-2">
-                  <Avatar className="h-5 w-5">
-                    <AvatarImage src={(event.assignedTo || event.createdBy)?.avatar_url || ""} />
-                    <AvatarFallback className="text-[9px]">
-                      <User className="h-3 w-3" />
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-xs text-muted-foreground truncate">
-                    {(event.assignedTo || event.createdBy)?.display_name}
-                  </span>
-                </div>
-              )}
-              
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs font-medium line-clamp-1 mb-0.5">{event.title}</p>
+              <p className="text-[10px] text-muted-foreground">
                 {format(new Date(event.timestamp), "dd MMM HH:mm", { locale: fr })}
               </p>
             </div>
