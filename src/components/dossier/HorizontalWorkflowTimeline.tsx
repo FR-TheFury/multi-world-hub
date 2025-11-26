@@ -115,12 +115,15 @@ const HorizontalWorkflowTimeline = ({ steps, progress, dossierId, onUpdate }: Ho
   const selectedStepData = getSelectedStepData();
   const selectedStepProgress = selectedStep ? getStepProgress(selectedStep) : null;
 
+  // Reverse steps order: highest step number at top/right, lowest at bottom/left
+  const reversedSteps = [...steps].reverse();
+
   return (
     <div className="space-y-6 relative">
       {/* Horizontal Timeline */}
       <div className="relative w-full overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
         <div className="flex items-center gap-4 px-4 py-2">
-          {steps.map((step, index) => {
+          {reversedSteps.map((step, index) => {
             const progressRecord = getStepProgress(step.id);
             const isActive = selectedStep === step.id;
             const isLast = index === steps.length - 1;

@@ -135,9 +135,12 @@ const VerticalWorkflowTimeline = ({ steps, progress, dossierId, onUpdate }: Vert
   const selectedStepData = getSelectedStepData();
   const selectedStepProgress = selectedStep ? getStepProgress(selectedStep) : null;
 
+  // Reverse steps order: highest step number at top, lowest at bottom
+  const reversedSteps = [...steps].reverse();
+
   return (
     <div className="space-y-4">
-      {steps.map((step, index) => {
+      {reversedSteps.map((step, index) => {
         const progressRecord = getStepProgress(step.id);
         const isActive = selectedStep === step.id;
         const isLast = index === steps.length - 1;
