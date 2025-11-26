@@ -18,7 +18,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import CreateDossierDialog from '@/components/dossier/CreateDossierDialog';
 import { toast } from 'sonner';
-import DBCSLogo from '@/assets/DBCS.svg';
+import DBCSLogo from '@/assets/DBCS.png';
 
 interface Dossier {
   id: string;
