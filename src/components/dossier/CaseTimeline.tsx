@@ -12,6 +12,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import WorkflowStepDetails from "./WorkflowStepDetails";
+import { toast } from "sonner";
 
 /**
  * Étape principale de la timeline
@@ -170,6 +172,8 @@ function getItemTypeLabel(type: TimelineItemType) {
 export default function CaseTimeline({ dossierId, steps, progress, onUpdate }: CaseTimelineProps) {
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedStep, setSelectedStep] = useState<any | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fusionner steps et progress pour créer les étapes enrichies
   const enrichedSteps: Step[] = useMemo(() => {
@@ -448,6 +452,63 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate }: C
     return map;
   }, [timelineItems]);
 
+  const handleStepComplete = async (stepId: string, formData?: Record<string, any>) => {
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.functions.invoke("workflow-engine", {
+        body: {
+          dossierId,
+          stepId,
+          action: "complete",
+          formData,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success("Étape complétée avec succès");
+      setSelectedStep(null);
+      onUpdate();
+    } catch (error: any) {
+      console.error("Error completing step:", error);
+      toast.error(error.message || "Erreur lors de la validation de l'étape");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleStepDecision = async (
+    stepId: string,
+    decision: boolean,
+    notes: string,
+    formData?: Record<string, any>
+  ) => {
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.functions.invoke("workflow-engine", {
+        body: {
+          dossierId,
+          stepId,
+          action: "decision",
+          decision,
+          notes,
+          formData,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success(`Décision "${decision ? "Oui" : "Non"}" enregistrée avec succès`);
+      setSelectedStep(null);
+      onUpdate();
+    } catch (error: any) {
+      console.error("Error processing decision:", error);
+      toast.error(error.message || "Erreur lors de la prise de décision");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -456,8 +517,45 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate }: C
     );
   }
 
+  // Trouver les informations complètes de l'étape sélectionnée
+  const selectedStepFull = selectedStep
+    ? steps.find((s) => s.id === selectedStep.id)
+    : null;
+  const selectedProgress = selectedStep
+    ? progress.find((p) => p.workflow_step_id === selectedStep.id)
+    : null;
+
+  // Déterminer les étapes suivantes
+  const nextSteps = selectedStepFull
+    ? {
+        next: selectedStepFull.next_step_id
+          ? steps.find((s) => s.id === selectedStepFull.next_step_id)
+          : null,
+        yes: selectedStepFull.decision_yes_next_step_id
+          ? steps.find((s) => s.id === selectedStepFull.decision_yes_next_step_id)
+          : null,
+        no: selectedStepFull.decision_no_next_step_id
+          ? steps.find((s) => s.id === selectedStepFull.decision_no_next_step_id)
+          : null,
+      }
+    : { next: null, yes: null, no: null };
+
   return (
     <div className="w-full max-w-5xl mx-auto px-4 py-6 md:py-8">
+      {selectedStep && selectedStepFull && (
+        <div className="mb-6">
+          <WorkflowStepDetails
+            step={selectedStepFull}
+            progress={selectedProgress}
+            onComplete={handleStepComplete}
+            onDecision={handleStepDecision}
+            isSubmitting={isSubmitting}
+            nextSteps={nextSteps}
+            onClose={() => setSelectedStep(null)}
+          />
+        </div>
+      )}
+
       <div className="relative">
         {/* Ligne verticale principale */}
         <div className="absolute left-1/2 top-0 bottom-0 -translate-x-1/2">
@@ -472,7 +570,7 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate }: C
             return (
               <div key={step.id} className="space-y-6">
                 {/* Étape principale */}
-                <StepCard step={step} />
+                <StepCard step={step} onClick={() => setSelectedStep(step)} />
 
                 {/* Segment intermédiaire entre cette étape et la suivante */}
                 {hasNextStep && stepItems.length > 0 && (
@@ -490,7 +588,7 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate }: C
 /**
  * Card d'une étape principale
  */
-function StepCard({ step }: { step: Step }) {
+function StepCard({ step, onClick }: { step: Step; onClick: () => void }) {
   const colors = getStepColors(step.status);
 
   const getStatusLabel = (status: StepStatus) => {
@@ -528,7 +626,10 @@ function StepCard({ step }: { step: Step }) {
         <span className="text-sm font-semibold">{step.order}</span>
       </div>
 
-      <div className="w-full md:w-3/4 bg-card border border-border rounded-2xl shadow-sm px-4 py-4 md:px-6 md:py-5">
+      <button
+        onClick={onClick}
+        className="w-full md:w-3/4 bg-card border border-border rounded-2xl shadow-sm px-4 py-4 md:px-6 md:py-5 hover:shadow-md hover:border-primary/50 transition-all duration-200 cursor-pointer text-left"
+      >
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
           <div>
             <h3 className="text-sm md:text-base font-semibold text-card-foreground">
@@ -554,7 +655,7 @@ function StepCard({ step }: { step: Step }) {
             )}
           </div>
         </div>
-      </div>
+      </button>
     </div>
   );
 }
