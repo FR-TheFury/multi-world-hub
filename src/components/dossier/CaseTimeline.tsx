@@ -303,11 +303,12 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate }: C
         .eq("dossier_id", dossierId)
         .order("created_at", { ascending: true });
 
-      // Fetch tasks - get all tasks with workflow_step_id
+      // Fetch tasks - filter by dossier_id and workflow_step_id
       const stepIds = enrichedSteps.map(s => s.id);
       const { data: tasks } = await supabase
         .from("tasks")
         .select("*")
+        .eq("dossier_id", dossierId)
         .in("workflow_step_id", stepIds)
         .order("created_at", { ascending: true });
 
@@ -470,7 +471,7 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate }: C
         body: {
           dossierId,
           stepId,
-          action: "complete",
+          action: "complete_step",
           formData,
         },
       });
@@ -500,7 +501,7 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate }: C
         body: {
           dossierId,
           stepId,
-          action: "decision",
+          action: "complete_step",
           decision,
           notes,
           formData,
