@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, FileText, MessageSquare, TrendingUp, User, MapPin, DollarSign, Clock, AlertCircle, Shield } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { EnrichedDossierTimeline } from './EnrichedDossierTimeline';
+import CaseTimeline from './CaseTimeline';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 
@@ -406,7 +406,7 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
-            <EnrichedDossierTimeline
+            <CaseTimeline
               dossierId={dossierId}
               steps={workflowSteps}
               progress={progress}
