@@ -13,12 +13,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Search, FileText, Plus, Filter, Download, MoreHorizontal, Eye, Calendar, Mail, BarChart3, Building2 } from 'lucide-react';
+import { Search, FileText, Plus, Filter, Download, MoreHorizontal, Eye, Calendar, Mail, BarChart3, Building2, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import CreateDossierDialog from '@/components/dossier/CreateDossierDialog';
 import { toast } from 'sonner';
 import JDMOLogo from '@/assets/JDMO.png';
+import { DeleteDossierDialog } from '@/components/dossier/DeleteDossierDialog';
 
 interface Dossier {
   id: string;
@@ -45,6 +46,8 @@ const DossiersJDMO = () => {
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [dossierToDelete, setDossierToDelete] = useState<Dossier | null>(null);
 
   useEffect(() => {
     fetchWorldAndDossiers();
@@ -118,6 +121,28 @@ const DossiersJDMO = () => {
           sessionStorage.setItem(`dossier_${dossierId}`, JSON.stringify(data));
         }
       });
+  };
+
+  const handleDeleteDossier = async () => {
+    if (!dossierToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from('dossiers')
+        .delete()
+        .eq('id', dossierToDelete.id);
+
+      if (error) throw error;
+
+      toast.success(`Le dossier "${dossierToDelete.title}" a été supprimé avec succès.`);
+      fetchWorldAndDossiers();
+    } catch (error: any) {
+      console.error('Error deleting dossier:', error);
+      toast.error('Impossible de supprimer le dossier.');
+    } finally {
+      setDeleteDialogOpen(false);
+      setDossierToDelete(null);
+    }
   };
 
   const getStatusBadgeColor = (status: string) => {
@@ -374,6 +399,16 @@ const DossiersJDMO = () => {
                         <Download className="h-4 w-4 mr-2" />
                         Télécharger le dossier
                       </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onClick={() => {
+                          setDossierToDelete(dossier);
+                          setDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Supprimer le dossier
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -417,6 +452,13 @@ const DossiersJDMO = () => {
           onSuccess={fetchWorldAndDossiers}
         />
       )}
+
+      <DeleteDossierDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteDossier}
+        dossierTitle={dossierToDelete?.title}
+      />
     </div>
     </div>
   );
