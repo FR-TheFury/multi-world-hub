@@ -15,7 +15,24 @@ interface WorldCard3DProps {
 
 const WorldCard3D = ({ world }: WorldCard3DProps) => {
   const navigate = useNavigate();
-  const colors = world.theme_colors;
+  
+  // Mapping des couleurs par code de monde (correction des couleurs inversées)
+  const colorMap: Record<string, { primary: string; accent: string }> = {
+    JDE: { 
+      primary: 'hsl(0, 85%, 58%)',     // Rouge
+      accent: 'hsl(0, 70%, 45%)'
+    },
+    JDMO: { 
+      primary: 'hsl(25, 95%, 60%)',    // Orange
+      accent: 'hsl(25, 80%, 50%)'
+    },
+    DBCS: { 
+      primary: 'hsl(145, 65%, 48%)',   // Vert
+      accent: 'hsl(145, 50%, 40%)'
+    },
+  };
+  
+  const colors = colorMap[world.code] || world.theme_colors;
 
   const handleClick = () => {
     navigate(`/${world.code.toLowerCase()}/dossiers`);

@@ -48,6 +48,26 @@ interface UnifiedTasksPanelProps {
 const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
   const { isSuperAdmin, user, roles } = useAuthStore();
   const navigate = useNavigate();
+  
+  // Mapping des couleurs par code de monde (correction des couleurs inversées)
+  const colorMap: Record<string, { primary: string; accent: string }> = {
+    JDE: { 
+      primary: 'hsl(0, 85%, 58%)',     // Rouge
+      accent: 'hsl(0, 70%, 45%)'
+    },
+    JDMO: { 
+      primary: 'hsl(25, 95%, 60%)',    // Orange
+      accent: 'hsl(25, 80%, 50%)'
+    },
+    DBCS: { 
+      primary: 'hsl(145, 65%, 48%)',   // Vert
+      accent: 'hsl(145, 50%, 40%)'
+    },
+  };
+  
+  const getWorldColors = (worldCode: string) => {
+    return colorMap[worldCode] || { primary: 'hsl(0, 0%, 50%)', accent: 'hsl(0, 0%, 40%)' };
+  };
   const [tasksByWorld, setTasksByWorld] = useState<Record<string, Task[]>>({});
   const [appointmentsByWorld, setAppointmentsByWorld] = useState<Record<string, Appointment[]>>({});
   const [loading, setLoading] = useState(true);
@@ -276,27 +296,28 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
           const worldTasks = tasksByWorld[world.id] || [];
           const incompleteTasks = worldTasks.filter(t => t.status !== 'done');
           const worldAppointments = appointmentsByWorld[world.id] || [];
+          const worldColors = getWorldColors(world.code);
 
           return (
             <Card 
               key={world.id} 
               className="flex flex-col transition-all"
               style={{
-                borderColor: world.theme_colors.primary,
+                borderColor: worldColors.primary,
                 borderWidth: '2px',
               }}
             >
               <CardHeader 
                 className="pb-4 space-y-4"
                 style={{
-                  background: `linear-gradient(135deg, ${world.theme_colors.primary}08 0%, ${world.theme_colors.accent}05 100%)`,
+                  background: `linear-gradient(135deg, ${worldColors.primary}08 0%, ${worldColors.accent}05 100%)`,
                 }}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div 
                       className="w-10 h-10 rounded-lg flex items-center justify-center" 
-                      style={{ backgroundColor: `${world.theme_colors.primary}20` }}
+                      style={{ backgroundColor: `${worldColors.primary}20` }}
                     >
                       {getWorldIcon(world.code) && (
                         <img 
@@ -309,7 +330,7 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                     <div>
                       <h3 
                         className="font-semibold"
-                        style={{ color: world.theme_colors.primary }}
+                        style={{ color: worldColors.primary }}
                       >
                         {world.name}
                       </h3>
@@ -329,17 +350,15 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                         console.log('Dialog state set to true');
                       }}
                       style={{
-                        borderColor: world.theme_colors.primary,
-                        color: world.theme_colors.primary,
-                        backgroundColor: 'transparent',
+                        borderColor: worldColors.primary,
+                        color: 'white',
+                        backgroundColor: worldColors.primary,
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = world.theme_colors.primary;
-                        e.currentTarget.style.color = 'white';
+                        e.currentTarget.style.filter = 'brightness(0.85)';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                        e.currentTarget.style.color = world.theme_colors.primary;
+                        e.currentTarget.style.filter = 'brightness(1)';
                       }}
                     >
                       <Plus className="h-4 w-4 mr-1" />
@@ -356,26 +375,20 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                     variant="outline"
                     className="h-7 px-2 text-xs transition-all"
                     style={priorityFilter === 'high' ? {
-                      backgroundColor: world.theme_colors.primary,
+                      backgroundColor: worldColors.primary,
                       color: 'white',
-                      borderColor: world.theme_colors.primary,
+                      borderColor: worldColors.primary,
                     } : {
-                      borderColor: world.theme_colors.primary,
-                      color: world.theme_colors.primary,
-                      backgroundColor: 'transparent',
+                      borderColor: worldColors.primary,
+                      color: 'white',
+                      backgroundColor: worldColors.primary,
                     }}
                     onClick={() => setPriorityFilter(priorityFilter === 'high' ? null : 'high')}
                     onMouseEnter={(e) => {
-                      if (priorityFilter !== 'high') {
-                        e.currentTarget.style.backgroundColor = world.theme_colors.primary;
-                        e.currentTarget.style.color = 'white';
-                      }
+                      e.currentTarget.style.filter = 'brightness(0.85)';
                     }}
                     onMouseLeave={(e) => {
-                      if (priorityFilter !== 'high') {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                        e.currentTarget.style.color = world.theme_colors.primary;
-                      }
+                      e.currentTarget.style.filter = 'brightness(1)';
                     }}
                   >
                     <AlertCircle className="h-3 w-3 mr-1" />
@@ -386,26 +399,20 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                     variant="outline"
                     className="h-7 px-2 text-xs transition-all"
                     style={priorityFilter === 'medium' ? {
-                      backgroundColor: world.theme_colors.primary,
+                      backgroundColor: worldColors.primary,
                       color: 'white',
-                      borderColor: world.theme_colors.primary,
+                      borderColor: worldColors.primary,
                     } : {
-                      borderColor: world.theme_colors.primary,
-                      color: world.theme_colors.primary,
-                      backgroundColor: 'transparent',
+                      borderColor: worldColors.primary,
+                      color: 'white',
+                      backgroundColor: worldColors.primary,
                     }}
                     onClick={() => setPriorityFilter(priorityFilter === 'medium' ? null : 'medium')}
                     onMouseEnter={(e) => {
-                      if (priorityFilter !== 'medium') {
-                        e.currentTarget.style.backgroundColor = world.theme_colors.primary;
-                        e.currentTarget.style.color = 'white';
-                      }
+                      e.currentTarget.style.filter = 'brightness(0.85)';
                     }}
                     onMouseLeave={(e) => {
-                      if (priorityFilter !== 'medium') {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                        e.currentTarget.style.color = world.theme_colors.primary;
-                      }
+                      e.currentTarget.style.filter = 'brightness(1)';
                     }}
                   >
                     <Clock className="h-3 w-3 mr-1" />
@@ -416,26 +423,20 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                     variant="outline"
                     className="h-7 px-2 text-xs transition-all"
                     style={priorityFilter === 'low' ? {
-                      backgroundColor: world.theme_colors.primary,
+                      backgroundColor: worldColors.primary,
                       color: 'white',
-                      borderColor: world.theme_colors.primary,
+                      borderColor: worldColors.primary,
                     } : {
-                      borderColor: world.theme_colors.primary,
-                      color: world.theme_colors.primary,
-                      backgroundColor: 'transparent',
+                      borderColor: worldColors.primary,
+                      color: 'white',
+                      backgroundColor: worldColors.primary,
                     }}
                     onClick={() => setPriorityFilter(priorityFilter === 'low' ? null : 'low')}
                     onMouseEnter={(e) => {
-                      if (priorityFilter !== 'low') {
-                        e.currentTarget.style.backgroundColor = world.theme_colors.primary;
-                        e.currentTarget.style.color = 'white';
-                      }
+                      e.currentTarget.style.filter = 'brightness(0.85)';
                     }}
                     onMouseLeave={(e) => {
-                      if (priorityFilter !== 'low') {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                        e.currentTarget.style.color = world.theme_colors.primary;
-                      }
+                      e.currentTarget.style.filter = 'brightness(1)';
                     }}
                   >
                     <CheckCircle2 className="h-3 w-3 mr-1" />
@@ -447,18 +448,16 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                       variant="outline"
                       className="h-7 px-2 text-xs transition-all"
                       style={{ 
-                        color: world.theme_colors.primary,
-                        borderColor: world.theme_colors.primary,
-                        backgroundColor: 'transparent',
+                        color: 'white',
+                        borderColor: worldColors.primary,
+                        backgroundColor: worldColors.primary,
                       }}
                       onClick={() => setPriorityFilter(null)}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = world.theme_colors.primary;
-                        e.currentTarget.style.color = 'white';
+                        e.currentTarget.style.filter = 'brightness(0.85)';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                        e.currentTarget.style.color = world.theme_colors.primary;
+                        e.currentTarget.style.filter = 'brightness(1)';
                       }}
                     >
                       Réinitialiser
@@ -600,8 +599,8 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                               key={email.id}
                               className="flex items-start gap-3 p-2 rounded-lg border transition-colors cursor-pointer"
                               style={{
-                                borderColor: `${world.theme_colors.primary}30`,
-                                backgroundColor: `${world.theme_colors.primary}08`,
+                                borderColor: `${worldColors.primary}30`,
+                                backgroundColor: `${worldColors.primary}08`,
                               }}
                               onClick={() => navigate('/mailbox')}
                             >
@@ -609,8 +608,8 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                                 <AvatarFallback 
                                   className="text-xs font-semibold"
                                   style={{
-                                    backgroundColor: `${world.theme_colors.primary}20`,
-                                    color: world.theme_colors.primary,
+                                    backgroundColor: `${worldColors.primary}20`,
+                                    color: worldColors.primary,
                                   }}
                                 >
                                   {email.senderAvatar}
@@ -679,8 +678,8 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                             key={appointment.id}
                             className="flex items-start gap-3 p-2 rounded-lg border transition-colors"
                             style={{
-                              borderColor: `${world.theme_colors.primary}30`,
-                              backgroundColor: `${world.theme_colors.primary}05`,
+                              borderColor: `${worldColors.primary}30`,
+                              backgroundColor: `${worldColors.primary}05`,
                             }}
                           >
                             <div className="flex-1 min-w-0">
