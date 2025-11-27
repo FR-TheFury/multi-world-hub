@@ -79,19 +79,14 @@ const DossierFilters = ({
               return (
                 <Badge
                   key={world.id}
-                  variant={isSelected ? "default" : "outline"}
-                  className="cursor-pointer transition-all hover:scale-105"
-                  style={
-                    isSelected
-                      ? {
-                          backgroundColor: worldColor,
-                          color: 'white',
-                        }
-                      : {
-                          borderColor: worldColor,
-                          color: worldColor,
-                        }
-                  }
+                  variant="default"
+                  className="cursor-pointer transition-all hover:scale-105 hover:brightness-90"
+                  style={{
+                    backgroundColor: worldColor,
+                    color: 'white',
+                    borderColor: worldColor,
+                    opacity: isSelected ? 1 : 0.7,
+                  }}
                   onClick={() => toggleWorld(world.code)}
                 >
                   {world.code}
