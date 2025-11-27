@@ -5,14 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Users, Search, Plus, Mail, Phone, MapPin, FileText } from 'lucide-react';
+import { Users, Search, Plus, Mail, Phone, MapPin } from 'lucide-react';
 import CreateClientDialog from '@/components/client/CreateClientDialog';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 interface ClientInfo {
   id: string;
-  dossier_id: string;
+  dossier_id: string | null;
   nom: string;
   prenom: string;
   email: string | null;
@@ -26,10 +26,6 @@ interface ClientInfo {
   numero_police: string | null;
   montant_dommage_batiment: number | null;
   created_at: string;
-  dossier: {
-    title: string;
-    reference: string;
-  };
 }
 
 const ClientsManagement = () => {
@@ -52,10 +48,8 @@ const ClientsManagement = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('dossier_client_info')
-        .select(`
-          *,
-          dossier:dossiers!dossier_client_info_dossier_id_fkey(title, reference)
-        `)
+        .select('*')
+        .is('dossier_id', null) // Only fetch standalone client files
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -81,8 +75,7 @@ const ClientsManagement = () => {
         client.nom?.toLowerCase().includes(query) ||
         client.prenom?.toLowerCase().includes(query) ||
         client.email?.toLowerCase().includes(query) ||
-        client.telephone?.includes(query) ||
-        client.dossier?.reference?.toLowerCase().includes(query)
+        client.telephone?.includes(query)
     );
     setFilteredClients(filtered);
   };
@@ -147,7 +140,7 @@ const ClientsManagement = () => {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
-              placeholder="Rechercher par nom, prénom, email, téléphone ou référence..."
+              placeholder="Rechercher par nom, prénom, email ou téléphone..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -192,13 +185,6 @@ const ClientsManagement = () => {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                {/* Dossier associé */}
-                <div className="flex items-center gap-2 text-sm">
-                  <FileText className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Dossier:</span>
-                  <span className="font-medium">{client.dossier?.reference || 'N/A'}</span>
-                </div>
-
                 {/* Email */}
                 {client.email && (
                   <div className="flex items-center gap-2 text-sm">

@@ -49,31 +49,11 @@ const CreateClientDialog = ({ open, onOpenChange, onSuccess }: CreateClientDialo
 
     setLoading(true);
     try {
-      // Create a temporary dossier to hold client info
-      const { data: tempDossier, error: dossierError } = await supabase
-        .from('dossiers')
-        .insert({
-          title: `Fiche client: ${clientInfo.nom} ${clientInfo.prenom}`,
-          owner_id: (await supabase.auth.getUser()).data.user?.id,
-          status: 'nouveau',
-          // Get first accessible world
-          world_id: (await supabase
-            .from('user_world_access')
-            .select('world_id')
-            .eq('user_id', (await supabase.auth.getUser()).data.user?.id || '')
-            .limit(1)
-            .single()).data?.world_id,
-        })
-        .select()
-        .single();
-
-      if (dossierError) throw dossierError;
-
-      // Create client info
+      // Create standalone client info without dossier
       const { error: clientError } = await supabase
         .from('dossier_client_info')
         .insert({
-          dossier_id: tempDossier.id,
+          dossier_id: null, // Fiche client standalone
           client_type: clientInfo.client_type as any,
           nom: clientInfo.nom,
           prenom: clientInfo.prenom,
