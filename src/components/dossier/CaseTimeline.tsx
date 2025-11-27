@@ -8,12 +8,19 @@ import {
   Clock,
   ArrowRightLeft,
   Loader2,
+  MessageSquare,
+  Calendar,
+  ListTodo,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import WorkflowStepDetails from "./WorkflowStepDetails";
+import { AddCommentDialog } from "./AddCommentDialog";
+import { AddTaskDialog } from "./AddTaskDialog";
+import { AddAppointmentDialog } from "./AddAppointmentDialog";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 /**
  * Étape principale de la timeline
@@ -174,6 +181,10 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate }: C
   const [loading, setLoading] = useState(true);
   const [selectedStep, setSelectedStep] = useState<any | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeStepForAction, setActiveStepForAction] = useState<string | null>(null);
+  const [showCommentDialog, setShowCommentDialog] = useState(false);
+  const [showTaskDialog, setShowTaskDialog] = useState(false);
+  const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
 
   // Fusionner steps et progress pour créer les étapes enrichies
   const enrichedSteps: Step[] = useMemo(() => {
@@ -540,8 +551,55 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate }: C
       }
     : { next: null, yes: null, no: null };
 
+  const handleOpenCommentDialog = (stepId: string) => {
+    setActiveStepForAction(stepId);
+    setShowCommentDialog(true);
+  };
+
+  const handleOpenTaskDialog = (stepId: string) => {
+    setActiveStepForAction(stepId);
+    setShowTaskDialog(true);
+  };
+
+  const handleOpenAppointmentDialog = (stepId: string) => {
+    setActiveStepForAction(stepId);
+    setShowAppointmentDialog(true);
+  };
+
   return (
     <div className="w-full max-w-5xl mx-auto px-4 py-6 md:py-8">
+      <AddCommentDialog
+        open={showCommentDialog}
+        onOpenChange={setShowCommentDialog}
+        dossierId={dossierId}
+        onCommentCreated={() => {
+          fetchTimelineItems();
+          onUpdate();
+        }}
+      />
+
+      <AddTaskDialog
+        open={showTaskDialog}
+        onOpenChange={setShowTaskDialog}
+        dossierId={dossierId}
+        workflowStepId={activeStepForAction || undefined}
+        onTaskCreated={() => {
+          fetchTimelineItems();
+          onUpdate();
+        }}
+      />
+
+      <AddAppointmentDialog
+        open={showAppointmentDialog}
+        onOpenChange={setShowAppointmentDialog}
+        dossierId={dossierId}
+        workflowStepId={activeStepForAction || undefined}
+        onAppointmentCreated={() => {
+          fetchTimelineItems();
+          onUpdate();
+        }}
+      />
+
       {selectedStep && selectedStepFull && (
         <div className="mb-6">
           <WorkflowStepDetails
@@ -570,7 +628,13 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate }: C
             return (
               <div key={step.id} className="space-y-6">
                 {/* Étape principale */}
-                <StepCard step={step} onClick={() => setSelectedStep(step)} />
+                <StepCard 
+                  step={step} 
+                  onClick={() => setSelectedStep(step)}
+                  onAddComment={() => handleOpenCommentDialog(step.id)}
+                  onAddTask={() => handleOpenTaskDialog(step.id)}
+                  onAddAppointment={() => handleOpenAppointmentDialog(step.id)}
+                />
 
                 {/* Segment intermédiaire entre cette étape et la suivante */}
                 {hasNextStep && stepItems.length > 0 && (
@@ -588,7 +652,19 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate }: C
 /**
  * Card d'une étape principale
  */
-function StepCard({ step, onClick }: { step: Step; onClick: () => void }) {
+function StepCard({ 
+  step, 
+  onClick, 
+  onAddComment, 
+  onAddTask, 
+  onAddAppointment 
+}: { 
+  step: Step; 
+  onClick: () => void;
+  onAddComment: () => void;
+  onAddTask: () => void;
+  onAddAppointment: () => void;
+}) {
   const colors = getStepColors(step.status);
 
   const getStatusLabel = (status: StepStatus) => {
@@ -626,71 +702,120 @@ function StepCard({ step, onClick }: { step: Step; onClick: () => void }) {
         <span className="text-sm font-semibold">{step.order}</span>
       </div>
 
-      <button
-        onClick={onClick}
-        className="w-full md:w-3/4 bg-card border border-border rounded-2xl shadow-sm px-4 py-4 md:px-6 md:py-5 hover:shadow-md hover:border-primary/50 transition-all duration-200 cursor-pointer text-left"
-      >
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-          <div>
-            <h3 className="text-sm md:text-base font-semibold text-card-foreground">
-              {step.name}
-            </h3>
-            {step.description && (
-              <p className="text-xs md:text-sm text-muted-foreground mt-1">
-                {step.description}
-              </p>
-            )}
+      <div className="w-full md:w-3/4">
+        <button
+          onClick={onClick}
+          className="w-full bg-card border border-border rounded-2xl shadow-sm px-4 py-4 md:px-6 md:py-5 hover:shadow-md hover:border-primary/50 transition-all duration-200 cursor-pointer text-left"
+        >
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+            <div>
+              <h3 className="text-sm md:text-base font-semibold text-card-foreground">
+                {step.name}
+              </h3>
+              {step.description && (
+                <p className="text-xs md:text-sm text-muted-foreground mt-1">
+                  {step.description}
+                </p>
+              )}
+            </div>
+            <div className="flex flex-col items-start md:items-end gap-1">
+              <span
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium ${colors.chipBg} ${colors.chipText}`}
+              >
+                {getStatusIcon(step.status)}
+                {getStatusLabel(step.status)}
+              </span>
+              {(step.completed_at || step.started_at) && (
+                <p className="text-[11px] text-muted-foreground">
+                  {formatDate(step.completed_at || step.started_at!)}
+                </p>
+              )}
+            </div>
           </div>
-          <div className="flex flex-col items-start md:items-end gap-1">
-            <span
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium ${colors.chipBg} ${colors.chipText}`}
-            >
-              {getStatusIcon(step.status)}
-              {getStatusLabel(step.status)}
-            </span>
-            {(step.completed_at || step.started_at) && (
-              <p className="text-[11px] text-muted-foreground">
-                {formatDate(step.completed_at || step.started_at!)}
-              </p>
-            )}
-          </div>
+        </button>
+
+        {/* Boutons d'action */}
+        <div className="flex items-center justify-center gap-2 mt-3">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddComment();
+            }}
+            className="text-xs h-8"
+          >
+            <MessageSquare className="w-3.5 h-3.5 mr-1.5" />
+            Commentaire
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddAppointment();
+            }}
+            className="text-xs h-8"
+          >
+            <Calendar className="w-3.5 h-3.5 mr-1.5" />
+            RDV
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddTask();
+            }}
+            className="text-xs h-8"
+          >
+            <ListTodo className="w-3.5 h-3.5 mr-1.5" />
+            Tâche
+          </Button>
         </div>
-      </button>
+      </div>
     </div>
   );
 }
 
 /**
  * Segment intermédiaire entre deux étapes :
- * ligne verticale + cartes latérales gauche/droite reliées par des lignes horizontales.
+ * Affiche les événements en escalier selon leur timestamp
  */
 function BetweenSegment({ items }: { items: TimelineItem[] }) {
-  const [expandedLeft, setExpandedLeft] = useState(false);
-  const [expandedRight, setExpandedRight] = useState(false);
-  const MAX_VISIBLE = 3;
+  const [expanded, setExpanded] = useState(false);
+  const MAX_VISIBLE = 6;
 
-  // Séparer les items par côté
-  const leftItems = items.filter(
-    (item) => item.type === "comment" || item.type === "annotation"
-  );
-  const rightItems = items.filter(
-    (item) => item.type === "document" || item.type === "task" || item.type === "appointment"
+  // Trier tous les items par date
+  const sortedItems = [...items].sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
   );
 
-  const visibleLeftItems =
-    expandedLeft || leftItems.length <= MAX_VISIBLE
-      ? leftItems
-      : leftItems.slice(0, MAX_VISIBLE);
+  const visibleItems = expanded || sortedItems.length <= MAX_VISIBLE
+    ? sortedItems
+    : sortedItems.slice(0, MAX_VISIBLE);
 
-  const visibleRightItems =
-    expandedRight || rightItems.length <= MAX_VISIBLE
-      ? rightItems
-      : rightItems.slice(0, MAX_VISIBLE);
+  const hiddenCount = sortedItems.length > MAX_VISIBLE ? sortedItems.length - MAX_VISIBLE : 0;
 
-  const hiddenLeftCount =
-    leftItems.length > MAX_VISIBLE ? leftItems.length - MAX_VISIBLE : 0;
-  const hiddenRightCount =
-    rightItems.length > MAX_VISIBLE ? rightItems.length - MAX_VISIBLE : 0;
+  // Calculer l'espacement vertical en fonction du temps écoulé
+  const getVerticalSpacing = (currentItem: TimelineItem, previousItem?: TimelineItem) => {
+    if (!previousItem) return 0;
+    
+    const currentTime = new Date(currentItem.createdAt).getTime();
+    const previousTime = new Date(previousItem.createdAt).getTime();
+    const timeDiff = currentTime - previousTime;
+    
+    // Convert time difference to hours
+    const hoursDiff = timeDiff / (1000 * 60 * 60);
+    
+    // Min spacing: 12px, Max spacing: 80px
+    // Scale based on time difference (0-24 hours range)
+    const minSpacing = 12;
+    const maxSpacing = 80;
+    const spacing = Math.min(maxSpacing, minSpacing + (hoursDiff * 2));
+    
+    return spacing;
+  };
 
   return (
     <div className="relative min-h-[80px]">
@@ -699,57 +824,39 @@ function BetweenSegment({ items }: { items: TimelineItem[] }) {
         <div className="w-px h-full border-l border-dashed border-slate-300" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 md:gap-6 relative z-10">
-        {/* Colonne gauche : commentaires et annotations */}
-        <div className="flex flex-col gap-3 pt-2 items-end">
-          {visibleLeftItems.map((item, idx) => (
-            <SideItemCard
-              key={item.id}
-              item={item}
-              positionIndex={idx}
-              side="left"
-            />
-          ))}
+      <div className="relative z-10">
+        {visibleItems.map((item, idx) => {
+          const side = idx % 2 === 0 ? "left" : "right";
+          const previousItem = idx > 0 ? visibleItems[idx - 1] : undefined;
+          const marginTop = getVerticalSpacing(item, previousItem);
 
-          {hiddenLeftCount > 0 && (
+          return (
+            <div 
+              key={item.id} 
+              style={{ marginTop: idx === 0 ? '8px' : `${marginTop}px` }}
+            >
+              <SideItemCard
+                item={item}
+                positionIndex={idx}
+                side={side}
+              />
+            </div>
+          );
+        })}
+
+        {hiddenCount > 0 && (
+          <div className="flex justify-center mt-4">
             <button
               type="button"
-              onClick={() => setExpandedLeft((v) => !v)}
-              className="text-xs font-medium text-primary hover:text-primary/80 transition-colors mt-1"
+              onClick={() => setExpanded((v) => !v)}
+              className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
             >
-              {expandedLeft
+              {expanded
                 ? "Masquer les éléments"
-                : `Afficher ${hiddenLeftCount} élément(s) de plus`}
+                : `Afficher ${hiddenCount} élément(s) de plus`}
             </button>
-          )}
-        </div>
-
-        {/* Colonne centrale : espace vide autour de la ligne */}
-        <div className="w-8 md:w-12" />
-
-        {/* Colonne droite : documents, tâches, RDV */}
-        <div className="flex flex-col gap-3 pt-2 items-start">
-          {visibleRightItems.map((item, idx) => (
-            <SideItemCard
-              key={item.id}
-              item={item}
-              positionIndex={idx}
-              side="right"
-            />
-          ))}
-
-          {hiddenRightCount > 0 && (
-            <button
-              type="button"
-              onClick={() => setExpandedRight((v) => !v)}
-              className="text-xs font-medium text-primary hover:text-primary/80 transition-colors mt-1"
-            >
-              {expandedRight
-                ? "Masquer les éléments"
-                : `Afficher ${hiddenRightCount} élément(s) de plus`}
-            </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -770,13 +877,57 @@ function SideItemCard({
   const colors = getItemColors(item.type);
 
   if (side === "left") {
-    // Cards à gauche : ligne pointillée part vers la DROITE
     return (
-      <div className="relative pr-8 md:pr-10 max-w-md w-full">
-        {/* Point sur la ligne + branche horizontale vers la droite */}
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 hidden md:flex items-center z-20">
-          <div className={`w-6 border-t-2 border-dashed ${colors.border}`} />
+      <div className="flex justify-end">
+        <div className="relative pr-8 md:pr-10 max-w-md w-full md:w-[calc(50%-2rem)]">
+          {/* Point sur la ligne + branche horizontale vers la droite */}
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 hidden md:flex items-center z-20">
+            <div className={`w-6 border-t-2 border-dashed ${colors.border}`} />
+            <div className={`w-2 h-2 rounded-full ${colors.border.replace('border', 'bg')}`} />
+          </div>
+
+          <div className={`bg-card border ${colors.border} rounded-xl shadow-sm px-3 py-2.5 md:px-4 md:py-3 hover:shadow-md transition-shadow`}>
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2">
+                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full ${colors.bg} ${colors.text} text-[11px] font-medium`}>
+                  {getItemIcon(item.type)}
+                  <span>{getItemTypeLabel(item.type)}</span>
+                </span>
+              </div>
+              <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                {formatDate(item.createdAt)}
+              </span>
+            </div>
+
+            <h4 className="text-xs md:text-sm font-bold text-card-foreground mb-1">
+              {item.title}
+            </h4>
+            <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
+              {item.content}
+            </p>
+
+            {(item.fromUser || item.toUser) && (
+              <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                <ArrowRightLeft className="w-3.5 h-3.5" />
+                <span className="font-medium">
+                  {item.fromUser}
+                  {item.toUser ? ` → ${item.toUser}` : ""}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex justify-start">
+      <div className="relative pl-8 md:pl-10 max-w-md w-full md:w-[calc(50%-2rem)]">
+        {/* Point sur la ligne + branche horizontale vers la gauche */}
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 hidden md:flex items-center z-20">
           <div className={`w-2 h-2 rounded-full ${colors.border.replace('border', 'bg')}`} />
+          <div className={`w-6 border-t-2 border-dashed ${colors.border}`} />
         </div>
 
         <div className={`bg-card border ${colors.border} rounded-xl shadow-sm px-3 py-2.5 md:px-4 md:py-3 hover:shadow-md transition-shadow`}>
@@ -809,48 +960,6 @@ function SideItemCard({
             </div>
           )}
         </div>
-      </div>
-    );
-  }
-
-  // Cards à droite : ligne pointillée part vers la GAUCHE
-  return (
-    <div className="relative pl-8 md:pl-10 max-w-md w-full">
-      {/* Point sur la ligne + branche horizontale vers la gauche */}
-      <div className="absolute left-0 top-1/2 -translate-y-1/2 hidden md:flex items-center z-20">
-        <div className={`w-2 h-2 rounded-full ${colors.border.replace('border', 'bg')}`} />
-        <div className={`w-6 border-t-2 border-dashed ${colors.border}`} />
-      </div>
-
-      <div className={`bg-card border ${colors.border} rounded-xl shadow-sm px-3 py-2.5 md:px-4 md:py-3 hover:shadow-md transition-shadow`}>
-        <div className="flex items-center justify-between gap-2 mb-2">
-          <div className="flex items-center gap-2">
-            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full ${colors.bg} ${colors.text} text-[11px] font-medium`}>
-              {getItemIcon(item.type)}
-              <span>{getItemTypeLabel(item.type)}</span>
-            </span>
-          </div>
-          <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-            {formatDate(item.createdAt)}
-          </span>
-        </div>
-
-        <h4 className="text-xs md:text-sm font-bold text-card-foreground mb-1">
-          {item.title}
-        </h4>
-        <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-          {item.content}
-        </p>
-
-        {(item.fromUser || item.toUser) && (
-          <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <ArrowRightLeft className="w-3.5 h-3.5" />
-            <span className="font-medium">
-              {item.fromUser}
-              {item.toUser ? ` → ${item.toUser}` : ""}
-            </span>
-          </div>
-        )}
       </div>
     </div>
   );
