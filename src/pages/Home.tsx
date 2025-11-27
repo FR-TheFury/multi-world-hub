@@ -1,73 +1,23 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useAuthStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { ArrowRight, FolderOpen, Clock, AlertCircle } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { supabase } from '@/integrations/supabase/client';
 import jdeLogo from '@/assets/JDE.png';
 import jdmoLogo from '@/assets/JDMO.png';
 import dbcsLogo from '@/assets/DBCS.png';
 
-interface WorldStats {
-  total: number;
-  en_cours: number;
-  en_attente: number;
-}
-
 const Home = () => {
   const navigate = useNavigate();
   const { session, accessibleWorlds } = useAuthStore();
-  const [worldStats, setWorldStats] = useState<Record<string, WorldStats>>({});
 
   useEffect(() => {
     if (!session) {
       navigate('/auth');
     }
   }, [session, navigate]);
-
-  useEffect(() => {
-    if (session && accessibleWorlds.length > 0) {
-      fetchWorldStats();
-    }
-  }, [session, accessibleWorlds.length]);
-
-  const fetchWorldStats = async () => {
-    try {
-      const statsMap: Record<string, WorldStats> = {};
-
-      for (const world of accessibleWorlds) {
-        const { count: total } = await supabase
-          .from('dossiers')
-          .select('*', { count: 'exact', head: true })
-          .eq('world_id', world.id);
-
-        const { count: en_cours } = await supabase
-          .from('dossiers')
-          .select('*', { count: 'exact', head: true })
-          .eq('world_id', world.id)
-          .eq('status', 'en_cours');
-
-        const { count: nouveau } = await supabase
-          .from('dossiers')
-          .select('*', { count: 'exact', head: true })
-          .eq('world_id', world.id)
-          .eq('status', 'nouveau');
-
-        statsMap[world.code] = {
-          total: total || 0,
-          en_cours: en_cours || 0,
-          en_attente: nouveau || 0,
-        };
-      }
-
-      setWorldStats(statsMap);
-    } catch (error) {
-      console.error('Error fetching world stats:', error);
-    }
-  };
 
   if (!session) return null;
 
@@ -163,60 +113,9 @@ const Home = () => {
 
         {/* World cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-          {worlds.map((world, index) => {
-            const worldData = accessibleWorlds.find(w => w.code === world.name);
-            const stats = worldData ? worldStats[worldData.code] : null;
-            
-            return (
-              <div key={world.name} className="space-y-4">
-                {/* Stats au-dessus de la carte */}
-                {stats && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      duration: 0.5,
-                      delay: index * 0.2,
-                    }}
-                    className="grid grid-cols-3 gap-2"
-                  >
-                    <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm">
-                      <CardContent className="p-3 flex items-center gap-2">
-                        <div className="p-2 rounded-lg bg-primary/10">
-                          <FolderOpen className="h-4 w-4 text-primary" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Total</p>
-                          <p className="text-lg font-bold">{stats.total}</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm">
-                      <CardContent className="p-3 flex items-center gap-2">
-                        <div className="p-2 rounded-lg bg-amber-500/10">
-                          <Clock className="h-4 w-4 text-amber-600" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">En cours</p>
-                          <p className="text-lg font-bold">{stats.en_cours}</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm">
-                      <CardContent className="p-3 flex items-center gap-2">
-                        <div className="p-2 rounded-lg bg-blue-500/10">
-                          <AlertCircle className="h-4 w-4 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">En attente</p>
-                          <p className="text-lg font-bold">{stats.en_attente}</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                )}
-                
-                <motion.div
+          {worlds.map((world, index) => (
+            <motion.div
+              key={world.name}
                   initial={{ opacity: 0, y: 50 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{
@@ -269,9 +168,7 @@ const Home = () => {
                     }}
                   />
                 </motion.div>
-              </div>
-            );
-          })}
+          ))}
         </div>
 
         {/* CTA Button */}
