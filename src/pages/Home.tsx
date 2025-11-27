@@ -80,9 +80,9 @@ const Home = () => {
 
   // Mapping des gradients par code de monde
   const gradientMap: Record<string, string> = {
-    JDE: 'from-emerald-500/20 to-green-600/10',
+    JDE: 'from-red-500/20 to-rose-600/10',
     JDMO: 'from-orange-500/20 to-amber-600/10',
-    DBCS: 'from-red-500/20 to-rose-600/10',
+    DBCS: 'from-emerald-500/20 to-green-600/10',
   };
 
   // Créer la liste des mondes à partir des mondes accessibles et les trier dans l'ordre souhaité
@@ -243,11 +243,11 @@ const Home = () => {
                       onClick={() => navigate(`/${world.name.toLowerCase()}/dossiers`)}
                       className={`w-full ${
                         world.name === 'JDE' 
-                          ? 'bg-red-600 hover:bg-red-700' 
+                          ? 'bg-red-600 hover:bg-red-800' 
                           : world.name === 'JDMO'
-                          ? 'bg-orange-600 hover:bg-orange-700'
-                          : 'bg-green-600 hover:bg-green-700'
-                      } text-white shadow-md`}
+                          ? 'bg-orange-600 hover:bg-orange-800'
+                          : 'bg-green-600 hover:bg-green-800'
+                      } text-white shadow-md transition-colors`}
                     >
                       Entrer dans le Monde
                       <ArrowRight className="ml-2 h-4 w-4" />
