@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { FileText, Eye, MoreHorizontal, Calendar, Mail, Download, Filter } from 'lucide-react';
+import { FileText, Eye, MoreHorizontal, Calendar, Mail, Download, Filter, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import DossierFilters from '@/components/DossierFilters';
@@ -26,6 +26,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useToast } from '@/hooks/use-toast';
+import { DeleteDossierDialog } from '@/components/dossier/DeleteDossierDialog';
 
 interface Dossier {
   id: string;
@@ -48,11 +50,14 @@ interface Dossier {
 const AllDossiers = () => {
   const navigate = useNavigate();
   const { accessibleWorlds } = useAuthStore();
+  const { toast } = useToast();
   const [dossiers, setDossiers] = useState<Dossier[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedWorlds, setSelectedWorlds] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [dossierToDelete, setDossierToDelete] = useState<Dossier | null>(null);
 
   // Mapping des couleurs corrigées par code de monde
   const colorMap: Record<string, string> = {
@@ -171,6 +176,36 @@ const AllDossiers = () => {
           sessionStorage.setItem(`dossier_${dossierId}`, JSON.stringify(data));
         }
       });
+  };
+
+  const handleDeleteDossier = async () => {
+    if (!dossierToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from('dossiers')
+        .delete()
+        .eq('id', dossierToDelete.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Dossier supprimé',
+        description: `Le dossier "${dossierToDelete.title}" a été supprimé avec succès.`,
+      });
+
+      fetchAllDossiers();
+    } catch (error: any) {
+      console.error('Error deleting dossier:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de supprimer le dossier.',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleteDialogOpen(false);
+      setDossierToDelete(null);
+    }
   };
 
   if (loading) {
@@ -327,6 +362,16 @@ const AllDossiers = () => {
                                   <Download className="h-4 w-4 mr-2" />
                                   Télécharger
                                 </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() => {
+                                    setDossierToDelete(dossier);
+                                    setDeleteDialogOpen(true);
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Supprimer le dossier
+                                </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>
@@ -348,6 +393,13 @@ const AllDossiers = () => {
           </div>
         </CardContent>
       </Card>
+
+      <DeleteDossierDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteDossier}
+        dossierTitle={dossierToDelete?.title}
+      />
     </div>
   );
 };
