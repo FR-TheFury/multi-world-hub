@@ -78,6 +78,13 @@ const Home = () => {
     DBCS: dbcsLogo,
   };
 
+  // Mapping des couleurs par code de monde (pour corriger les couleurs des noms)
+  const colorMap: Record<string, string> = {
+    JDE: 'hsl(0, 85%, 58%)',     // Rouge
+    JDMO: 'hsl(25, 95%, 60%)',   // Orange
+    DBCS: 'hsl(145, 65%, 48%)',  // Vert
+  };
+
   // Mapping des gradients par code de monde
   const gradientMap: Record<string, string> = {
     JDE: 'from-red-500/20 to-rose-600/10',
@@ -91,7 +98,7 @@ const Home = () => {
       name: world.code,
       fullName: world.name,
       logo: logoMap[world.code],
-      color: world.theme_colors.primary,
+      color: colorMap[world.code] || world.theme_colors.primary,
       gradient: gradientMap[world.code] || 'from-primary/20 to-accent/10',
     };
     return acc;
