@@ -71,7 +71,7 @@ const WorldCard3D = ({ world }: WorldCard3DProps) => {
           className="relative overflow-hidden shadow-3d hover:shadow-vuexy-xl transition-slow cursor-pointer backdrop-blur-sm"
           onClick={handleClick}
           style={{
-            background: `linear-gradient(135deg, ${colors.primary}20 0%, ${colors.accent}15 100%)`,
+            background: `linear-gradient(135deg, ${colors.primary}40 0%, ${colors.accent}30 100%)`,
             borderColor: colors.primary,
             borderWidth: '2px',
             borderRadius: '1.5rem',
@@ -99,7 +99,6 @@ const WorldCard3D = ({ world }: WorldCard3DProps) => {
               <h3 className="text-2xl font-bold" style={{ color: colors.primary }}>
                 {world.name}
               </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{world.description}</p>
             </div>
 
             <div className="pt-4">
@@ -126,7 +125,7 @@ const WorldCard3D = ({ world }: WorldCard3DProps) => {
 
           {/* Decorative gradient overlays */}
           <div
-            className="absolute inset-0 pointer-events-none opacity-15"
+            className="absolute inset-0 pointer-events-none opacity-20"
             style={{
               background: `radial-gradient(circle at 100% 0%, ${colors.accent} 0%, transparent 50%)`,
             }}
