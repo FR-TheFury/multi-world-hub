@@ -1,0 +1,312 @@
+import { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+interface CreateClientDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
+}
+
+const CreateClientDialog = ({ open, onOpenChange, onSuccess }: CreateClientDialogProps) => {
+  const [loading, setLoading] = useState(false);
+  const [clientInfo, setClientInfo] = useState({
+    client_type: 'locataire',
+    nom: '',
+    prenom: '',
+    telephone: '',
+    email: '',
+    adresse_client: '',
+    adresse_sinistre: '',
+    type_sinistre: '',
+    date_sinistre: '',
+    compagnie_assurance: '',
+    numero_police: '',
+    montant_dommage_batiment: '',
+    montant_demolition_deblayage: '',
+    montant_mise_conformite: '',
+    adresse_identique_sinistre: false,
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!clientInfo.nom.trim() || !clientInfo.prenom.trim()) {
+      toast.error('Le nom et prénom sont requis');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Create a temporary dossier to hold client info
+      const { data: tempDossier, error: dossierError } = await supabase
+        .from('dossiers')
+        .insert({
+          title: `Fiche client: ${clientInfo.nom} ${clientInfo.prenom}`,
+          owner_id: (await supabase.auth.getUser()).data.user?.id,
+          status: 'nouveau',
+          // Get first accessible world
+          world_id: (await supabase
+            .from('user_world_access')
+            .select('world_id')
+            .eq('user_id', (await supabase.auth.getUser()).data.user?.id || '')
+            .limit(1)
+            .single()).data?.world_id,
+        })
+        .select()
+        .single();
+
+      if (dossierError) throw dossierError;
+
+      // Create client info
+      const { error: clientError } = await supabase
+        .from('dossier_client_info')
+        .insert({
+          dossier_id: tempDossier.id,
+          client_type: clientInfo.client_type as any,
+          nom: clientInfo.nom,
+          prenom: clientInfo.prenom,
+          telephone: clientInfo.telephone || null,
+          email: clientInfo.email || null,
+          adresse_client: clientInfo.adresse_client || null,
+          adresse_sinistre: clientInfo.adresse_sinistre || null,
+          type_sinistre: clientInfo.type_sinistre || null,
+          date_sinistre: clientInfo.date_sinistre || null,
+          compagnie_assurance: clientInfo.compagnie_assurance || null,
+          numero_police: clientInfo.numero_police || null,
+          montant_dommage_batiment: clientInfo.montant_dommage_batiment ? parseFloat(clientInfo.montant_dommage_batiment) : null,
+          montant_demolition_deblayage: clientInfo.montant_demolition_deblayage ? parseFloat(clientInfo.montant_demolition_deblayage) : null,
+          montant_mise_conformite: clientInfo.montant_mise_conformite ? parseFloat(clientInfo.montant_mise_conformite) : null,
+          adresse_identique_sinistre: clientInfo.adresse_identique_sinistre,
+        });
+
+      if (clientError) throw clientError;
+
+      toast.success('Fiche client créée avec succès');
+      
+      // Reset form
+      setClientInfo({
+        client_type: 'locataire',
+        nom: '',
+        prenom: '',
+        telephone: '',
+        email: '',
+        adresse_client: '',
+        adresse_sinistre: '',
+        type_sinistre: '',
+        date_sinistre: '',
+        compagnie_assurance: '',
+        numero_police: '',
+        montant_dommage_batiment: '',
+        montant_demolition_deblayage: '',
+        montant_mise_conformite: '',
+        adresse_identique_sinistre: false,
+      });
+      
+      onOpenChange(false);
+      onSuccess?.();
+    } catch (error: any) {
+      console.error('Error creating client:', error);
+      toast.error(error.message || 'Erreur lors de la création de la fiche client');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[800px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold text-center">Créer une fiche client</DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-6 p-6">
+          <div>
+            <Label htmlFor="client_type">Type de client *</Label>
+            <Select
+              value={clientInfo.client_type}
+              onValueChange={(value) => setClientInfo({ ...clientInfo, client_type: value })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="locataire">Locataire</SelectItem>
+                <SelectItem value="proprietaire">Propriétaire</SelectItem>
+                <SelectItem value="proprietaire_non_occupant">Propriétaire non occupant</SelectItem>
+                <SelectItem value="professionnel">Professionnel</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="nom">Nom *</Label>
+              <Input
+                id="nom"
+                value={clientInfo.nom}
+                onChange={(e) => setClientInfo({ ...clientInfo, nom: e.target.value })}
+                placeholder="Nom"
+              />
+            </div>
+            <div>
+              <Label htmlFor="prenom">Prénom *</Label>
+              <Input
+                id="prenom"
+                value={clientInfo.prenom}
+                onChange={(e) => setClientInfo({ ...clientInfo, prenom: e.target.value })}
+                placeholder="Prénom"
+              />
+            </div>
+            <div>
+              <Label htmlFor="telephone">Téléphone</Label>
+              <Input
+                id="telephone"
+                value={clientInfo.telephone}
+                onChange={(e) => setClientInfo({ ...clientInfo, telephone: e.target.value })}
+                placeholder="Téléphone"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={clientInfo.email}
+                onChange={(e) => setClientInfo({ ...clientInfo, email: e.target.value })}
+                placeholder="Email"
+              />
+            </div>
+            <div>
+              <Label htmlFor="adresse_client">Adresse client</Label>
+              <Input
+                id="adresse_client"
+                value={clientInfo.adresse_client}
+                onChange={(e) => setClientInfo({ ...clientInfo, adresse_client: e.target.value })}
+                placeholder="Adresse du client"
+              />
+            </div>
+          </div>
+
+          <div className="border-t pt-4">
+            <h3 className="font-semibold mb-3">Informations sinistre</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="adresse_sinistre">Adresse du sinistre</Label>
+                <Input
+                  id="adresse_sinistre"
+                  value={clientInfo.adresse_sinistre}
+                  onChange={(e) => setClientInfo({ ...clientInfo, adresse_sinistre: e.target.value })}
+                  placeholder="Adresse du sinistre"
+                />
+              </div>
+              <div>
+                <Label htmlFor="type_sinistre">Type de sinistre</Label>
+                <Input
+                  id="type_sinistre"
+                  value={clientInfo.type_sinistre}
+                  onChange={(e) => setClientInfo({ ...clientInfo, type_sinistre: e.target.value })}
+                  placeholder="Type de sinistre"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 mt-4">
+              <div>
+                <Label htmlFor="date_sinistre">Date du sinistre</Label>
+                <Input
+                  id="date_sinistre"
+                  type="date"
+                  value={clientInfo.date_sinistre}
+                  onChange={(e) => setClientInfo({ ...clientInfo, date_sinistre: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="compagnie_assurance">Compagnie d'assurance</Label>
+                <Input
+                  id="compagnie_assurance"
+                  value={clientInfo.compagnie_assurance}
+                  onChange={(e) => setClientInfo({ ...clientInfo, compagnie_assurance: e.target.value })}
+                  placeholder="Compagnie"
+                />
+              </div>
+              <div>
+                <Label htmlFor="numero_police">Numéro de police</Label>
+                <Input
+                  id="numero_police"
+                  value={clientInfo.numero_police}
+                  onChange={(e) => setClientInfo({ ...clientInfo, numero_police: e.target.value })}
+                  placeholder="N° de police"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t pt-4">
+            <h3 className="font-semibold mb-3">Montants (optionnel)</h3>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="montant_dommage_batiment">Dommage bâtiment (€)</Label>
+                <Input
+                  id="montant_dommage_batiment"
+                  type="number"
+                  step="0.01"
+                  value={clientInfo.montant_dommage_batiment}
+                  onChange={(e) => setClientInfo({ ...clientInfo, montant_dommage_batiment: e.target.value })}
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <Label htmlFor="montant_demolition_deblayage">Démolition/Déblayage (€)</Label>
+                <Input
+                  id="montant_demolition_deblayage"
+                  type="number"
+                  step="0.01"
+                  value={clientInfo.montant_demolition_deblayage}
+                  onChange={(e) => setClientInfo({ ...clientInfo, montant_demolition_deblayage: e.target.value })}
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <Label htmlFor="montant_mise_conformite">Mise en conformité (€)</Label>
+                <Input
+                  id="montant_mise_conformite"
+                  type="number"
+                  step="0.01"
+                  value={clientInfo.montant_mise_conformite}
+                  onChange={(e) => setClientInfo({ ...clientInfo, montant_mise_conformite: e.target.value })}
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Annuler
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Création...' : 'Créer la fiche client'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default CreateClientDialog;

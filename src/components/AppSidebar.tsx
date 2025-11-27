@@ -1,4 +1,4 @@
-import { Home, FolderOpen, Settings, Shield, LogOut, TrendingUp, Sparkles, Building2, Scale, Archive } from 'lucide-react';
+import { Home, FolderOpen, Settings, Shield, LogOut, TrendingUp, Sparkles, Building2, Scale, Archive, Users } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/integrations/supabase/client';
@@ -68,6 +68,22 @@ const AppSidebar = () => {
                   <FolderOpen className={`h-5 w-5 ${isActive('/dossiers') ? 'text-primary' : ''}`} />
                   {!isCollapsed && <span>Tous les Dossiers</span>}
                   {isActive('/dossiers') && (
+                    <div className="absolute right-2 w-2 h-2 rounded-full bg-primary animate-pulse" />
+                  )}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  onClick={() => navigate('/clients')}
+                  className={`relative transition-all duration-200 ${
+                    isActive('/clients') 
+                      ? 'bg-gradient-to-r from-primary/15 to-primary/5 text-primary font-semibold border-l-4 border-primary shadow-md' 
+                      : 'hover:bg-accent hover:translate-x-1'
+                  }`}
+                >
+                  <Users className={`h-5 w-5 ${isActive('/clients') ? 'text-primary' : ''}`} />
+                  {!isCollapsed && <span>Fiches Clients</span>}
+                  {isActive('/clients') && (
                     <div className="absolute right-2 w-2 h-2 rounded-full bg-primary animate-pulse" />
                   )}
                 </SidebarMenuButton>
