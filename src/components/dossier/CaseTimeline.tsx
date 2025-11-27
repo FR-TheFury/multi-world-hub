@@ -632,7 +632,19 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate }: C
                 {/* Étape principale */}
                 <StepCard 
                   step={step} 
-                  onClick={() => setSelectedStep(step)}
+                  stepId={`step-${step.id}`}
+                  onClick={() => {
+                    setSelectedStep(step);
+                    // Scroll vers l'étape après un court délai pour laisser le temps au détail de s'afficher
+                    setTimeout(() => {
+                      const stepElement = document.getElementById(`step-${step.id}`);
+                      if (stepElement) {
+                        const elementTop = stepElement.getBoundingClientRect().top + window.scrollY;
+                        const offset = 150; // Décalage depuis le haut pour voir le détail
+                        window.scrollTo({ top: elementTop - offset, behavior: 'smooth' });
+                      }
+                    }, 100);
+                  }}
                   onAddComment={() => handleOpenCommentDialog(step.id)}
                   onAddTask={() => handleOpenTaskDialog(step.id)}
                   onAddAppointment={() => handleOpenAppointmentDialog(step.id)}
@@ -656,12 +668,14 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate }: C
  */
 function StepCard({ 
   step, 
+  stepId,
   onClick, 
   onAddComment, 
   onAddTask, 
   onAddAppointment 
 }: { 
-  step: Step; 
+  step: Step;
+  stepId: string;
   onClick: () => void;
   onAddComment: () => void;
   onAddTask: () => void;
@@ -696,7 +710,7 @@ function StepCard({
   };
 
   return (
-    <div className="relative flex justify-center">
+    <div id={stepId} className="relative flex justify-center">
       {/* pastille numérotée */}
       <div
         className={`absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full ${colors.badgeBg} text-white shadow-lg ring-4 ${colors.badgeRing} z-10`}
