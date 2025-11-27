@@ -49,7 +49,6 @@ const ClientsManagement = () => {
       const { data, error } = await supabase
         .from('dossier_client_info')
         .select('*')
-        .is('dossier_id', null) // Only fetch standalone client files
         .order('created_at', { ascending: false });
 
       if (error) throw error;
