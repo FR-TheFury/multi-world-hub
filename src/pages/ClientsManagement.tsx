@@ -5,8 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Users, Search, Plus, Mail, Phone, MapPin } from 'lucide-react';
+import { Users, Search, Plus, Mail, Phone, MapPin, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import CreateClientDialog from '@/components/client/CreateClientDialog';
+import EditClientDialog from '@/components/client/EditClientDialog';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -34,6 +37,8 @@ const ClientsManagement = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [editingClientId, setEditingClientId] = useState<string | null>(null);
+  const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchClients();
@@ -99,6 +104,26 @@ const ClientsManagement = () => {
     return colors[type] || 'bg-gray-100 text-gray-700';
   };
 
+  const handleDeleteClient = async () => {
+    if (!deletingClientId) return;
+
+    try {
+      const { error } = await supabase
+        .from('dossier_client_info')
+        .delete()
+        .eq('id', deletingClientId);
+
+      if (error) throw error;
+
+      toast.success('Fiche client supprimée avec succès');
+      setDeletingClientId(null);
+      fetchClients();
+    } catch (error) {
+      console.error('Error deleting client:', error);
+      toast.error('Erreur lors de la suppression de la fiche client');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -114,6 +139,30 @@ const ClientsManagement = () => {
         onOpenChange={setShowCreateDialog}
         onSuccess={fetchClients}
       />
+
+      <EditClientDialog
+        open={!!editingClientId}
+        onOpenChange={(open) => !open && setEditingClientId(null)}
+        clientId={editingClientId}
+        onSuccess={fetchClients}
+      />
+
+      <AlertDialog open={!!deletingClientId} onOpenChange={(open) => !open && setDeletingClientId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer cette fiche client ? Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteClient} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -181,6 +230,26 @@ const ClientsManagement = () => {
                       {getClientTypeLabel(client.client_type)}
                     </Badge>
                   </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreVertical className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setEditingClientId(client.id)}>
+                        <Pencil className="w-4 h-4 mr-2" />
+                        Modifier
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => setDeletingClientId(client.id)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Supprimer
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
