@@ -28,6 +28,19 @@ const DossierFilters = ({
   onReset,
   resultCount,
 }: DossierFiltersProps) => {
+  // Mapping des couleurs corrigées par code de monde
+  const colorMap: Record<string, string> = {
+    JDE: 'hsl(0, 85%, 58%)',      // Rouge
+    JDMO: 'hsl(25, 95%, 60%)',    // Orange
+    DBCS: 'hsl(145, 65%, 48%)',   // Vert
+  };
+
+  // Ordre d'affichage fixe des mondes
+  const worldOrder = ['JDE', 'JDMO', 'DBCS'];
+  const sortedWorlds = [...worlds].sort((a, b) => 
+    worldOrder.indexOf(a.code) - worldOrder.indexOf(b.code)
+  );
+
   const toggleWorld = (worldCode: string) => {
     if (selectedWorlds.includes(worldCode)) {
       onWorldsChange(selectedWorlds.filter((w) => w !== worldCode));
@@ -60,8 +73,9 @@ const DossierFilters = ({
         <div className="space-y-2">
           <label className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">Mondes</label>
           <div className="flex flex-wrap gap-2">
-            {worlds.map((world) => {
+            {sortedWorlds.map((world) => {
               const isSelected = selectedWorlds.includes(world.code);
+              const worldColor = colorMap[world.code] || world.theme_colors.primary;
               return (
                 <Badge
                   key={world.id}
@@ -70,12 +84,12 @@ const DossierFilters = ({
                   style={
                     isSelected
                       ? {
-                          backgroundColor: world.theme_colors.primary,
+                          backgroundColor: worldColor,
                           color: 'white',
                         }
                       : {
-                          borderColor: world.theme_colors.primary,
-                          color: world.theme_colors.primary,
+                          borderColor: worldColor,
+                          color: worldColor,
                         }
                   }
                   onClick={() => toggleWorld(world.code)}
