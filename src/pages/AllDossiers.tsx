@@ -54,6 +54,13 @@ const AllDossiers = () => {
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Mapping des couleurs corrigées par code de monde
+  const colorMap: Record<string, string> = {
+    JDE: 'hsl(0, 85%, 58%)',      // Rouge
+    JDMO: 'hsl(25, 95%, 60%)',    // Orange
+    DBCS: 'hsl(145, 65%, 48%)',   // Vert
+  };
+
   useEffect(() => {
     fetchAllDossiers();
   }, [accessibleWorlds]);
@@ -245,9 +252,9 @@ const AllDossiers = () => {
                           <Badge
                             className="font-medium shadow-none"
                             style={{
-                              backgroundColor: dossier.world.theme_colors.primary + '15',
-                              color: dossier.world.theme_colors.primary,
-                              borderColor: dossier.world.theme_colors.primary + '30',
+                              backgroundColor: (colorMap[dossier.world.code] || dossier.world.theme_colors.primary) + '15',
+                              color: colorMap[dossier.world.code] || dossier.world.theme_colors.primary,
+                              borderColor: (colorMap[dossier.world.code] || dossier.world.theme_colors.primary) + '30',
                             }}
                           >
                             {dossier.world.code}
