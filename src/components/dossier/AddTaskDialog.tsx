@@ -131,16 +131,8 @@ export function AddTaskDialog({ open, onOpenChange, dossierId, workflowStepId, o
             status: "scheduled",
           });
 
-        if (appointmentError) throw appointmentError;
+      if (appointmentError) throw appointmentError;
       }
-
-      // Create system comment
-      await supabase.from("dossier_comments").insert({
-        dossier_id: dossierId,
-        user_id: user.id,
-        content: `Tâche créée : "${title}"${createAppointment ? " avec rendez-vous automatique" : ""}`,
-        comment_type: "comment",
-      });
 
       // Send notification to assigned user
       if (assignedTo && assignedTo !== user.id) {

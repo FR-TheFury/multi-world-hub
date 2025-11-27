@@ -52,14 +52,6 @@ export function AddAnnotationDialog({
 
       if (error) throw error;
 
-      // Create system comment
-      await supabase.from("dossier_comments").insert({
-        dossier_id: dossierId,
-        user_id: user.id,
-        content: `Annotation ajoutée : "${title}"`,
-        comment_type: "comment",
-      });
-
       toast.success("Annotation ajoutée avec succès");
       setTitle("");
       setContent("");
