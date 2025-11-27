@@ -420,8 +420,8 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate }: C
         });
       });
 
-      // Sort chronologically
-      allItems.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      // Sort reverse chronologically (newest first at top, oldest at bottom)
+      allItems.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
       setTimelineItems(allItems);
     } catch (error) {
