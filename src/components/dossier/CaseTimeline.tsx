@@ -622,7 +622,8 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate }: C
         </div>
 
         <div className="space-y-10">
-          {enrichedSteps.map((step, index) => {
+          {/* Inverser l'ordre pour l'affichage (étape 1 en bas, dernière en haut) */}
+          {[...enrichedSteps].reverse().map((step, index) => {
             const stepItems = itemsByStep[step.id] || [];
             const hasNextStep = index < enrichedSteps.length - 1;
 
