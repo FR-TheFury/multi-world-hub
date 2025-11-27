@@ -561,73 +561,161 @@ function StepCard({ step }: { step: Step }) {
 
 /**
  * Segment intermédiaire entre deux étapes :
- * ligne verticale + cartes latérales reliées par des lignes horizontales.
+ * ligne verticale + cartes latérales gauche/droite reliées par des lignes horizontales.
  */
 function BetweenSegment({ items }: { items: TimelineItem[] }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expandedLeft, setExpandedLeft] = useState(false);
+  const [expandedRight, setExpandedRight] = useState(false);
   const MAX_VISIBLE = 3;
 
-  const visibleItems =
-    expanded || items.length <= MAX_VISIBLE
-      ? items
-      : items.slice(0, MAX_VISIBLE);
+  // Séparer les items par côté
+  const leftItems = items.filter(
+    (item) => item.type === "comment" || item.type === "annotation"
+  );
+  const rightItems = items.filter(
+    (item) => item.type === "document" || item.type === "task" || item.type === "appointment"
+  );
 
-  const hiddenCount =
-    items.length > MAX_VISIBLE ? items.length - MAX_VISIBLE : 0;
+  const visibleLeftItems =
+    expandedLeft || leftItems.length <= MAX_VISIBLE
+      ? leftItems
+      : leftItems.slice(0, MAX_VISIBLE);
+
+  const visibleRightItems =
+    expandedRight || rightItems.length <= MAX_VISIBLE
+      ? rightItems
+      : rightItems.slice(0, MAX_VISIBLE);
+
+  const hiddenLeftCount =
+    leftItems.length > MAX_VISIBLE ? leftItems.length - MAX_VISIBLE : 0;
+  const hiddenRightCount =
+    rightItems.length > MAX_VISIBLE ? rightItems.length - MAX_VISIBLE : 0;
 
   return (
-    <div className="relative">
-      {/* petit morceau de ligne verticale entre les étapes */}
+    <div className="relative min-h-[80px]">
+      {/* Ligne verticale centrale entre les étapes */}
       <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 z-0">
         <div className="w-px h-full border-l border-dashed border-slate-300" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-4 md:gap-6">
-        {/* Colonne gauche : cards */}
-        <div className="flex flex-col gap-3 pt-2 relative z-10">
-          {visibleItems.map((item, idx) => (
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 md:gap-6 relative z-10">
+        {/* Colonne gauche : commentaires et annotations */}
+        <div className="flex flex-col gap-3 pt-2 items-end">
+          {visibleLeftItems.map((item, idx) => (
             <SideItemCard
               key={item.id}
               item={item}
               positionIndex={idx}
+              side="left"
             />
           ))}
 
-          {hiddenCount > 0 && (
+          {hiddenLeftCount > 0 && (
             <button
               type="button"
-              onClick={() => setExpanded((v) => !v)}
-              className="self-start text-xs font-medium text-primary hover:text-primary/80 transition-colors mt-1"
+              onClick={() => setExpandedLeft((v) => !v)}
+              className="text-xs font-medium text-primary hover:text-primary/80 transition-colors mt-1"
             >
-              {expanded
+              {expandedLeft
                 ? "Masquer les éléments"
-                : `Afficher ${hiddenCount} élément(s) de plus`}
+                : `Afficher ${hiddenLeftCount} élément(s) de plus`}
             </button>
           )}
         </div>
 
-        {/* Colonne centrale vide (sert juste à garder l'alignement visuel) */}
-        <div />
+        {/* Colonne centrale : espace vide autour de la ligne */}
+        <div className="w-8 md:w-12" />
+
+        {/* Colonne droite : documents, tâches, RDV */}
+        <div className="flex flex-col gap-3 pt-2 items-start">
+          {visibleRightItems.map((item, idx) => (
+            <SideItemCard
+              key={item.id}
+              item={item}
+              positionIndex={idx}
+              side="right"
+            />
+          ))}
+
+          {hiddenRightCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setExpandedRight((v) => !v)}
+              className="text-xs font-medium text-primary hover:text-primary/80 transition-colors mt-1"
+            >
+              {expandedRight
+                ? "Masquer les éléments"
+                : `Afficher ${hiddenRightCount} élément(s) de plus`}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
 /**
- * Card latérale reliée à la timeline
+ * Card latérale reliée à la timeline (gauche ou droite)
  */
 function SideItemCard({
   item,
   positionIndex,
+  side,
 }: {
   item: TimelineItem;
   positionIndex: number;
+  side: "left" | "right";
 }) {
   const colors = getItemColors(item.type);
 
+  if (side === "left") {
+    // Cards à gauche : ligne pointillée part vers la DROITE
+    return (
+      <div className="relative pr-8 md:pr-10 max-w-md w-full">
+        {/* Point sur la ligne + branche horizontale vers la droite */}
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 hidden md:flex items-center z-20">
+          <div className={`w-6 border-t-2 border-dashed ${colors.border}`} />
+          <div className={`w-2 h-2 rounded-full ${colors.border.replace('border', 'bg')}`} />
+        </div>
+
+        <div className={`bg-card border ${colors.border} rounded-xl shadow-sm px-3 py-2.5 md:px-4 md:py-3 hover:shadow-md transition-shadow`}>
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2">
+              <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full ${colors.bg} ${colors.text} text-[11px] font-medium`}>
+                {getItemIcon(item.type)}
+                <span>{getItemTypeLabel(item.type)}</span>
+              </span>
+            </div>
+            <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+              {formatDate(item.createdAt)}
+            </span>
+          </div>
+
+          <h4 className="text-xs md:text-sm font-bold text-card-foreground mb-1">
+            {item.title}
+          </h4>
+          <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
+            {item.content}
+          </p>
+
+          {(item.fromUser || item.toUser) && (
+            <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <ArrowRightLeft className="w-3.5 h-3.5" />
+              <span className="font-medium">
+                {item.fromUser}
+                {item.toUser ? ` → ${item.toUser}` : ""}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Cards à droite : ligne pointillée part vers la GAUCHE
   return (
-    <div className="relative pl-8 md:pl-10">
-      {/* Point sur la ligne + branche horizontale pointillée */}
+    <div className="relative pl-8 md:pl-10 max-w-md w-full">
+      {/* Point sur la ligne + branche horizontale vers la gauche */}
       <div className="absolute left-0 top-1/2 -translate-y-1/2 hidden md:flex items-center z-20">
         <div className={`w-2 h-2 rounded-full ${colors.border.replace('border', 'bg')}`} />
         <div className={`w-6 border-t-2 border-dashed ${colors.border}`} />
@@ -641,22 +729,22 @@ function SideItemCard({
               <span>{getItemTypeLabel(item.type)}</span>
             </span>
           </div>
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-[11px] text-muted-foreground whitespace-nowrap">
             {formatDate(item.createdAt)}
           </span>
         </div>
 
-        <h4 className="text-xs md:text-sm font-semibold text-card-foreground mb-1">
+        <h4 className="text-xs md:text-sm font-bold text-card-foreground mb-1">
           {item.title}
         </h4>
-        <p className="text-xs md:text-sm text-muted-foreground line-clamp-2">
+        <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
           {item.content}
         </p>
 
         {(item.fromUser || item.toUser) && (
           <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <ArrowRightLeft className="w-3.5 h-3.5" />
-            <span>
+            <span className="font-medium">
               {item.fromUser}
               {item.toUser ? ` → ${item.toUser}` : ""}
             </span>
