@@ -203,15 +203,15 @@ const CreateDossierDialog = ({ open, onOpenChange, worldId, onSuccess }: CreateD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Créer un nouveau dossier</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="sm:max-w-[800px]">
+        <DialogHeader className="text-center">
+          <DialogTitle className="text-2xl">Créer un nouveau dossier</DialogTitle>
+          <DialogDescription className="text-base">
             Remplissez les informations pour créer un nouveau dossier
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
+          <div className="space-y-6 p-6 max-h-[75vh] overflow-y-auto">
             <div className="space-y-2">
               <Label htmlFor="title">
                 Titre du dossier <span className="text-destructive">*</span>
@@ -239,12 +239,12 @@ const CreateDossierDialog = ({ open, onOpenChange, worldId, onSuccess }: CreateD
             </div>
 
             {/* Client Mode Selection */}
-            <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
-              <Label className="text-base">Fiche Client</Label>
-              <p className="text-xs text-muted-foreground mb-3">
+            <div className="space-y-4 p-5 border rounded-lg bg-muted/30">
+              <Label className="text-base font-semibold">Fiche Client</Label>
+              <p className="text-sm text-muted-foreground">
                 Choisissez comment associer un client à ce dossier
               </p>
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-3">
                 <Button
                   type="button"
                   variant={clientMode === 'none' ? 'default' : 'outline'}
@@ -300,10 +300,10 @@ const CreateDossierDialog = ({ open, onOpenChange, worldId, onSuccess }: CreateD
 
             {/* Client Info Form */}
             {clientMode === 'new' && (
-              <div className="space-y-4 p-4 border rounded-lg bg-accent/5">
-                <h4 className="font-medium text-sm">Informations Client</h4>
+              <div className="space-y-5 p-5 border rounded-lg bg-accent/5">
+                <h4 className="font-semibold text-base">Informations Client</h4>
                 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="client_type">Type de client</Label>
                     <Select
@@ -324,7 +324,7 @@ const CreateDossierDialog = ({ open, onOpenChange, worldId, onSuccess }: CreateD
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="nom">Nom</Label>
                     <Input
@@ -343,9 +343,6 @@ const CreateDossierDialog = ({ open, onOpenChange, worldId, onSuccess }: CreateD
                       disabled={loading}
                     />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label htmlFor="telephone">Téléphone</Label>
                     <Input
@@ -356,6 +353,9 @@ const CreateDossierDialog = ({ open, onOpenChange, worldId, onSuccess }: CreateD
                       disabled={loading}
                     />
                   </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
                     <Input
@@ -366,19 +366,18 @@ const CreateDossierDialog = ({ open, onOpenChange, worldId, onSuccess }: CreateD
                       disabled={loading}
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="adresse_sinistre">Adresse du sinistre</Label>
+                    <Input
+                      id="adresse_sinistre"
+                      value={clientInfo.adresse_sinistre}
+                      onChange={(e) => setClientInfo({ ...clientInfo, adresse_sinistre: e.target.value })}
+                      disabled={loading}
+                    />
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="adresse_sinistre">Adresse du sinistre</Label>
-                  <Input
-                    id="adresse_sinistre"
-                    value={clientInfo.adresse_sinistre}
-                    onChange={(e) => setClientInfo({ ...clientInfo, adresse_sinistre: e.target.value })}
-                    disabled={loading}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="type_sinistre">Type de sinistre</Label>
                     <Input
@@ -398,9 +397,6 @@ const CreateDossierDialog = ({ open, onOpenChange, worldId, onSuccess }: CreateD
                       disabled={loading}
                     />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label htmlFor="compagnie_assurance">Compagnie d'assurance</Label>
                     <Input
@@ -410,6 +406,9 @@ const CreateDossierDialog = ({ open, onOpenChange, worldId, onSuccess }: CreateD
                       disabled={loading}
                     />
                   </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="numero_police">N° de police</Label>
                     <Input
