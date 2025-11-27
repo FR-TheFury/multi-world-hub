@@ -87,22 +87,22 @@ const WorldCard3D = ({ world }: WorldCard3DProps) => {
 
             <div className="pt-4">
               <Button
-                className="w-full group relative overflow-hidden text-white"
+                className="w-full group relative overflow-hidden text-white transition-all duration-300"
                 style={{
                   backgroundColor: colors.primary,
                   borderRadius: '0.875rem',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.filter = 'brightness(0.85)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.filter = 'brightness(1)';
                 }}
               >
                 <span className="relative z-10 flex items-center justify-center">
                   Entrer dans le Monde
                   <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-2 transition-all duration-300" />
                 </span>
-                <div 
-                  className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300"
-                  style={{
-                    background: `radial-gradient(circle at center, ${colors.accent} 0%, transparent 70%)`,
-                  }}
-                />
               </Button>
             </div>
           </div>
