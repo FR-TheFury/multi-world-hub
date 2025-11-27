@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Calendar, FileText, MessageSquare, User, LayoutDashboard, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Calendar, FileText, MessageSquare, User, LayoutDashboard, ArrowRight, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -15,6 +15,7 @@ import DocumentsTab from '@/components/dossier/DocumentsTab';
 import CommentsTab from '@/components/dossier/CommentsTab';
 import AppointmentsTab from '@/components/dossier/AppointmentsTab';
 import ClientInfoTab from '@/components/dossier/ClientInfoTab';
+import PhotosTab from '@/components/dossier/PhotosTab';
 import TransferDossierDialog from '@/components/dossier/TransferDossierDialog';
 import TransferHistoryBadge from '@/components/dossier/TransferHistoryBadge';
 
@@ -218,26 +219,30 @@ const DossierDetail = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview">
               <LayoutDashboard className="h-4 w-4 mr-2" />
               Vue d'ensemble
+            </TabsTrigger>
+            <TabsTrigger value="client">
+              <User className="h-4 w-4 mr-2" />
+              Client
+            </TabsTrigger>
+            <TabsTrigger value="appointments">
+              <Calendar className="h-4 w-4 mr-2" />
+              Rdv
             </TabsTrigger>
             <TabsTrigger value="documents">
               <FileText className="h-4 w-4 mr-2" />
               Documents
             </TabsTrigger>
+            <TabsTrigger value="photos">
+              <Camera className="h-4 w-4 mr-2" />
+              Photos
+            </TabsTrigger>
             <TabsTrigger value="comments">
               <MessageSquare className="h-4 w-4 mr-2" />
               Historique
-            </TabsTrigger>
-            <TabsTrigger value="appointments">
-              <Calendar className="h-4 w-4 mr-2" />
-              Rendez-vous
-            </TabsTrigger>
-            <TabsTrigger value="client">
-              <User className="h-4 w-4 mr-2" />
-              Client
             </TabsTrigger>
           </TabsList>
 
@@ -245,20 +250,24 @@ const DossierDetail = () => {
             <OverviewTab dossierId={dossier.id} worldId={dossier.world_id} />
           </TabsContent>
 
-          <TabsContent value="documents">
-            <DocumentsTab dossierId={dossier.id} />
-          </TabsContent>
-
-          <TabsContent value="comments">
-            <CommentsTab dossierId={dossier.id} />
+          <TabsContent value="client">
+            <ClientInfoTab dossierId={dossier.id} />
           </TabsContent>
 
           <TabsContent value="appointments">
             <AppointmentsTab dossierId={dossier.id} worldId={dossier.world_id} />
           </TabsContent>
 
-          <TabsContent value="client">
-            <ClientInfoTab dossierId={dossier.id} />
+          <TabsContent value="documents">
+            <DocumentsTab dossierId={dossier.id} />
+          </TabsContent>
+
+          <TabsContent value="photos">
+            <PhotosTab dossierId={dossier.id} />
+          </TabsContent>
+
+          <TabsContent value="comments">
+            <CommentsTab dossierId={dossier.id} />
           </TabsContent>
         </Tabs>
 
