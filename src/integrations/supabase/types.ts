@@ -885,6 +885,7 @@ export type Database = {
           created_at: string | null
           created_by: string
           description: string | null
+          dossier_id: string | null
           due_date: string | null
           id: string
           priority: string
@@ -899,6 +900,7 @@ export type Database = {
           created_at?: string | null
           created_by: string
           description?: string | null
+          dossier_id?: string | null
           due_date?: string | null
           id?: string
           priority?: string
@@ -913,6 +915,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string
           description?: string | null
+          dossier_id?: string | null
           due_date?: string | null
           id?: string
           priority?: string
@@ -923,6 +926,13 @@ export type Database = {
           world_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "tasks_dossier_id_fkey"
+            columns: ["dossier_id"]
+            isOneToOne: false
+            referencedRelation: "dossiers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tasks_workflow_step_id_fkey"
             columns: ["workflow_step_id"]

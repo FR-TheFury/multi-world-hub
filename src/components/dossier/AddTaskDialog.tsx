@@ -101,6 +101,7 @@ export function AddTaskDialog({ open, onOpenChange, dossierId, workflowStepId, o
         assigned_to: assignedTo || user.id,
         due_date: dueDate || null,
         workflow_step_id: workflowStepId || null,
+        dossier_id: dossierId,
       };
 
       const { data: task, error: taskError } = await supabase

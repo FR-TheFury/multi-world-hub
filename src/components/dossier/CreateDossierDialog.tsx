@@ -166,15 +166,6 @@ const CreateDossierDialog = ({ open, onOpenChange, worldId, onSuccess }: CreateD
         }
       }
 
-      // Add creation comment
-      await supabase.from('dossier_comments').insert({
-        dossier_id: dossierData.id,
-        user_id: user.id,
-        comment_type: 'status_change',
-        content: `Dossier créé`,
-        metadata: { status: 'nouveau' },
-      });
-
       toast.success('Dossier créé avec succès');
       setFormData({ title: '', tags: '' });
       setClientMode('none');
