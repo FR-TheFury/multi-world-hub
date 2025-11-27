@@ -259,7 +259,7 @@ export type Database = {
           compagnie_assurance: string | null
           created_at: string | null
           date_sinistre: string | null
-          dossier_id: string
+          dossier_id: string | null
           email: string | null
           id: string
           metadata: Json | null
@@ -281,7 +281,7 @@ export type Database = {
           compagnie_assurance?: string | null
           created_at?: string | null
           date_sinistre?: string | null
-          dossier_id: string
+          dossier_id?: string | null
           email?: string | null
           id?: string
           metadata?: Json | null
@@ -303,7 +303,7 @@ export type Database = {
           compagnie_assurance?: string | null
           created_at?: string | null
           date_sinistre?: string | null
-          dossier_id?: string
+          dossier_id?: string | null
           email?: string | null
           id?: string
           metadata?: Json | null
