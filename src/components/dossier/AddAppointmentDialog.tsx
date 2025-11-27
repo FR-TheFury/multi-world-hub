@@ -120,14 +120,6 @@ export function AddAppointmentDialog({
 
       if (appointmentError) throw appointmentError;
 
-      // Create system comment
-      await supabase.from("dossier_comments").insert({
-        dossier_id: dossierId,
-        user_id: user.id,
-        content: `Rendez-vous créé : "${title}"`,
-        comment_type: "comment",
-      });
-
       // Send notification to assigned user
       if (assignedTo && assignedTo !== user.id) {
         const { data: assigneeProfile } = await supabase

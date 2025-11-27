@@ -91,15 +91,6 @@ const DocumentsTab = ({ dossierId }: DocumentsTabProps) => {
         });
 
         if (dbError) throw dbError;
-
-        // Add comment
-        await supabase.from('dossier_comments').insert({
-          dossier_id: dossierId,
-          user_id: user?.id,
-          comment_type: 'document_added',
-          content: `Document "${file.name}" ajouté`,
-          metadata: { file_name: file.name },
-        });
       }
 
       toast.success('Documents téléversés avec succès');
