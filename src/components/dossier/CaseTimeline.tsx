@@ -601,20 +601,6 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate }: C
         }}
       />
 
-      {selectedStep && selectedStepFull && (
-        <div className="mb-6">
-          <WorkflowStepDetails
-            step={selectedStepFull}
-            progress={selectedProgress}
-            onComplete={handleStepComplete}
-            onDecision={handleStepDecision}
-            isSubmitting={isSubmitting}
-            nextSteps={nextSteps}
-            onClose={() => setSelectedStep(null)}
-          />
-        </div>
-      )}
-
       <div className="relative">
         {/* Ligne verticale principale */}
         <div className="absolute left-1/2 top-0 bottom-0 -translate-x-1/2">
@@ -629,8 +615,23 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate }: C
 
             return (
               <div key={step.id} className="space-y-6">
+                {/* Détails de l'étape sélectionnée - affiché juste au-dessus */}
+                {selectedStep?.id === step.id && selectedStepFull && (
+                  <div className="mb-6">
+                    <WorkflowStepDetails
+                      step={selectedStepFull}
+                      progress={selectedProgress}
+                      onComplete={handleStepComplete}
+                      onDecision={handleStepDecision}
+                      isSubmitting={isSubmitting}
+                      nextSteps={nextSteps}
+                      onClose={() => setSelectedStep(null)}
+                    />
+                  </div>
+                )}
+
                 {/* Étape principale */}
-                <StepCard 
+                <StepCard
                   step={step} 
                   stepId={`step-${step.id}`}
                   onClick={() => {
