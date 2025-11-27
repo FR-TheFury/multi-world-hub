@@ -252,9 +252,9 @@ const AllDossiers = () => {
                           <Badge
                             className="font-medium shadow-none"
                             style={{
-                              backgroundColor: (colorMap[dossier.world.code] || dossier.world.theme_colors.primary) + '15',
-                              color: colorMap[dossier.world.code] || dossier.world.theme_colors.primary,
-                              borderColor: (colorMap[dossier.world.code] || dossier.world.theme_colors.primary) + '30',
+                              backgroundColor: colorMap[dossier.world.code] || dossier.world.theme_colors.primary,
+                              color: 'white',
+                              borderColor: colorMap[dossier.world.code] || dossier.world.theme_colors.primary,
                             }}
                           >
                             {dossier.world.code}
