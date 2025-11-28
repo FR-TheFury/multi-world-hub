@@ -23,6 +23,7 @@ import { AddTaskDialog } from "./AddTaskDialog";
 import { AddAppointmentDialog } from "./AddAppointmentDialog";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { UnifiedItemDialog } from "./UnifiedItemDialog";
 
 /**
  * Étape principale de la timeline
@@ -203,6 +204,10 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
   const [showCommentDialog, setShowCommentDialog] = useState(false);
   const [showTaskDialog, setShowTaskDialog] = useState(false);
   const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<TimelineItem | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | undefined>();
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   // Fusionner steps et progress pour créer les étapes enrichies
   const enrichedSteps: Step[] = useMemo(() => {
@@ -223,6 +228,7 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
 
   useEffect(() => {
     fetchTimelineItems();
+    fetchUserInfo();
 
     // Abonnements en temps réel
     const commentsChannel = supabase
@@ -484,6 +490,35 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
     return afterStepId;
   };
 
+  // Récupérer les informations de l'utilisateur actuel
+  const fetchUserInfo = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      setCurrentUserId(user.id);
+      
+      // Vérifier si c'est un superadmin
+      const { data } = await supabase
+        .from("user_roles")
+        .select("*, roles!inner(name)")
+        .eq("user_id", user.id);
+      
+      const hasRole = data?.some((ur: any) => ur.roles?.name === "superadmin");
+      setIsSuperAdmin(hasRole || false);
+    }
+  };
+
+  // Gérer le clic sur une carte
+  const handleCardClick = (item: TimelineItem) => {
+    setSelectedItem(item);
+    setEditDialogOpen(true);
+  };
+
+  // Callback pour rafraîchir après modification
+  const handleItemUpdated = () => {
+    fetchTimelineItems();
+    onUpdate();
+  };
+
   /**
    * Regrouper les items par afterStepId
    */
@@ -687,13 +722,23 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
 
                 {/* Segment intermédiaire entre cette étape et la suivante */}
                 {hasNextStep && stepItems.length > 0 && (
-                  <BetweenSegment items={stepItems} />
+                  <BetweenSegment items={stepItems} onCardClick={handleCardClick} />
                 )}
               </div>
             );
           })}
         </div>
       </div>
+
+      {/* Dialog universel pour éditer/supprimer les éléments */}
+      <UnifiedItemDialog
+        item={selectedItem}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onItemUpdated={handleItemUpdated}
+        currentUserId={currentUserId}
+        isSuperAdmin={isSuperAdmin}
+      />
     </div>
   );
 }
@@ -833,7 +878,7 @@ function StepCard({
  * Segment intermédiaire entre deux étapes :
  * Affiche les événements en escalier selon leur timestamp
  */
-function BetweenSegment({ items }: { items: TimelineItem[] }) {
+function BetweenSegment({ items, onCardClick }: { items: TimelineItem[]; onCardClick: (item: TimelineItem) => void }) {
   const [expanded, setExpanded] = useState(false);
   const MAX_VISIBLE = 6;
 
@@ -890,6 +935,7 @@ function BetweenSegment({ items }: { items: TimelineItem[] }) {
                 item={item}
                 positionIndex={idx}
                 side={side}
+                onCardClick={onCardClick}
               />
             </div>
           );
@@ -920,10 +966,12 @@ function SideItemCard({
   item,
   positionIndex,
   side,
+  onCardClick,
 }: {
   item: TimelineItem;
   positionIndex: number;
   side: "left" | "right";
+  onCardClick: (item: TimelineItem) => void;
 }) {
   const colors = getItemColors(item.type);
 
@@ -938,7 +986,8 @@ function SideItemCard({
           </div>
 
           <div
-            className={`relative overflow-visible bg-card border ${colors.border} rounded-xl shadow-sm px-3 py-2.5 md:px-4 md:py-3 hover:shadow-md transition-shadow`}
+            onClick={() => onCardClick(item)}
+            className={`relative overflow-visible bg-card border ${colors.border} rounded-xl shadow-sm px-3 py-2.5 md:px-4 md:py-3 hover:shadow-md transition-all cursor-pointer hover:scale-[1.02]`}
           >
             {/* Photo de profil débordante en haut à droite */}
             {item.fromUser && (
@@ -1006,7 +1055,8 @@ function SideItemCard({
         </div>
 
         <div
-          className={`relative overflow-visible bg-card border ${colors.border} rounded-xl shadow-sm px-3 py-2.5 md:px-4 md:py-3 hover:shadow-md transition-shadow`}
+          onClick={() => onCardClick(item)}
+          className={`relative overflow-visible bg-card border ${colors.border} rounded-xl shadow-sm px-3 py-2.5 md:px-4 md:py-3 hover:shadow-md transition-all cursor-pointer hover:scale-[1.02]`}
         >
             {/* Photo de profil débordante en haut à droite */}
             {item.fromUser && (
