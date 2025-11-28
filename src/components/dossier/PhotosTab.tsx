@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Camera, Upload, Trash2, X } from 'lucide-react';
+import { Camera, Upload, Trash2, X, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -23,6 +23,7 @@ interface Photo {
   uploaded_by: string;
   created_at: string;
   taken_at: string | null;
+  metadata: { type?: 'photo' | 'plan' } | null;
   uploader: {
     display_name: string;
   };
@@ -60,7 +61,7 @@ const PhotosTab = ({ dossierId }: PhotosTabProps) => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setPhotos(data || []);
+      setPhotos((data as any) || []);
     } catch (error) {
       console.error('Error fetching photos:', error);
       toast.error('Erreur lors du chargement des photos');
@@ -85,7 +86,7 @@ const PhotosTab = ({ dossierId }: PhotosTabProps) => {
     }
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: 'photo' | 'plan' = 'photo') => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
@@ -100,7 +101,8 @@ const PhotosTab = ({ dossierId }: PhotosTabProps) => {
         }
 
         const fileExt = file.name.split('.').pop();
-        const fileName = `${dossierId}/photos/${Date.now()}.${fileExt}`;
+        const folderName = type === 'plan' ? 'plans' : 'photos';
+        const fileName = `${dossierId}/${folderName}/${Date.now()}.${fileExt}`;
 
         // Upload to storage
         const { error: uploadError } = await supabase.storage
@@ -117,6 +119,7 @@ const PhotosTab = ({ dossierId }: PhotosTabProps) => {
           storage_path: fileName,
           uploaded_by: user?.id,
           taken_at: new Date().toISOString(),
+          metadata: { type },
         });
 
         if (dbError) throw dbError;
@@ -126,15 +129,15 @@ const PhotosTab = ({ dossierId }: PhotosTabProps) => {
           dossier_id: dossierId,
           user_id: user?.id,
           comment_type: 'document_added',
-          content: `Photo "${file.name}" ajoutée`,
-          metadata: { file_name: file.name },
+          content: `${type === 'plan' ? 'Plan' : 'Photo'} "${file.name}" ajouté${type === 'plan' ? '' : 'e'}`,
+          metadata: { file_name: file.name, type },
         });
       }
 
-      toast.success('Photos téléversées avec succès');
+      toast.success(`${type === 'plan' ? 'Plans' : 'Photos'} téléversé${type === 'plan' ? 's' : 'es'} avec succès`);
       fetchPhotos();
     } catch (error: any) {
-      console.error('Error uploading photos:', error);
+      console.error('Error uploading files:', error);
       toast.error('Erreur lors du téléversement');
     } finally {
       setUploading(false);
@@ -196,67 +199,92 @@ const PhotosTab = ({ dossierId }: PhotosTabProps) => {
     );
   }
 
-  return (
-    <>
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Photos du dossier</CardTitle>
-            <div className="relative">
-              <Input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={handleFileUpload}
-                disabled={uploading}
-                className="hidden"
-                id="photo-upload"
-              />
-              <Button asChild disabled={uploading}>
-                <label htmlFor="photo-upload" className="cursor-pointer">
-                  <Upload className="h-4 w-4 mr-2" />
-                  {uploading ? 'Téléversement...' : 'Ajouter des photos'}
-                </label>
-              </Button>
-            </div>
+  const photosList = photos.filter(p => !p.metadata?.type || p.metadata.type === 'photo');
+  const plansList = photos.filter(p => p.metadata?.type === 'plan');
+
+  const renderGallery = (items: Photo[], emptyIcon: React.ReactNode, emptyText: string, uploadId: string, uploadType: 'photo' | 'plan') => (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle>{uploadType === 'plan' ? 'Plans' : 'Photos'} du dossier</CardTitle>
+          <div className="relative">
+            <Input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={(e) => handleFileUpload(e, uploadType)}
+              disabled={uploading}
+              className="hidden"
+              id={uploadId}
+            />
+            <Button asChild disabled={uploading}>
+              <label htmlFor={uploadId} className="cursor-pointer">
+                <Upload className="h-4 w-4 mr-2" />
+                {uploading ? 'Téléversement...' : `Ajouter des ${uploadType === 'plan' ? 'plans' : 'photos'}`}
+              </label>
+            </Button>
           </div>
-        </CardHeader>
-        <CardContent>
-          {photos.length === 0 ? (
-            <div className="text-center py-12">
-              <Camera className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Aucune photo pour le moment</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Cliquez sur "Ajouter des photos" pour téléverser des images
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {photos.map((photo) => (
-                <div
-                  key={photo.id}
-                  className="relative aspect-square group cursor-pointer overflow-hidden rounded-lg border hover:border-primary transition-colors"
-                  onClick={() => setSelectedPhoto(photo)}
-                >
-                  <img
-                    src={getThumbnailUrl(photo)}
-                    alt={photo.caption || photo.file_name}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
-                    <div className="text-white text-xs space-y-1 w-full">
-                      <p className="font-medium truncate">{photo.file_name}</p>
-                      <p className="text-white/80">
-                        {format(new Date(photo.created_at), 'dd MMM yyyy', { locale: fr })}
-                      </p>
-                    </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {items.length === 0 ? (
+          <div className="text-center py-12">
+            {emptyIcon}
+            <p className="text-muted-foreground">{emptyText}</p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Cliquez sur "Ajouter des {uploadType === 'plan' ? 'plans' : 'photos'}" pour téléverser des images
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {items.map((item) => (
+              <div
+                key={item.id}
+                className="relative aspect-square group cursor-pointer overflow-hidden rounded-lg border hover:border-primary transition-colors"
+                onClick={() => setSelectedPhoto(item)}
+              >
+                <img
+                  src={getThumbnailUrl(item)}
+                  alt={item.caption || item.file_name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                  <div className="text-white text-xs space-y-1 w-full">
+                    <p className="font-medium truncate">{item.file_name}</p>
+                    <p className="text-white/80">
+                      {format(new Date(item.created_at), 'dd MMM yyyy', { locale: fr })}
+                    </p>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  return (
+    <>
+      <div className="space-y-6">
+        {/* Photos Section */}
+        {renderGallery(
+          photosList,
+          <Camera className="h-12 w-12 text-muted-foreground mx-auto mb-4" />,
+          'Aucune photo pour le moment',
+          'photo-upload',
+          'photo'
+        )}
+
+        {/* Plans Section */}
+        {renderGallery(
+          plansList,
+          <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />,
+          'Aucun plan pour le moment',
+          'plan-upload',
+          'plan'
+        )}
+      </div>
 
       {/* Photo Preview Dialog */}
       <Dialog open={!!selectedPhoto} onOpenChange={() => setSelectedPhoto(null)}>
