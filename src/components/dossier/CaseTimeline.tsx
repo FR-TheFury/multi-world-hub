@@ -928,8 +928,8 @@ function BetweenSegment({ items, onCardClick, currentUserId }: { items: Timeline
 
       <div className="relative z-10">
         {visibleItems.map((item, idx) => {
-          // Ma carte = gauche, Carte des autres = droite
-          const side = item.createdById === currentUserId ? "left" : "right";
+          // Ma carte = droite, Carte des autres = gauche
+          const side = item.createdById === currentUserId ? "right" : "left";
           const previousItem = idx > 0 ? visibleItems[idx - 1] : undefined;
           const marginTop = getVerticalSpacing(item, previousItem);
 
