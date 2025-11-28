@@ -350,7 +350,7 @@ const CreateClientDialog = ({ open, onOpenChange, onSuccess }: CreateClientDialo
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="bg-primary hover:bg-primary/90">
               {loading ? 'Création...' : 'Créer la fiche client'}
             </Button>
           </DialogFooter>

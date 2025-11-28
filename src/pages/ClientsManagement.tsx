@@ -240,6 +240,7 @@ const ClientsManagement = () => {
               variant={worldFilter === 'JDE' ? 'default' : 'outline'}
               onClick={() => setWorldFilter('JDE')}
               size="sm"
+              className={worldFilter === 'JDE' ? 'text-white' : 'border-red-600 text-red-600 hover:bg-red-50'}
               style={{
                 backgroundColor: worldFilter === 'JDE' ? getWorldColor('JDE') : undefined,
               }}
@@ -250,6 +251,7 @@ const ClientsManagement = () => {
               variant={worldFilter === 'JDMO' ? 'default' : 'outline'}
               onClick={() => setWorldFilter('JDMO')}
               size="sm"
+              className={worldFilter === 'JDMO' ? 'text-white' : 'border-orange-600 text-orange-600 hover:bg-orange-50'}
               style={{
                 backgroundColor: worldFilter === 'JDMO' ? getWorldColor('JDMO') : undefined,
               }}
@@ -260,6 +262,7 @@ const ClientsManagement = () => {
               variant={worldFilter === 'DBCS' ? 'default' : 'outline'}
               onClick={() => setWorldFilter('DBCS')}
               size="sm"
+              className={worldFilter === 'DBCS' ? 'text-white' : 'border-green-600 text-green-600 hover:bg-green-50'}
               style={{
                 backgroundColor: worldFilter === 'DBCS' ? getWorldColor('DBCS') : undefined,
               }}

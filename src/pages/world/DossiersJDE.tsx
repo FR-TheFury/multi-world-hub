@@ -240,7 +240,7 @@ const DossiersJDE = () => {
             onClick={() => setCreateDialogOpen(true)}
             size="sm"
             variant="ghost"
-            className="!bg-red-600 hover:!bg-red-700 text-white shadow-md"
+            className="bg-red-600 hover:bg-red-700 text-white shadow-md"
           >
             <Plus className="h-4 w-4 mr-2" />
             Nouveau dossier JDE
@@ -367,7 +367,7 @@ const DossiersJDE = () => {
                     onClick={() => navigate(`/dossier/${dossier.id}`)}
                     size="sm"
                     variant="ghost"
-                    className="!bg-red-600 hover:!bg-red-700 text-white shadow-md"
+                    className="bg-red-600 hover:bg-red-700 text-white shadow-md"
                   >
                     <Eye className="h-4 w-4 mr-2" />
                     Voir le détail
@@ -430,7 +430,7 @@ const DossiersJDE = () => {
                   <Button
                     onClick={() => setCreateDialogOpen(true)}
                     variant="ghost"
-                    className="mt-4 !bg-red-600 hover:!bg-red-700 text-white"
+                    className="mt-4 bg-red-600 hover:bg-red-700 text-white"
                     size="sm"
                   >
                     <Plus className="h-4 w-4 mr-2" />
