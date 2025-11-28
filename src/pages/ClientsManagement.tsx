@@ -76,14 +76,18 @@ const ClientsManagement = () => {
   };
 
   const filterClients = () => {
-    let filtered = clients;
+    let filtered = [...clients];
 
-    // Filter by world
+    // Filter by world first
     if (worldFilter !== 'all') {
-      filtered = filtered.filter((client) => client.primary_world?.code === worldFilter);
+      filtered = filtered.filter((client) => {
+        // Check if primary world matches
+        if (client.primary_world?.code === worldFilter) return true;
+        return false;
+      });
     }
 
-    // Filter by search query
+    // Then filter by search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -91,7 +95,7 @@ const ClientsManagement = () => {
           client.nom?.toLowerCase().includes(query) ||
           client.prenom?.toLowerCase().includes(query) ||
           client.email?.toLowerCase().includes(query) ||
-          client.telephone?.includes(query)
+          client.telephone?.toLowerCase().includes(query)
       );
     }
 
