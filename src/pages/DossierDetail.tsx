@@ -238,7 +238,7 @@ const DossierDetail = () => {
             </TabsTrigger>
             <TabsTrigger value="photos">
               <Camera className="h-4 w-4 mr-2" />
-              Photos
+              Photos / Plans
             </TabsTrigger>
             <TabsTrigger value="comments">
               <MessageSquare className="h-4 w-4 mr-2" />
