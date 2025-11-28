@@ -186,6 +186,19 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
     return labels[type] || type;
   };
 
+  const getWorldBackgroundClass = (world?: string) => {
+    switch (world?.toLowerCase()) {
+      case 'jde':
+        return 'bg-red-50/70 dark:bg-red-950/30';
+      case 'jdmo':
+        return 'bg-orange-50/70 dark:bg-orange-950/30';
+      case 'dbcs':
+        return 'bg-green-50/70 dark:bg-green-950/30';
+      default:
+        return '';
+    }
+  };
+
   return (
     <div className="space-y-6 p-4">{/* Removed max-w-7xl for full width */}
       {/* En-tête du dossier avec informations client */}
@@ -393,7 +406,7 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
           </CardContent>
         </Card>
       ) : (
-        <Card className="border-l-4 border-l-primary">
+        <Card className={`border-l-4 border-l-primary ${getWorldBackgroundClass(dossierDetails?.worlds?.name)}`}>
           <CardHeader>
             <CardTitle className="text-xl flex items-center gap-2">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">

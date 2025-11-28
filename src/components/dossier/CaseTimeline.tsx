@@ -582,7 +582,7 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
   };
 
   return (
-    <div className={`w-full max-w-5xl mx-auto px-4 py-6 md:py-8 rounded-xl ${getWorldBackgroundClass(world)}`}>
+    <div className="w-full max-w-5xl mx-auto px-4 py-6 md:py-8">
       <AddCommentDialog
         open={showCommentDialog}
         onOpenChange={setShowCommentDialog}
