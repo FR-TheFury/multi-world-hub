@@ -48,6 +48,12 @@ const CreateClientDialog = ({ open, onOpenChange, onSuccess }: CreateClientDialo
     montant_demolition_deblayage: '',
     montant_mise_conformite: '',
     adresse_identique_sinistre: false,
+    // Coordonnées du propriétaire (pour locataires uniquement)
+    proprietaire_nom: '',
+    proprietaire_prenom: '',
+    proprietaire_telephone: '',
+    proprietaire_email: '',
+    proprietaire_adresse: '',
   });
 
   useEffect(() => {
@@ -109,6 +115,12 @@ const CreateClientDialog = ({ open, onOpenChange, onSuccess }: CreateClientDialo
           montant_demolition_deblayage: clientInfo.montant_demolition_deblayage ? parseFloat(clientInfo.montant_demolition_deblayage) : null,
           montant_mise_conformite: clientInfo.montant_mise_conformite ? parseFloat(clientInfo.montant_mise_conformite) : null,
           adresse_identique_sinistre: clientInfo.adresse_identique_sinistre,
+          // Coordonnées du propriétaire (uniquement pour locataires)
+          proprietaire_nom: clientInfo.client_type === 'locataire' ? clientInfo.proprietaire_nom || null : null,
+          proprietaire_prenom: clientInfo.client_type === 'locataire' ? clientInfo.proprietaire_prenom || null : null,
+          proprietaire_telephone: clientInfo.client_type === 'locataire' ? clientInfo.proprietaire_telephone || null : null,
+          proprietaire_email: clientInfo.client_type === 'locataire' ? clientInfo.proprietaire_email || null : null,
+          proprietaire_adresse: clientInfo.client_type === 'locataire' ? clientInfo.proprietaire_adresse || null : null,
         });
 
       if (clientError) throw clientError;
@@ -133,6 +145,11 @@ const CreateClientDialog = ({ open, onOpenChange, onSuccess }: CreateClientDialo
         montant_demolition_deblayage: '',
         montant_mise_conformite: '',
         adresse_identique_sinistre: false,
+        proprietaire_nom: '',
+        proprietaire_prenom: '',
+        proprietaire_telephone: '',
+        proprietaire_email: '',
+        proprietaire_adresse: '',
       });
       
       onOpenChange(false);
@@ -252,6 +269,64 @@ const CreateClientDialog = ({ open, onOpenChange, onSuccess }: CreateClientDialo
               />
             </div>
           </div>
+
+          {clientInfo.client_type === 'locataire' && (
+            <div className="border-t pt-4 bg-amber-50/50 p-4 rounded-lg">
+              <h3 className="font-semibold mb-3 flex items-center gap-2">
+                🏠 Coordonnées du propriétaire
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="proprietaire_nom">Nom</Label>
+                  <Input
+                    id="proprietaire_nom"
+                    value={clientInfo.proprietaire_nom}
+                    onChange={(e) => setClientInfo({ ...clientInfo, proprietaire_nom: e.target.value })}
+                    placeholder="Nom du propriétaire"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="proprietaire_prenom">Prénom</Label>
+                  <Input
+                    id="proprietaire_prenom"
+                    value={clientInfo.proprietaire_prenom}
+                    onChange={(e) => setClientInfo({ ...clientInfo, proprietaire_prenom: e.target.value })}
+                    placeholder="Prénom du propriétaire"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                <div>
+                  <Label htmlFor="proprietaire_telephone">Téléphone</Label>
+                  <Input
+                    id="proprietaire_telephone"
+                    value={clientInfo.proprietaire_telephone}
+                    onChange={(e) => setClientInfo({ ...clientInfo, proprietaire_telephone: e.target.value })}
+                    placeholder="Téléphone du propriétaire"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="proprietaire_email">Email</Label>
+                  <Input
+                    id="proprietaire_email"
+                    type="email"
+                    value={clientInfo.proprietaire_email}
+                    onChange={(e) => setClientInfo({ ...clientInfo, proprietaire_email: e.target.value })}
+                    placeholder="Email du propriétaire"
+                  />
+                </div>
+              </div>
+              <div className="mt-4">
+                <Label htmlFor="proprietaire_adresse">Adresse</Label>
+                <Input
+                  id="proprietaire_adresse"
+                  value={clientInfo.proprietaire_adresse}
+                  onChange={(e) => setClientInfo({ ...clientInfo, proprietaire_adresse: e.target.value })}
+                  placeholder="Adresse du propriétaire"
+                />
+              </div>
+            </div>
+          )}
 
           <div className="border-t pt-4">
             <h3 className="font-semibold mb-3">Informations sinistre</h3>

@@ -32,6 +32,12 @@ interface ClientInfo {
   montant_demolition_deblayage: number | null;
   montant_mise_conformite: number | null;
   primary_world_id: string | null;
+  // Coordonnées du propriétaire (pour locataires uniquement)
+  proprietaire_nom: string | null;
+  proprietaire_prenom: string | null;
+  proprietaire_telephone: string | null;
+  proprietaire_email: string | null;
+  proprietaire_adresse: string | null;
 }
 
 interface World {
@@ -273,6 +279,68 @@ const EditClientDialog = ({ open, onOpenChange, clientId, onSuccess }: EditClien
               onChange={(e) => handleInputChange('adresse_client', e.target.value)}
             />
           </div>
+
+          {/* Coordonnées du propriétaire (pour locataires uniquement) */}
+          {formData.client_type === 'locataire' && (
+            <div className="space-y-4 pt-4 border-t bg-amber-50/50 p-4 rounded-lg">
+              <h3 className="font-semibold flex items-center gap-2">
+                🏠 Coordonnées du propriétaire
+              </h3>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="proprietaire_nom">Nom</Label>
+                  <Input
+                    id="proprietaire_nom"
+                    value={formData.proprietaire_nom || ''}
+                    onChange={(e) => handleInputChange('proprietaire_nom', e.target.value)}
+                    placeholder="Nom du propriétaire"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="proprietaire_prenom">Prénom</Label>
+                  <Input
+                    id="proprietaire_prenom"
+                    value={formData.proprietaire_prenom || ''}
+                    onChange={(e) => handleInputChange('proprietaire_prenom', e.target.value)}
+                    placeholder="Prénom du propriétaire"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="proprietaire_telephone">Téléphone</Label>
+                  <Input
+                    id="proprietaire_telephone"
+                    value={formData.proprietaire_telephone || ''}
+                    onChange={(e) => handleInputChange('proprietaire_telephone', e.target.value)}
+                    placeholder="Téléphone du propriétaire"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="proprietaire_email">Email</Label>
+                  <Input
+                    id="proprietaire_email"
+                    type="email"
+                    value={formData.proprietaire_email || ''}
+                    onChange={(e) => handleInputChange('proprietaire_email', e.target.value)}
+                    placeholder="Email du propriétaire"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="proprietaire_adresse">Adresse</Label>
+                <Input
+                  id="proprietaire_adresse"
+                  value={formData.proprietaire_adresse || ''}
+                  onChange={(e) => handleInputChange('proprietaire_adresse', e.target.value)}
+                  placeholder="Adresse du propriétaire"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Informations sinistre */}
           <div className="space-y-4 pt-4 border-t">
