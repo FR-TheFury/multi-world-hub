@@ -312,6 +312,11 @@ export type Database = {
           numero_police: string | null
           prenom: string | null
           primary_world_id: string | null
+          proprietaire_adresse: string | null
+          proprietaire_email: string | null
+          proprietaire_nom: string | null
+          proprietaire_prenom: string | null
+          proprietaire_telephone: string | null
           telephone: string | null
           type_sinistre: string | null
           updated_at: string | null
@@ -335,6 +340,11 @@ export type Database = {
           numero_police?: string | null
           prenom?: string | null
           primary_world_id?: string | null
+          proprietaire_adresse?: string | null
+          proprietaire_email?: string | null
+          proprietaire_nom?: string | null
+          proprietaire_prenom?: string | null
+          proprietaire_telephone?: string | null
           telephone?: string | null
           type_sinistre?: string | null
           updated_at?: string | null
@@ -358,6 +368,11 @@ export type Database = {
           numero_police?: string | null
           prenom?: string | null
           primary_world_id?: string | null
+          proprietaire_adresse?: string | null
+          proprietaire_email?: string | null
+          proprietaire_nom?: string | null
+          proprietaire_prenom?: string | null
+          proprietaire_telephone?: string | null
           telephone?: string | null
           type_sinistre?: string | null
           updated_at?: string | null
