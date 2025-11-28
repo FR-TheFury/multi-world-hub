@@ -230,19 +230,53 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
+      case 'urgent':
+        return 'bg-pink-50 text-pink-700 border-pink-300';
       case 'high':
-        return 'bg-destructive/15 text-destructive border-destructive/30';
+        return 'bg-purple-50 text-purple-700 border-purple-300';
       case 'medium':
-        return 'bg-primary/15 text-primary border-primary/30';
+        return 'bg-blue-50 text-blue-700 border-blue-300';
       case 'low':
-        return 'bg-muted text-muted-foreground border-muted-foreground/30';
+        return 'bg-gray-100 text-gray-600 border-gray-300';
       default:
-        return 'bg-muted text-muted-foreground border-muted-foreground/30';
+        return 'bg-gray-100 text-gray-600 border-gray-300';
+    }
+  };
+
+  const getPriorityBorderColor = (priority: string) => {
+    switch (priority) {
+      case 'urgent':
+        return 'hsl(330, 85%, 55%)'; // Rose/Magenta
+      case 'high':
+        return 'hsl(270, 70%, 60%)'; // Violet
+      case 'medium':
+        return 'hsl(210, 75%, 55%)'; // Bleu
+      case 'low':
+        return 'hsl(0, 0%, 60%)'; // Gris
+      default:
+        return 'hsl(0, 0%, 60%)';
+    }
+  };
+
+  const getPriorityBackgroundColor = (priority: string) => {
+    switch (priority) {
+      case 'urgent':
+        return 'hsl(330, 85%, 97%)'; // Rose très clair
+      case 'high':
+        return 'hsl(270, 70%, 97%)'; // Violet très clair
+      case 'medium':
+        return 'hsl(210, 75%, 97%)'; // Bleu très clair
+      case 'low':
+        return 'hsl(0, 0%, 96%)'; // Gris très clair
+      default:
+        return 'hsl(0, 0%, 96%)';
     }
   };
 
   const getPriorityIcon = (priority: string) => {
     switch (priority) {
+      case 'urgent':
+        return <AlertCircle className="h-3 w-3" />;
       case 'high':
         return <AlertCircle className="h-3 w-3" />;
       case 'medium':
@@ -256,6 +290,8 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
 
   const getPriorityLabel = (priority: string) => {
     switch (priority) {
+      case 'urgent':
+        return 'Urgente';
       case 'high':
         return 'Élevée';
       case 'medium':
@@ -375,6 +411,30 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                     size="sm"
                     variant="outline"
                     className="h-7 px-2 text-xs transition-all"
+                    style={priorityFilter === 'urgent' ? {
+                      backgroundColor: worldColors.primary,
+                      color: 'white',
+                      borderColor: worldColors.primary,
+                    } : {
+                      borderColor: worldColors.primary,
+                      color: 'white',
+                      backgroundColor: worldColors.primary,
+                    }}
+                    onClick={() => setPriorityFilter(priorityFilter === 'urgent' ? null : 'urgent')}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.filter = 'brightness(0.85)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.filter = 'brightness(1)';
+                    }}
+                  >
+                    <AlertCircle className="h-3 w-3 mr-1" />
+                    Urgent
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 px-2 text-xs transition-all"
                     style={priorityFilter === 'high' ? {
                       backgroundColor: worldColors.primary,
                       color: 'white',
@@ -393,7 +453,7 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                     }}
                   >
                     <AlertCircle className="h-3 w-3 mr-1" />
-                    Urgent
+                    Élevé
                   </Button>
                   <Button
                     size="sm"
@@ -480,11 +540,12 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                         <div
                           key={task.id}
                           className={cn(
-                            "flex items-start gap-3 p-3 rounded-lg border transition-all hover:shadow-md",
+                            "flex items-start gap-3 p-3 rounded-lg border-2 transition-all hover:shadow-md",
                             task.status === 'done' && 'bg-muted/30 border-border/50 opacity-60'
                           )}
                           style={task.status !== 'done' ? {
-                            borderColor: `${world.theme_colors.primary}30`,
+                            borderColor: getPriorityBorderColor(task.priority),
+                            backgroundColor: getPriorityBackgroundColor(task.priority),
                           } : undefined}
                         >
                         <Checkbox
