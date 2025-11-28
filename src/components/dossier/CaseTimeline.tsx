@@ -729,7 +729,7 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
                 {/* Segment intermédiaire entre cette étape et la suivante */}
                 {hasNextStep && stepItems.length > 0 && (
                   <BetweenSegment 
-                    key={`segment-${step.id}-${stepItems.length}`}
+                    key={`segment-${step.id}-${stepItems.map(i => i.id).join('-')}`}
                     items={stepItems} 
                     onCardClick={handleCardClick} 
                     currentUserId={currentUserId} 
@@ -890,7 +890,7 @@ function StepCard({
  * Affiche les événements en escalier selon leur timestamp
  */
 function BetweenSegment({ items, onCardClick, currentUserId }: { items: TimelineItem[]; onCardClick: (item: TimelineItem) => void; currentUserId?: string }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(() => false);
   const MAX_VISIBLE = 6;
 
   // Trier tous les items par date (plus récent en premier)
@@ -898,10 +898,13 @@ function BetweenSegment({ items, onCardClick, currentUserId }: { items: Timeline
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
+  // Créer une clé unique basée sur les IDs des items pour détecter tout changement
+  const itemsKey = items.map(i => i.id).sort().join(',');
+  
   // Réinitialiser l'état expanded quand les items changent
   useEffect(() => {
     setExpanded(false);
-  }, [items.length]);
+  }, [itemsKey]);
 
   const visibleItems = expanded || sortedItems.length <= MAX_VISIBLE
     ? sortedItems
