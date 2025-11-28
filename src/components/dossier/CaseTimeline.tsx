@@ -52,6 +52,7 @@ type TimelineItem = {
   title: string;
   content: string;
   createdAt: string;
+  createdById: string;
   fromUser: string;
   fromUserAvatar?: string;
   toUser?: string;
@@ -396,6 +397,7 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
           title: c.comment_type === "comment" ? "Commentaire" : "Note système",
           content: c.content,
           createdAt: c.created_at!,
+          createdById: c.user_id,
           fromUser: c.profiles?.display_name || "Utilisateur",
           fromUserAvatar: c.profiles?.avatar_url || undefined,
           afterStepId: findAfterStepId(c.created_at!, enrichedSteps),
@@ -409,6 +411,7 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
           title: d.file_name,
           content: `Document ajouté (${d.document_type || "non spécifié"})`,
           createdAt: d.created_at!,
+          createdById: d.uploaded_by,
           fromUser: d.profiles?.display_name || "Utilisateur",
           fromUserAvatar: d.profiles?.avatar_url || undefined,
           afterStepId: findAfterStepId(d.created_at!, enrichedSteps),
@@ -424,6 +427,7 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
           title: t.title,
           content: t.description || "Aucune description",
           createdAt: t.created_at!,
+          createdById: t.created_by,
           fromUser: fromProfile?.name || "Système",
           fromUserAvatar: fromProfile?.avatar || undefined,
           toUser: toProfile?.name,
@@ -440,6 +444,7 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
           title: a.title,
           content: a.description || `RDV le ${format(new Date(a.start_time), "dd/MM à HH:mm", { locale: fr })}`,
           createdAt: a.created_at!,
+          createdById: a.user_id,
           fromUser: profile?.name || "Système",
           fromUserAvatar: profile?.avatar || undefined,
           afterStepId: findAfterStepId(a.created_at!, enrichedSteps),
@@ -454,6 +459,7 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
           title: a.title,
           content: a.content,
           createdAt: a.created_at!,
+          createdById: a.created_by,
           fromUser: profile?.name || "Utilisateur",
           fromUserAvatar: profile?.avatar || undefined,
           afterStepId: findAfterStepId(a.created_at!, enrichedSteps),
@@ -722,7 +728,7 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
 
                 {/* Segment intermédiaire entre cette étape et la suivante */}
                 {hasNextStep && stepItems.length > 0 && (
-                  <BetweenSegment items={stepItems} onCardClick={handleCardClick} />
+                  <BetweenSegment items={stepItems} onCardClick={handleCardClick} currentUserId={currentUserId} />
                 )}
               </div>
             );
@@ -878,7 +884,7 @@ function StepCard({
  * Segment intermédiaire entre deux étapes :
  * Affiche les événements en escalier selon leur timestamp
  */
-function BetweenSegment({ items, onCardClick }: { items: TimelineItem[]; onCardClick: (item: TimelineItem) => void }) {
+function BetweenSegment({ items, onCardClick, currentUserId }: { items: TimelineItem[]; onCardClick: (item: TimelineItem) => void; currentUserId?: string }) {
   const [expanded, setExpanded] = useState(false);
   const MAX_VISIBLE = 6;
 
