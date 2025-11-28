@@ -527,9 +527,15 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                 </div>
               </CardHeader>
 
-              <CardContent className="flex-1 flex flex-col gap-4">
+              <CardContent className="flex-1 flex flex-col gap-6 p-6">
                 {/* Tasks Section */}
                 <div className="space-y-3 flex-1">
+                  <div className="flex items-center gap-2 mb-3 pb-2 border-b-2" style={{ borderColor: worldColors.primary }}>
+                    <CheckCircle2 className="h-5 w-5" style={{ color: worldColors.primary }} />
+                    <h4 className="text-sm font-bold uppercase tracking-wide" style={{ color: worldColors.primary }}>
+                      Tâches
+                    </h4>
+                  </div>
                   {worldTasks.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-8 text-center">
                       <CheckCircle2 className="h-12 w-12 text-muted-foreground/30 mb-3" />
@@ -629,7 +635,13 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                 </div>
 
                 {/* Emails Section */}
-                <div className="pt-4 border-t border-border space-y-3">
+                <div className="space-y-3 pt-6 border-t-2" style={{ borderColor: `${worldColors.primary}40` }}>
+                  <div className="flex items-center gap-2 mb-3 pb-2 border-b-2" style={{ borderColor: worldColors.primary }}>
+                    <Mail className="h-5 w-5" style={{ color: worldColors.primary }} />
+                    <h4 className="text-sm font-bold uppercase tracking-wide" style={{ color: worldColors.primary }}>
+                      Emails
+                    </h4>
+                  </div>
                   {(() => {
                     const worldEmails = DEMO_EMAILS.filter(email => email.labels.includes(world.code));
                     const unreadEmails = worldEmails.filter(e => e.unread);
@@ -637,22 +649,19 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
 
                     if (unreadEmails.length === 0) {
                       return (
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Mail className="h-4 w-4" />
-                          <p className="text-xs">Aucun email non lu</p>
+                        <div className="flex flex-col items-center justify-center py-6 text-center">
+                          <Mail className="h-10 w-10 text-muted-foreground/30 mb-2" />
+                          <p className="text-xs text-muted-foreground">Aucun email non lu</p>
                         </div>
                       );
                     }
 
                     return (
                       <>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Mail className="h-4 w-4 text-foreground" />
-                            <p className="text-sm font-medium text-foreground">
-                              Emails ({unreadEmails.length} non lu{unreadEmails.length !== 1 ? 's' : ''})
-                            </p>
-                          </div>
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-xs text-muted-foreground">
+                            {unreadEmails.length} email{unreadEmails.length !== 1 ? 's' : ''} non lu{unreadEmails.length !== 1 ? 's' : ''}
+                          </p>
                         </div>
 
                         <div className="space-y-2">
@@ -718,19 +727,18 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
                 </div>
 
                 {/* Appointments Section */}
-                <div className="pt-4 border-t border-border space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-foreground" />
-                      <p className="text-sm font-medium text-foreground">
-                        Rendez-vous à venir
-                      </p>
-                    </div>
+                <div className="space-y-3 pt-6 border-t-2" style={{ borderColor: `${worldColors.primary}40` }}>
+                  <div className="flex items-center gap-2 mb-3 pb-2 border-b-2" style={{ borderColor: worldColors.primary }}>
+                    <Calendar className="h-5 w-5" style={{ color: worldColors.primary }} />
+                    <h4 className="text-sm font-bold uppercase tracking-wide" style={{ color: worldColors.primary }}>
+                      Agenda
+                    </h4>
                   </div>
 
                   {worldAppointments.length === 0 ? (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <p className="text-xs">Aucun rendez-vous planifié</p>
+                    <div className="flex flex-col items-center justify-center py-6 text-center">
+                      <Calendar className="h-10 w-10 text-muted-foreground/30 mb-2" />
+                      <p className="text-xs text-muted-foreground">Aucun rendez-vous planifié</p>
                     </div>
                   ) : (
                     <>
