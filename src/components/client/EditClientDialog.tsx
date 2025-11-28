@@ -454,7 +454,7 @@ const EditClientDialog = ({ open, onOpenChange, clientId, onSuccess }: EditClien
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="bg-primary hover:bg-primary/90">
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Enregistrer
             </Button>

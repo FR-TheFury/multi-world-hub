@@ -194,7 +194,7 @@ const DocumentsTab = ({ dossierId }: DocumentsTabProps) => {
                 className="hidden"
                 id="file-upload"
               />
-              <Button asChild disabled={uploading}>
+              <Button asChild disabled={uploading} className="bg-primary hover:bg-primary/90">
                 <label htmlFor="file-upload" className="cursor-pointer">
                   <Upload className="h-4 w-4 mr-2" />
                   {uploading ? 'Téléversement...' : 'Ajouter des documents'}

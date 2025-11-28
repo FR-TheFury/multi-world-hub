@@ -446,7 +446,7 @@ const CreateDossierDialog = ({ open, onOpenChange, worldId, onSuccess }: CreateD
             >
               Annuler
             </Button>
-            <Button type="submit" disabled={loading || !formData.title.trim()}>
+            <Button type="submit" disabled={loading || !formData.title.trim()} className="bg-primary hover:bg-primary/90">
               {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Créer le dossier
             </Button>

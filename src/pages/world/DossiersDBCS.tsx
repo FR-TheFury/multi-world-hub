@@ -244,7 +244,7 @@ const DossiersDBCS = () => {
             onClick={() => setCreateDialogOpen(true)}
             size="sm"
             variant="ghost"
-            className="!bg-green-600 hover:!bg-green-700 text-white shadow-md"
+            className="bg-green-600 hover:bg-green-700 text-white shadow-md"
           >
             <Plus className="h-4 w-4 mr-2" />
             Nouveau dossier DBCS
@@ -371,7 +371,7 @@ const DossiersDBCS = () => {
                     onClick={() => navigate(`/dossier/${dossier.id}`)}
                     size="sm"
                     variant="ghost"
-                    className="!bg-green-600 hover:!bg-green-700 text-white shadow-md"
+                    className="bg-green-600 hover:bg-green-700 text-white shadow-md"
                   >
                     <Eye className="h-4 w-4 mr-2" />
                     Voir le détail
@@ -434,7 +434,7 @@ const DossiersDBCS = () => {
                   <Button
                     onClick={() => setCreateDialogOpen(true)}
                     variant="ghost"
-                    className="mt-4 !bg-green-600 hover:!bg-green-700 text-white"
+                    className="mt-4 bg-green-600 hover:bg-green-700 text-white"
                     size="sm"
                   >
                     <Plus className="h-4 w-4 mr-2" />

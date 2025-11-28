@@ -331,6 +331,10 @@ const AllDossiers = () => {
                               onClick={() => navigate(`/dossier/${dossier.id}`)}
                               size="sm"
                               variant="default"
+                              style={{
+                                backgroundColor: colorMap[dossier.world.code] || dossier.world.theme_colors.primary,
+                              }}
+                              className="text-white hover:opacity-90"
                             >
                               <Eye className="h-4 w-4 mr-2" />
                               Voir
