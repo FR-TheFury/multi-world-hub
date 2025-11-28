@@ -686,7 +686,6 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
           {/* Inverser l'ordre pour l'affichage (étape 1 en bas, dernière en haut) */}
           {[...enrichedSteps].reverse().map((step, index) => {
             const stepItems = itemsByStep[step.id] || [];
-            const hasNextStep = index < enrichedSteps.length - 1;
 
             return (
               <div key={step.id} className="space-y-6">
@@ -703,6 +702,16 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
                       onClose={() => setSelectedStep(null)}
                     />
                   </div>
+                )}
+
+                {/* Segment intermédiaire entre l'étape précédente et celle-ci (au-dessus) */}
+                {stepItems.length > 0 && (
+                  <BetweenSegment 
+                    key={`segment-${step.id}-${stepItems.map(i => i.id).join('-')}`}
+                    items={stepItems} 
+                    onCardClick={handleCardClick} 
+                    currentUserId={currentUserId} 
+                  />
                 )}
 
                 {/* Étape principale */}
@@ -725,16 +734,6 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
                   onAddTask={() => handleOpenTaskDialog(step.id)}
                   onAddAppointment={() => handleOpenAppointmentDialog(step.id)}
                 />
-
-                {/* Segment intermédiaire entre cette étape et la suivante */}
-                {hasNextStep && stepItems.length > 0 && (
-                  <BetweenSegment 
-                    key={`segment-${step.id}-${stepItems.map(i => i.id).join('-')}`}
-                    items={stepItems} 
-                    onCardClick={handleCardClick} 
-                    currentUserId={currentUserId} 
-                  />
-                )}
               </div>
             );
           })}
