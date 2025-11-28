@@ -728,7 +728,12 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
 
                 {/* Segment intermédiaire entre cette étape et la suivante */}
                 {hasNextStep && stepItems.length > 0 && (
-                  <BetweenSegment items={stepItems} onCardClick={handleCardClick} currentUserId={currentUserId} />
+                  <BetweenSegment 
+                    key={`segment-${step.id}-${stepItems.length}`}
+                    items={stepItems} 
+                    onCardClick={handleCardClick} 
+                    currentUserId={currentUserId} 
+                  />
                 )}
               </div>
             );
@@ -892,6 +897,11 @@ function BetweenSegment({ items, onCardClick, currentUserId }: { items: Timeline
   const sortedItems = [...items].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
+
+  // Réinitialiser l'état expanded quand les items changent
+  useEffect(() => {
+    setExpanded(false);
+  }, [items.length]);
 
   const visibleItems = expanded || sortedItems.length <= MAX_VISIBLE
     ? sortedItems
