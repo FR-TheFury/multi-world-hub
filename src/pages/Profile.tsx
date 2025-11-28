@@ -20,6 +20,51 @@ const profileSchema = z.object({
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
+// Utility function to crop and resize image to a square
+const cropAndResizeImage = (file: File, size: number = 256): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) {
+      reject(new Error('Could not get canvas context'));
+      return;
+    }
+
+    img.onload = () => {
+      // Calculate centered square crop
+      const minDimension = Math.min(img.width, img.height);
+      const offsetX = (img.width - minDimension) / 2;
+      const offsetY = (img.height - minDimension) / 2;
+
+      // Set canvas size to desired output size
+      canvas.width = size;
+      canvas.height = size;
+
+      // Draw cropped and resized image
+      ctx.drawImage(
+        img,
+        offsetX, offsetY, minDimension, minDimension,  // Source (centered square)
+        0, 0, size, size                                // Destination (256x256)
+      );
+
+      // Convert to JPEG Blob
+      canvas.toBlob(
+        (blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Failed to convert image'));
+        },
+        'image/jpeg',
+        0.9  // 90% quality
+      );
+    };
+
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = URL.createObjectURL(file);
+  });
+};
+
 const Profile = () => {
   const { user, profile, setProfile } = useAuthStore();
   const [loading, setLoading] = useState(false);
@@ -57,8 +102,10 @@ const Profile = () => {
     setUploading(true);
 
     try {
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${user.id}/avatar.${fileExt}`;
+      // Crop and resize the image to 256x256 square
+      const processedBlob = await cropAndResizeImage(file, 256);
+      
+      const filePath = `${user.id}/avatar.jpg`;  // Always use .jpg for processed images
 
       // Delete old avatar if exists
       if (avatarUrl) {
@@ -69,7 +116,7 @@ const Profile = () => {
       // Upload new avatar
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, processedBlob, { upsert: true });
 
       if (uploadError) throw uploadError;
 
