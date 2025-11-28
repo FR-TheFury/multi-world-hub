@@ -888,9 +888,9 @@ function BetweenSegment({ items, onCardClick, currentUserId }: { items: Timeline
   const [expanded, setExpanded] = useState(false);
   const MAX_VISIBLE = 6;
 
-  // Trier tous les items par date
+  // Trier tous les items par date (plus récent en premier)
   const sortedItems = [...items].sort(
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
   const visibleItems = expanded || sortedItems.length <= MAX_VISIBLE
