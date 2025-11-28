@@ -33,6 +33,13 @@ interface TimelineItem {
   uploadedById?: string;
   userId?: string;
   assignedToId?: string;
+  toUser?: string;
+}
+
+interface UserProfile {
+  id: string;
+  display_name: string | null;
+  email: string;
 }
 
 interface UnifiedItemDialogProps {
@@ -56,6 +63,7 @@ export function UnifiedItemDialog({
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [users, setUsers] = useState<UserProfile[]>([]);
 
   // États pour l'édition
   const [editedTitle, setEditedTitle] = useState("");
@@ -66,6 +74,7 @@ export function UnifiedItemDialog({
   const [editedDueDate, setEditedDueDate] = useState("");
   const [editedStartTime, setEditedStartTime] = useState("");
   const [editedEndTime, setEditedEndTime] = useState("");
+  const [editedAssignedTo, setEditedAssignedTo] = useState("");
 
   // Initialiser les valeurs quand l'item change
   useMemo(() => {
@@ -78,8 +87,27 @@ export function UnifiedItemDialog({
       setEditedDueDate(item.dueDate || "");
       setEditedStartTime(item.startTime || "");
       setEditedEndTime(item.endTime || "");
+      setEditedAssignedTo(item.assignedToId || "");
     }
   }, [item]);
+
+  // Charger les utilisateurs si c'est une tâche
+  useMemo(() => {
+    if (open && item?.type === "task") {
+      fetchUsers();
+    }
+  }, [open, item]);
+
+  const fetchUsers = async () => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, display_name, email')
+      .order('display_name');
+    
+    if (data) {
+      setUsers(data);
+    }
+  };
 
   // Vérifier les permissions
   const canEdit = useMemo(() => {
@@ -151,7 +179,8 @@ export function UnifiedItemDialog({
             description: editedDescription,
             status: editedStatus,
             priority: editedPriority,
-            due_date: editedDueDate || null
+            due_date: editedDueDate || null,
+            assigned_to: editedAssignedTo || null
           };
           break;
         case "annotation":
@@ -369,6 +398,28 @@ export function UnifiedItemDialog({
                     )}
                   </div>
                 )}
+
+                <div className="space-y-2">
+                  <Label>Assigné à</Label>
+                  {isEditing ? (
+                    <Select value={editedAssignedTo} onValueChange={setEditedAssignedTo}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un utilisateur" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {users.map(user => (
+                          <SelectItem key={user.id} value={user.id}>
+                            {user.display_name || user.email}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="p-2 rounded-md bg-muted text-sm">
+                      {item.toUser || "Non assignée"}
+                    </div>
+                  )}
+                </div>
               </>
             )}
 

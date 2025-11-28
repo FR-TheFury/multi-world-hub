@@ -59,6 +59,11 @@ type TimelineItem = {
   toUserAvatar?: string;
   afterStepId: string;
   metadata?: any;
+  description?: string;
+  status?: string;
+  priority?: string;
+  dueDate?: string;
+  assignedToId?: string;
 };
 
 interface CaseTimelineProps {
@@ -426,8 +431,13 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
           type: "task",
           title: t.title,
           content: t.description || "Aucune description",
+          description: t.description || undefined,
+          status: t.status,
+          priority: t.priority,
+          dueDate: t.due_date || undefined,
           createdAt: t.created_at!,
           createdById: t.created_by,
+          assignedToId: t.assigned_to || undefined,
           fromUser: fromProfile?.name || "Système",
           fromUserAvatar: fromProfile?.avatar || undefined,
           toUser: toProfile?.name,
