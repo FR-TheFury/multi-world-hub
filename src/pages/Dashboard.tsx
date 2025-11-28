@@ -85,7 +85,7 @@ const Dashboard = () => {
 
       {/* 3D World Cards with Info */}
       <section>
-        <h3 className="text-lg font-semibold mb-4 text-foreground">Vos Mondes</h3>
+        <h3 className="text-lg font-semibold mb-4 text-foreground">Vos dossiers</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {accessibleWorlds.map((world) => {
             const stats = worldStats[world.code];
