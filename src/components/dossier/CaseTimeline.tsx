@@ -11,7 +11,9 @@ import {
   MessageSquare,
   Calendar,
   ListTodo,
+  User,
 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -50,7 +52,9 @@ type TimelineItem = {
   content: string;
   createdAt: string;
   fromUser: string;
+  fromUserAvatar?: string;
   toUser?: string;
+  toUserAvatar?: string;
   afterStepId: string;
   metadata?: any;
 };
@@ -306,14 +310,14 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
       // Fetch comments
       const { data: comments } = await supabase
         .from("dossier_comments")
-        .select("*, profiles!dossier_comments_user_id_fkey(display_name)")
+        .select("*, profiles!dossier_comments_user_id_fkey(display_name, avatar_url)")
         .eq("dossier_id", dossierId)
         .order("created_at", { ascending: true });
 
       // Fetch documents
       const { data: documents } = await supabase
         .from("dossier_attachments")
-        .select("*, profiles!dossier_attachments_uploaded_by_fkey(display_name)")
+        .select("*, profiles!dossier_attachments_uploaded_by_fkey(display_name, avatar_url)")
         .eq("dossier_id", dossierId)
         .order("created_at", { ascending: true });
 
@@ -333,10 +337,12 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
       
       const { data: taskProfiles } = await supabase
         .from("profiles")
-        .select("id, display_name")
+        .select("id, display_name, avatar_url")
         .in("id", allTaskUserIds);
 
-      const taskProfilesMap = new Map(taskProfiles?.map(p => [p.id, p.display_name]) || []);
+      const taskProfilesMap = new Map(
+        taskProfiles?.map(p => [p.id, { name: p.display_name, avatar: p.avatar_url }]) || []
+      );
 
       // Fetch appointments
       const { data: appointments } = await supabase
@@ -349,10 +355,12 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
       const appointmentUserIds = [...new Set(appointments?.map(a => a.user_id).filter(Boolean) || [])];
       const { data: appointmentProfiles } = await supabase
         .from("profiles")
-        .select("id, display_name")
+        .select("id, display_name, avatar_url")
         .in("id", appointmentUserIds);
 
-      const appointmentProfilesMap = new Map(appointmentProfiles?.map(p => [p.id, p.display_name]) || []);
+      const appointmentProfilesMap = new Map(
+        appointmentProfiles?.map(p => [p.id, { name: p.display_name, avatar: p.avatar_url }]) || []
+      );
 
       // Fetch annotations
       const { data: annotations } = await supabase
@@ -365,10 +373,12 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
       const annotationUserIds = [...new Set(annotations?.map(a => a.created_by).filter(Boolean) || [])];
       const { data: annotationProfiles } = await supabase
         .from("profiles")
-        .select("id, display_name")
+        .select("id, display_name, avatar_url")
         .in("id", annotationUserIds);
 
-      const annotationProfilesMap = new Map(annotationProfiles?.map(p => [p.id, p.display_name]) || []);
+      const annotationProfilesMap = new Map(
+        annotationProfiles?.map(p => [p.id, { name: p.display_name, avatar: p.avatar_url }]) || []
+      );
 
       // Transform all to TimelineItem format
       const allItems: TimelineItem[] = [];
@@ -381,6 +391,7 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
           content: c.content,
           createdAt: c.created_at!,
           fromUser: c.profiles?.display_name || "Utilisateur",
+          fromUserAvatar: c.profiles?.avatar_url || undefined,
           afterStepId: findAfterStepId(c.created_at!, enrichedSteps),
         });
       });
@@ -393,43 +404,52 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
           content: `Document ajouté (${d.document_type || "non spécifié"})`,
           createdAt: d.created_at!,
           fromUser: d.profiles?.display_name || "Utilisateur",
+          fromUserAvatar: d.profiles?.avatar_url || undefined,
           afterStepId: findAfterStepId(d.created_at!, enrichedSteps),
         });
       });
 
       tasks?.forEach((t) => {
+        const fromProfile = taskProfilesMap.get(t.created_by);
+        const toProfile = t.assigned_to ? taskProfilesMap.get(t.assigned_to) : undefined;
         allItems.push({
           id: t.id,
           type: "task",
           title: t.title,
           content: t.description || "Aucune description",
           createdAt: t.created_at!,
-          fromUser: taskProfilesMap.get(t.created_by) || "Système",
-          toUser: t.assigned_to ? taskProfilesMap.get(t.assigned_to) : undefined,
+          fromUser: fromProfile?.name || "Système",
+          fromUserAvatar: fromProfile?.avatar || undefined,
+          toUser: toProfile?.name,
+          toUserAvatar: toProfile?.avatar || undefined,
           afterStepId: findAfterStepId(t.created_at!, enrichedSteps),
         });
       });
 
       appointments?.forEach((a) => {
+        const profile = appointmentProfilesMap.get(a.user_id);
         allItems.push({
           id: a.id,
           type: "appointment",
           title: a.title,
           content: a.description || `RDV le ${format(new Date(a.start_time), "dd/MM à HH:mm", { locale: fr })}`,
           createdAt: a.created_at!,
-          fromUser: appointmentProfilesMap.get(a.user_id) || "Système",
+          fromUser: profile?.name || "Système",
+          fromUserAvatar: profile?.avatar || undefined,
           afterStepId: findAfterStepId(a.created_at!, enrichedSteps),
         });
       });
 
       annotations?.forEach((a) => {
+        const profile = annotationProfilesMap.get(a.created_by);
         allItems.push({
           id: a.id,
           type: "annotation",
           title: a.title,
           content: a.content,
           createdAt: a.created_at!,
-          fromUser: annotationProfilesMap.get(a.created_by) || "Utilisateur",
+          fromUser: profile?.name || "Utilisateur",
+          fromUserAvatar: profile?.avatar || undefined,
           afterStepId: findAfterStepId(a.created_at!, enrichedSteps),
         });
       });
@@ -938,12 +958,30 @@ function SideItemCard({
             </p>
 
             {(item.fromUser || item.toUser) && (
-              <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                <ArrowRightLeft className="w-3.5 h-3.5" />
-                <span className="font-medium">
-                  {item.fromUser}
-                  {item.toUser ? ` → ${item.toUser}` : ""}
-                </span>
+              <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <Avatar className="h-5 w-5">
+                    <AvatarImage src={item.fromUserAvatar} alt={item.fromUser} />
+                    <AvatarFallback className="text-[8px]">
+                      <User className="h-3 w-3" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="font-medium">{item.fromUser}</span>
+                </div>
+                {item.toUser && (
+                  <>
+                    <ArrowRightLeft className="w-3.5 h-3.5" />
+                    <div className="flex items-center gap-1.5">
+                      <Avatar className="h-5 w-5">
+                        <AvatarImage src={item.toUserAvatar} alt={item.toUser} />
+                        <AvatarFallback className="text-[8px]">
+                          <User className="h-3 w-3" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="font-medium">{item.toUser}</span>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -982,12 +1020,30 @@ function SideItemCard({
           </p>
 
           {(item.fromUser || item.toUser) && (
-            <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              <ArrowRightLeft className="w-3.5 h-3.5" />
-              <span className="font-medium">
-                {item.fromUser}
-                {item.toUser ? ` → ${item.toUser}` : ""}
-              </span>
+            <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground">
+              <div className="flex items-center gap-1.5">
+                <Avatar className="h-5 w-5">
+                  <AvatarImage src={item.fromUserAvatar} alt={item.fromUser} />
+                  <AvatarFallback className="text-[8px]">
+                    <User className="h-3 w-3" />
+                  </AvatarFallback>
+                </Avatar>
+                <span className="font-medium">{item.fromUser}</span>
+              </div>
+              {item.toUser && (
+                <>
+                  <ArrowRightLeft className="w-3.5 h-3.5" />
+                  <div className="flex items-center gap-1.5">
+                    <Avatar className="h-5 w-5">
+                      <AvatarImage src={item.toUserAvatar} alt={item.toUser} />
+                      <AvatarFallback className="text-[8px]">
+                        <User className="h-3 w-3" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="font-medium">{item.toUser}</span>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>
