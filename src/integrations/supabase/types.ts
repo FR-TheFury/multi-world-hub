@@ -388,6 +388,7 @@ export type Database = {
           id: string
           metadata: Json | null
           user_id: string
+          workflow_step_id: string | null
         }
         Insert: {
           comment_type?: Database["public"]["Enums"]["dossier_comment_type"]
@@ -397,6 +398,7 @@ export type Database = {
           id?: string
           metadata?: Json | null
           user_id: string
+          workflow_step_id?: string | null
         }
         Update: {
           comment_type?: Database["public"]["Enums"]["dossier_comment_type"]
@@ -406,6 +408,7 @@ export type Database = {
           id?: string
           metadata?: Json | null
           user_id?: string
+          workflow_step_id?: string | null
         }
         Relationships: [
           {
@@ -420,6 +423,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dossier_comments_workflow_step_id_fkey"
+            columns: ["workflow_step_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_steps"
             referencedColumns: ["id"]
           },
         ]
