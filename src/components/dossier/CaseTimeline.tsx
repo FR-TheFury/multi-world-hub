@@ -932,7 +932,7 @@ function SideItemCard({
       <div className="flex justify-end">
         <div className="relative pr-8 md:pr-12 max-w-md w-full md:w-[calc(50%-2rem)]">
           {/* Connecting line - pointing RIGHT toward timeline */}
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 hidden md:flex items-center z-20">
+          <div className="absolute -right-8 md:-right-12 top-1/2 -translate-y-1/2 hidden md:flex items-center z-20">
             <div className={`w-8 border-t-2 border-dashed ${colors.border}`} />
             <div className={`w-3 h-3 rounded-full ${colors.border.replace('border', 'bg')}`} />
           </div>
@@ -942,33 +942,35 @@ function SideItemCard({
           >
             {/* Photo de profil débordante en haut à droite */}
             {item.fromUser && (
-              <div className="absolute -top-4 -right-4 z-30 flex flex-col items-end gap-0.5">
+              <div className="absolute -top-3 -right-3 z-30">
                 <Avatar className="h-10 w-10 ring-2 ring-background shadow-md">
                   <AvatarImage src={item.fromUserAvatar} alt={item.fromUser} />
                   <AvatarFallback className="text-xs bg-muted">
                     <User className="h-5 w-5" />
                   </AvatarFallback>
                 </Avatar>
-                <div className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
-                  <span>{item.fromUser}</span>
-                  {item.toUser && (
-                    <>
-                      <ArrowRightLeft className="w-3 h-3" />
-                      <span>{item.toUser}</span>
-                    </>
-                  )}
-                </div>
               </div>
             )}
 
-            {/* Header : Badge type seulement */}
-            <div className="flex items-start justify-between gap-2 mb-2 pr-12">
+            {/* Header : Badge type et nom */}
+            <div className="flex items-start justify-between gap-2 mb-2">
               <span
                 className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full ${colors.bg} ${colors.text} text-[11px] font-medium`}
               >
                 {getItemIcon(item.type)}
                 <span>{getItemTypeLabel(item.type)}</span>
               </span>
+              {item.fromUser && (
+                <div className="text-[10px] font-medium text-muted-foreground flex items-center gap-1 pr-8">
+                  <span className="truncate max-w-[120px]">{item.fromUser}</span>
+                  {item.toUser && (
+                    <>
+                      <ArrowRightLeft className="w-3 h-3 flex-shrink-0" />
+                      <span className="truncate max-w-[120px]">{item.toUser}</span>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Contenu */}
@@ -995,7 +997,7 @@ function SideItemCard({
     <div className="flex justify-start">
       <div className="relative pl-8 md:pl-12 max-w-md w-full md:w-[calc(50%-2rem)]">
         {/* Connecting line - pointing LEFT toward timeline */}
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 hidden md:flex items-center z-20">
+        <div className="absolute -left-8 md:-left-12 top-1/2 -translate-y-1/2 hidden md:flex items-center z-20">
           <div className={`w-3 h-3 rounded-full ${colors.border.replace('border', 'bg')}`} />
           <div className={`w-8 border-t-2 border-dashed ${colors.border}`} />
         </div>
@@ -1005,33 +1007,35 @@ function SideItemCard({
         >
           {/* Photo de profil débordante en haut à droite */}
           {item.fromUser && (
-            <div className="absolute -top-4 -right-4 z-30 flex flex-col items-end gap-0.5">
+            <div className="absolute -top-3 -right-3 z-30">
               <Avatar className="h-10 w-10 ring-2 ring-background shadow-md">
                 <AvatarImage src={item.fromUserAvatar} alt={item.fromUser} />
                 <AvatarFallback className="text-xs bg-muted">
                   <User className="h-5 w-5" />
                 </AvatarFallback>
               </Avatar>
-              <div className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
-                <span>{item.fromUser}</span>
-                {item.toUser && (
-                  <>
-                    <ArrowRightLeft className="w-3 h-3" />
-                    <span>{item.toUser}</span>
-                  </>
-                )}
-              </div>
             </div>
           )}
 
-          {/* Header : Badge type seulement */}
-          <div className="flex items-start justify-between gap-2 mb-2 pr-12">
+          {/* Header : Badge type et nom */}
+          <div className="flex items-start justify-between gap-2 mb-2">
             <span
               className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full ${colors.bg} ${colors.text} text-[11px] font-medium`}
             >
               {getItemIcon(item.type)}
               <span>{getItemTypeLabel(item.type)}</span>
             </span>
+            {item.fromUser && (
+              <div className="text-[10px] font-medium text-muted-foreground flex items-center gap-1 pr-8">
+                <span className="truncate max-w-[120px]">{item.fromUser}</span>
+                {item.toUser && (
+                  <>
+                    <ArrowRightLeft className="w-3 h-3 flex-shrink-0" />
+                    <span className="truncate max-w-[120px]">{item.toUser}</span>
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Contenu */}
