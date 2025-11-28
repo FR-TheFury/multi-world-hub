@@ -979,8 +979,8 @@ function SideItemCard({
     return (
       <div className="flex justify-end">
         <div className="relative pr-8 md:pr-12 max-w-md w-full md:w-[calc(50%-2rem)]">
-          {/* Connecting line - pointing RIGHT toward timeline */}
-          <div className="absolute -right-8 md:-right-12 top-1/2 -translate-y-1/2 hidden md:flex items-center z-20">
+          {/* Connecting line - pointing RIGHT toward timeline, aligned with avatar */}
+          <div className="absolute -right-8 md:-right-12 top-2 hidden md:flex items-center z-20">
             <div className={`w-8 border-t-2 border-dashed ${colors.border}`} />
             <div className={`w-3 h-3 rounded-full ${colors.border.replace('border', 'bg')}`} />
           </div>
@@ -1048,8 +1048,8 @@ function SideItemCard({
   return (
     <div className="flex justify-start">
       <div className="relative pl-8 md:pl-12 max-w-md w-full md:w-[calc(50%-2rem)]">
-        {/* Connecting line - pointing LEFT toward timeline */}
-        <div className="absolute -left-8 md:-left-12 top-1/2 -translate-y-1/2 hidden md:flex items-center z-20">
+        {/* Connecting line - pointing LEFT toward timeline, aligned with avatar */}
+        <div className="absolute -left-8 md:-left-12 top-2 hidden md:flex items-center z-20">
           <div className={`w-3 h-3 rounded-full ${colors.border.replace('border', 'bg')}`} />
           <div className={`w-8 border-t-2 border-dashed ${colors.border}`} />
         </div>
