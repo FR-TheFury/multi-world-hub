@@ -930,26 +930,48 @@ function SideItemCard({
   if (side === "left") {
     return (
       <div className="flex justify-end">
-        <div className="relative pr-8 md:pr-10 max-w-md w-full md:w-[calc(50%-2rem)]">
-          {/* Point sur la ligne + branche horizontale vers la droite */}
+        <div className="relative pr-8 md:pr-12 max-w-md w-full md:w-[calc(50%-2rem)]">
+          {/* Connecting line - pointing RIGHT toward timeline */}
           <div className="absolute right-0 top-1/2 -translate-y-1/2 hidden md:flex items-center z-20">
-            <div className={`w-6 border-t-2 border-dashed ${colors.border}`} />
-            <div className={`w-2 h-2 rounded-full ${colors.border.replace('border', 'bg')}`} />
+            <div className={`w-8 border-t-2 border-dashed ${colors.border}`} />
+            <div className={`w-3 h-3 rounded-full ${colors.border.replace('border', 'bg')}`} />
           </div>
 
-          <div className={`bg-card border ${colors.border} rounded-xl shadow-sm px-3 py-2.5 md:px-4 md:py-3 hover:shadow-md transition-shadow`}>
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <div className="flex items-center gap-2">
-                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full ${colors.bg} ${colors.text} text-[11px] font-medium`}>
-                  {getItemIcon(item.type)}
-                  <span>{getItemTypeLabel(item.type)}</span>
-                </span>
+          <div
+            className={`relative overflow-visible bg-card border ${colors.border} rounded-xl shadow-sm px-3 py-2.5 md:px-4 md:py-3 hover:shadow-md transition-shadow`}
+          >
+            {/* Photo de profil débordante en haut à droite */}
+            {item.fromUser && (
+              <div className="absolute -top-4 -right-4 z-30 flex flex-col items-end gap-0.5">
+                <Avatar className="h-10 w-10 ring-2 ring-background shadow-md">
+                  <AvatarImage src={item.fromUserAvatar} alt={item.fromUser} />
+                  <AvatarFallback className="text-xs bg-muted">
+                    <User className="h-5 w-5" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
+                  <span>{item.fromUser}</span>
+                  {item.toUser && (
+                    <>
+                      <ArrowRightLeft className="w-3 h-3" />
+                      <span>{item.toUser}</span>
+                    </>
+                  )}
+                </div>
               </div>
-              <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-                {formatDate(item.createdAt)}
+            )}
+
+            {/* Header : Badge type seulement */}
+            <div className="flex items-start justify-between gap-2 mb-2 pr-12">
+              <span
+                className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full ${colors.bg} ${colors.text} text-[11px] font-medium`}
+              >
+                {getItemIcon(item.type)}
+                <span>{getItemTypeLabel(item.type)}</span>
               </span>
             </div>
 
+            {/* Contenu */}
             <h4 className="text-xs md:text-sm font-bold text-card-foreground mb-1">
               {item.title}
             </h4>
@@ -957,33 +979,12 @@ function SideItemCard({
               {item.content}
             </p>
 
-            {(item.fromUser || item.toUser) && (
-              <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground">
-                <div className="flex items-center gap-1.5">
-                  <Avatar className="h-5 w-5">
-                    <AvatarImage src={item.fromUserAvatar} alt={item.fromUser} />
-                    <AvatarFallback className="text-[8px]">
-                      <User className="h-3 w-3" />
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="font-medium">{item.fromUser}</span>
-                </div>
-                {item.toUser && (
-                  <>
-                    <ArrowRightLeft className="w-3.5 h-3.5" />
-                    <div className="flex items-center gap-1.5">
-                      <Avatar className="h-5 w-5">
-                        <AvatarImage src={item.toUserAvatar} alt={item.toUser} />
-                        <AvatarFallback className="text-[8px]">
-                          <User className="h-3 w-3" />
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="font-medium">{item.toUser}</span>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
+            {/* Date en bas à droite */}
+            <div className="flex justify-end mt-2">
+              <span className="text-[10px] text-muted-foreground">
+                {formatDate(item.createdAt)}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -992,26 +993,48 @@ function SideItemCard({
 
   return (
     <div className="flex justify-start">
-      <div className="relative pl-8 md:pl-10 max-w-md w-full md:w-[calc(50%-2rem)]">
-        {/* Point sur la ligne + branche horizontale vers la gauche */}
+      <div className="relative pl-8 md:pl-12 max-w-md w-full md:w-[calc(50%-2rem)]">
+        {/* Connecting line - pointing LEFT toward timeline */}
         <div className="absolute left-0 top-1/2 -translate-y-1/2 hidden md:flex items-center z-20">
-          <div className={`w-2 h-2 rounded-full ${colors.border.replace('border', 'bg')}`} />
-          <div className={`w-6 border-t-2 border-dashed ${colors.border}`} />
+          <div className={`w-3 h-3 rounded-full ${colors.border.replace('border', 'bg')}`} />
+          <div className={`w-8 border-t-2 border-dashed ${colors.border}`} />
         </div>
 
-        <div className={`bg-card border ${colors.border} rounded-xl shadow-sm px-3 py-2.5 md:px-4 md:py-3 hover:shadow-md transition-shadow`}>
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <div className="flex items-center gap-2">
-              <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full ${colors.bg} ${colors.text} text-[11px] font-medium`}>
-                {getItemIcon(item.type)}
-                <span>{getItemTypeLabel(item.type)}</span>
-              </span>
+        <div
+          className={`relative overflow-visible bg-card border ${colors.border} rounded-xl shadow-sm px-3 py-2.5 md:px-4 md:py-3 hover:shadow-md transition-shadow`}
+        >
+          {/* Photo de profil débordante en haut à droite */}
+          {item.fromUser && (
+            <div className="absolute -top-4 -right-4 z-30 flex flex-col items-end gap-0.5">
+              <Avatar className="h-10 w-10 ring-2 ring-background shadow-md">
+                <AvatarImage src={item.fromUserAvatar} alt={item.fromUser} />
+                <AvatarFallback className="text-xs bg-muted">
+                  <User className="h-5 w-5" />
+                </AvatarFallback>
+              </Avatar>
+              <div className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
+                <span>{item.fromUser}</span>
+                {item.toUser && (
+                  <>
+                    <ArrowRightLeft className="w-3 h-3" />
+                    <span>{item.toUser}</span>
+                  </>
+                )}
+              </div>
             </div>
-            <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-              {formatDate(item.createdAt)}
+          )}
+
+          {/* Header : Badge type seulement */}
+          <div className="flex items-start justify-between gap-2 mb-2 pr-12">
+            <span
+              className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full ${colors.bg} ${colors.text} text-[11px] font-medium`}
+            >
+              {getItemIcon(item.type)}
+              <span>{getItemTypeLabel(item.type)}</span>
             </span>
           </div>
 
+          {/* Contenu */}
           <h4 className="text-xs md:text-sm font-bold text-card-foreground mb-1">
             {item.title}
           </h4>
@@ -1019,33 +1042,12 @@ function SideItemCard({
             {item.content}
           </p>
 
-          {(item.fromUser || item.toUser) && (
-            <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground">
-              <div className="flex items-center gap-1.5">
-                <Avatar className="h-5 w-5">
-                  <AvatarImage src={item.fromUserAvatar} alt={item.fromUser} />
-                  <AvatarFallback className="text-[8px]">
-                    <User className="h-3 w-3" />
-                  </AvatarFallback>
-                </Avatar>
-                <span className="font-medium">{item.fromUser}</span>
-              </div>
-              {item.toUser && (
-                <>
-                  <ArrowRightLeft className="w-3.5 h-3.5" />
-                  <div className="flex items-center gap-1.5">
-                    <Avatar className="h-5 w-5">
-                      <AvatarImage src={item.toUserAvatar} alt={item.toUser} />
-                      <AvatarFallback className="text-[8px]">
-                        <User className="h-3 w-3" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="font-medium">{item.toUser}</span>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
+          {/* Date en bas à droite */}
+          <div className="flex justify-end mt-2">
+            <span className="text-[10px] text-muted-foreground">
+              {formatDate(item.createdAt)}
+            </span>
+          </div>
         </div>
       </div>
     </div>
