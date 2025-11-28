@@ -23,8 +23,10 @@
           var decoded = l.search.slice(1).split('&').map(function(s) { 
             return s.replace(/~and~/g, '&')
           }).join('?');
+          // Nettoyer les slashes multiples dans le pathname
+          var cleanPath = (l.pathname + decoded).replace(/\/+/g, '/');
           window.history.replaceState(null, null,
-              l.pathname + decoded + l.hash
+              cleanPath + l.hash
           );
         }
       }(window.location))
