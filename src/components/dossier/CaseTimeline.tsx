@@ -60,6 +60,7 @@ interface CaseTimelineProps {
   steps: any[];
   progress: any[];
   onUpdate: () => void;
+  worldCode?: string;
 }
 
 /**
@@ -172,11 +173,24 @@ function getItemTypeLabel(type: TimelineItemType) {
   return labels[type];
 }
 
+function getWorldBackgroundClass(worldCode?: string) {
+  switch (worldCode?.toUpperCase()) {
+    case 'JDE':
+      return 'bg-red-50/50 dark:bg-red-950/20';
+    case 'JDMO':
+      return 'bg-orange-50/50 dark:bg-orange-950/20';
+    case 'DBCS':
+      return 'bg-green-50/50 dark:bg-green-950/20';
+    default:
+      return '';
+  }
+}
+
 // -----------------
 // Composants
 // -----------------
 
-export default function CaseTimeline({ dossierId, steps, progress, onUpdate }: CaseTimelineProps) {
+export default function CaseTimeline({ dossierId, steps, progress, onUpdate, worldCode }: CaseTimelineProps) {
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedStep, setSelectedStep] = useState<any | null>(null);
@@ -601,7 +615,7 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate }: C
         }}
       />
 
-      <div className="relative">
+      <div className={`relative rounded-xl p-4 ${getWorldBackgroundClass(worldCode)}`}>
         {/* Ligne verticale principale */}
         <div className="absolute left-1/2 top-0 bottom-0 -translate-x-1/2">
           <div className="w-px h-full bg-gradient-to-b from-primary/30 via-slate-200 to-primary/30" />
@@ -803,9 +817,9 @@ function BetweenSegment({ items }: { items: TimelineItem[] }) {
   const [expanded, setExpanded] = useState(false);
   const MAX_VISIBLE = 6;
 
-  // Trier tous les items par date
+  // Trier tous les items par date (plus récent en haut)
   const sortedItems = [...items].sort(
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
   const visibleItems = expanded || sortedItems.length <= MAX_VISIBLE
