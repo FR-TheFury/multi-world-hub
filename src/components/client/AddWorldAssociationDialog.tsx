@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import JDELogo from '@/assets/JDE.png';
+import JDMOLogo from '@/assets/JDMO.png';
+import DBCSLogo from '@/assets/DBCS.png';
 
 interface World {
   id: string;
@@ -98,25 +100,39 @@ const AddWorldAssociationDialog = ({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="world">Monde *</Label>
-            <Select value={selectedWorldId} onValueChange={setSelectedWorldId} required>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un monde" />
-              </SelectTrigger>
-              <SelectContent>
-                {availableWorlds.length === 0 ? (
-                  <div className="p-2 text-sm text-muted-foreground text-center">
-                    Tous les mondes sont déjà associés
-                  </div>
-                ) : (
-                  availableWorlds.map((world) => (
-                    <SelectItem key={world.id} value={world.id}>
-                      {world.name} ({world.code})
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+            <Label>Monde *</Label>
+            {availableWorlds.length === 0 ? (
+              <div className="p-4 text-sm text-muted-foreground text-center border rounded-lg">
+                Tous les mondes sont déjà associés
+              </div>
+            ) : (
+              <div className="flex gap-4 justify-center mt-3">
+                {availableWorlds.map((world) => {
+                  const isSelected = selectedWorldId === world.id;
+                  const logoMap: Record<string, string> = {
+                    JDE: JDELogo,
+                    JDMO: JDMOLogo,
+                    DBCS: DBCSLogo,
+                  };
+                  const logo = logoMap[world.code];
+                  
+                  return (
+                    <button
+                      key={world.id}
+                      type="button"
+                      onClick={() => setSelectedWorldId(world.id)}
+                      className={`p-4 border-2 rounded-lg transition-all ${
+                        isSelected 
+                          ? 'border-primary shadow-lg scale-105' 
+                          : 'border-gray-300 grayscale opacity-50 hover:opacity-75'
+                      }`}
+                    >
+                      <img src={logo} alt={world.name} className="h-12 w-auto" />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
