@@ -124,6 +124,48 @@ export type Database = {
           },
         ]
       }
+      client_world_associations: {
+        Row: {
+          associated_at: string | null
+          association_reason: string | null
+          client_id: string
+          created_at: string | null
+          id: string
+          world_id: string
+        }
+        Insert: {
+          associated_at?: string | null
+          association_reason?: string | null
+          client_id: string
+          created_at?: string | null
+          id?: string
+          world_id: string
+        }
+        Update: {
+          associated_at?: string | null
+          association_reason?: string | null
+          client_id?: string
+          created_at?: string | null
+          id?: string
+          world_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_world_associations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "dossier_client_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_world_associations_world_id_fkey"
+            columns: ["world_id"]
+            isOneToOne: false
+            referencedRelation: "worlds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_templates: {
         Row: {
           auto_generate: boolean | null
@@ -269,6 +311,7 @@ export type Database = {
           nom: string | null
           numero_police: string | null
           prenom: string | null
+          primary_world_id: string | null
           telephone: string | null
           type_sinistre: string | null
           updated_at: string | null
@@ -291,6 +334,7 @@ export type Database = {
           nom?: string | null
           numero_police?: string | null
           prenom?: string | null
+          primary_world_id?: string | null
           telephone?: string | null
           type_sinistre?: string | null
           updated_at?: string | null
@@ -313,6 +357,7 @@ export type Database = {
           nom?: string | null
           numero_police?: string | null
           prenom?: string | null
+          primary_world_id?: string | null
           telephone?: string | null
           type_sinistre?: string | null
           updated_at?: string | null
@@ -323,6 +368,13 @@ export type Database = {
             columns: ["dossier_id"]
             isOneToOne: true
             referencedRelation: "dossiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dossier_client_info_primary_world_id_fkey"
+            columns: ["primary_world_id"]
+            isOneToOne: false
+            referencedRelation: "worlds"
             referencedColumns: ["id"]
           },
         ]

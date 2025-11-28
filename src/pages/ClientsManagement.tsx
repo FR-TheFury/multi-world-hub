@@ -13,6 +13,12 @@ import EditClientDialog from '@/components/client/EditClientDialog';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
+interface World {
+  id: string;
+  code: string;
+  name: string;
+}
+
 interface ClientInfo {
   id: string;
   dossier_id: string | null;
@@ -29,6 +35,7 @@ interface ClientInfo {
   numero_police: string | null;
   montant_dommage_batiment: number | null;
   created_at: string;
+  primary_world?: World;
 }
 
 const ClientsManagement = () => {
@@ -36,6 +43,7 @@ const ClientsManagement = () => {
   const [filteredClients, setFilteredClients] = useState<ClientInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [worldFilter, setWorldFilter] = useState<string>('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingClientId, setEditingClientId] = useState<string | null>(null);
   const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
@@ -46,14 +54,14 @@ const ClientsManagement = () => {
 
   useEffect(() => {
     filterClients();
-  }, [searchQuery, clients]);
+  }, [searchQuery, worldFilter, clients]);
 
   const fetchClients = async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
         .from('dossier_client_info')
-        .select('*')
+        .select('*, primary_world:worlds!primary_world_id(id, code, name)')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -68,20 +76,35 @@ const ClientsManagement = () => {
   };
 
   const filterClients = () => {
-    if (!searchQuery.trim()) {
-      setFilteredClients(clients);
-      return;
+    let filtered = clients;
+
+    // Filter by world
+    if (worldFilter !== 'all') {
+      filtered = filtered.filter((client) => client.primary_world?.code === worldFilter);
     }
 
-    const query = searchQuery.toLowerCase();
-    const filtered = clients.filter(
-      (client) =>
-        client.nom?.toLowerCase().includes(query) ||
-        client.prenom?.toLowerCase().includes(query) ||
-        client.email?.toLowerCase().includes(query) ||
-        client.telephone?.includes(query)
-    );
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (client) =>
+          client.nom?.toLowerCase().includes(query) ||
+          client.prenom?.toLowerCase().includes(query) ||
+          client.email?.toLowerCase().includes(query) ||
+          client.telephone?.includes(query)
+      );
+    }
+
     setFilteredClients(filtered);
+  };
+
+  const getWorldColor = (code: string) => {
+    const colors: Record<string, string> = {
+      JDE: 'hsl(0, 85%, 58%)',
+      JDMO: 'hsl(25, 95%, 60%)',
+      DBCS: 'hsl(145, 65%, 48%)',
+    };
+    return colors[code] || 'hsl(var(--primary))';
   };
 
   const getClientTypeLabel = (type: string) => {
@@ -182,9 +205,51 @@ const ClientsManagement = () => {
         </Button>
       </div>
 
-      {/* Search Bar */}
+      {/* Filters */}
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="pt-6 space-y-4">
+          {/* World Filter */}
+          <div className="flex gap-2">
+            <Button
+              variant={worldFilter === 'all' ? 'default' : 'outline'}
+              onClick={() => setWorldFilter('all')}
+              size="sm"
+            >
+              Tous les mondes
+            </Button>
+            <Button
+              variant={worldFilter === 'JDE' ? 'default' : 'outline'}
+              onClick={() => setWorldFilter('JDE')}
+              size="sm"
+              style={{
+                backgroundColor: worldFilter === 'JDE' ? getWorldColor('JDE') : undefined,
+              }}
+            >
+              JDE
+            </Button>
+            <Button
+              variant={worldFilter === 'JDMO' ? 'default' : 'outline'}
+              onClick={() => setWorldFilter('JDMO')}
+              size="sm"
+              style={{
+                backgroundColor: worldFilter === 'JDMO' ? getWorldColor('JDMO') : undefined,
+              }}
+            >
+              JDMO
+            </Button>
+            <Button
+              variant={worldFilter === 'DBCS' ? 'default' : 'outline'}
+              onClick={() => setWorldFilter('DBCS')}
+              size="sm"
+              style={{
+                backgroundColor: worldFilter === 'DBCS' ? getWorldColor('DBCS') : undefined,
+              }}
+            >
+              DBCS
+            </Button>
+          </div>
+
+          {/* Search Bar */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
@@ -223,10 +288,22 @@ const ClientsManagement = () => {
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <CardTitle className="text-xl">
-                      {client.nom} {client.prenom}
-                    </CardTitle>
-                    <Badge className={`mt-2 ${getClientTypeColor(client.client_type)}`}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <CardTitle className="text-xl">
+                        {client.nom} {client.prenom}
+                      </CardTitle>
+                      {client.primary_world && (
+                        <Badge
+                          style={{
+                            backgroundColor: getWorldColor(client.primary_world.code),
+                            color: 'white',
+                          }}
+                        >
+                          {client.primary_world.code}
+                        </Badge>
+                      )}
+                    </div>
+                    <Badge className={`${getClientTypeColor(client.client_type)}`}>
                       {getClientTypeLabel(client.client_type)}
                     </Badge>
                   </div>

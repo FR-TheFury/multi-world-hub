@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -19,8 +19,16 @@ interface CreateClientDialogProps {
   onSuccess?: () => void;
 }
 
+interface World {
+  id: string;
+  code: string;
+  name: string;
+}
+
 const CreateClientDialog = ({ open, onOpenChange, onSuccess }: CreateClientDialogProps) => {
   const [loading, setLoading] = useState(false);
+  const [accessibleWorlds, setAccessibleWorlds] = useState<World[]>([]);
+  const [selectedWorldId, setSelectedWorldId] = useState('');
   const [clientInfo, setClientInfo] = useState({
     client_type: 'locataire',
     nom: '',
@@ -39,11 +47,39 @@ const CreateClientDialog = ({ open, onOpenChange, onSuccess }: CreateClientDialo
     adresse_identique_sinistre: false,
   });
 
+  useEffect(() => {
+    if (open) {
+      fetchAccessibleWorlds();
+    }
+  }, [open]);
+
+  const fetchAccessibleWorlds = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_world_access')
+        .select('world_id, worlds(id, code, name)')
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+
+      if (error) throw error;
+
+      const worlds = data?.map((item: any) => item.worlds) || [];
+      setAccessibleWorlds(worlds);
+    } catch (error) {
+      console.error('Error fetching worlds:', error);
+      toast.error('Erreur lors du chargement des mondes');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!clientInfo.nom.trim() || !clientInfo.prenom.trim()) {
       toast.error('Le nom et prénom sont requis');
+      return;
+    }
+
+    if (!selectedWorldId) {
+      toast.error('Veuillez sélectionner un monde');
       return;
     }
 
@@ -54,6 +90,7 @@ const CreateClientDialog = ({ open, onOpenChange, onSuccess }: CreateClientDialo
         .from('dossier_client_info')
         .insert({
           dossier_id: null, // Fiche client standalone
+          primary_world_id: selectedWorldId,
           client_type: clientInfo.client_type as any,
           nom: clientInfo.nom,
           prenom: clientInfo.prenom,
@@ -76,6 +113,7 @@ const CreateClientDialog = ({ open, onOpenChange, onSuccess }: CreateClientDialo
       toast.success('Fiche client créée avec succès');
       
       // Reset form
+      setSelectedWorldId('');
       setClientInfo({
         client_type: 'locataire',
         nom: '',
@@ -112,6 +150,22 @@ const CreateClientDialog = ({ open, onOpenChange, onSuccess }: CreateClientDialo
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6 p-6">
+          <div>
+            <Label htmlFor="world">Monde *</Label>
+            <Select value={selectedWorldId} onValueChange={setSelectedWorldId} required>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un monde" />
+              </SelectTrigger>
+              <SelectContent>
+                {accessibleWorlds.map((world) => (
+                  <SelectItem key={world.id} value={world.id}>
+                    {world.name} ({world.code})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div>
             <Label htmlFor="client_type">Type de client *</Label>
             <Select

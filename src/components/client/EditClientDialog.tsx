@@ -4,9 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus, X } from 'lucide-react';
+import AddWorldAssociationDialog from './AddWorldAssociationDialog';
 
 interface ClientInfo {
   id: string;
@@ -27,6 +29,19 @@ interface ClientInfo {
   montant_mise_conformite: number | null;
 }
 
+interface World {
+  id: string;
+  code: string;
+  name: string;
+}
+
+interface WorldAssociation {
+  id: string;
+  world_id: string;
+  association_reason: string | null;
+  worlds: World;
+}
+
 interface EditClientDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -41,6 +56,9 @@ const EditClientDialog = ({ open, onOpenChange, clientId, onSuccess }: EditClien
     client_type: 'locataire',
     adresse_identique_sinistre: false,
   });
+  const [primaryWorld, setPrimaryWorld] = useState<World | null>(null);
+  const [associatedWorlds, setAssociatedWorlds] = useState<WorldAssociation[]>([]);
+  const [showAddWorldDialog, setShowAddWorldDialog] = useState(false);
 
   useEffect(() => {
     if (open && clientId) {
@@ -55,17 +73,44 @@ const EditClientDialog = ({ open, onOpenChange, clientId, onSuccess }: EditClien
       setFetching(true);
       const { data, error } = await supabase
         .from('dossier_client_info')
-        .select('*')
+        .select('*, primary_world:worlds!primary_world_id(id, code, name)')
         .eq('id', clientId)
         .single();
 
       if (error) throw error;
       setFormData(data);
+      setPrimaryWorld(data.primary_world);
+
+      // Fetch associated worlds
+      const { data: associations, error: assocError } = await supabase
+        .from('client_world_associations')
+        .select('id, world_id, association_reason, worlds(id, code, name)')
+        .eq('client_id', clientId);
+
+      if (assocError) throw assocError;
+      setAssociatedWorlds(associations || []);
     } catch (error) {
       console.error('Error fetching client:', error);
       toast.error('Erreur lors du chargement des données client');
     } finally {
       setFetching(false);
+    }
+  };
+
+  const removeWorldAssociation = async (associationId: string) => {
+    try {
+      const { error } = await supabase
+        .from('client_world_associations')
+        .delete()
+        .eq('id', associationId);
+
+      if (error) throw error;
+
+      toast.success('Monde dissocié avec succès');
+      fetchClientData();
+    } catch (error) {
+      console.error('Error removing world association:', error);
+      toast.error('Erreur lors de la dissociation du monde');
     }
   };
 
@@ -285,6 +330,52 @@ const EditClientDialog = ({ open, onOpenChange, clientId, onSuccess }: EditClien
             </div>
           </div>
 
+          {/* Mondes associés */}
+          <div className="space-y-4 pt-4 border-t">
+            <h3 className="font-semibold">Mondes associés</h3>
+            
+            {primaryWorld && (
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Monde principal</Label>
+                <Badge className="bg-primary text-primary-foreground">
+                  {primaryWorld.name} ({primaryWorld.code})
+                </Badge>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Mondes additionnels</Label>
+              <div className="flex flex-wrap gap-2">
+                {associatedWorlds.map((assoc) => (
+                  <Badge key={assoc.id} variant="secondary" className="pr-1">
+                    {assoc.worlds.name}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-4 w-4 ml-1 hover:bg-transparent"
+                      onClick={() => removeWorldAssociation(assoc.id)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </Badge>
+                ))}
+                {associatedWorlds.length === 0 && (
+                  <span className="text-sm text-muted-foreground">Aucun monde additionnel</span>
+                )}
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAddWorldDialog(true)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Ajouter un monde
+              </Button>
+            </div>
+          </div>
+
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
@@ -296,6 +387,17 @@ const EditClientDialog = ({ open, onOpenChange, clientId, onSuccess }: EditClien
             </Button>
           </div>
         </form>
+
+        <AddWorldAssociationDialog
+          open={showAddWorldDialog}
+          onOpenChange={setShowAddWorldDialog}
+          clientId={clientId}
+          currentWorldIds={[
+            primaryWorld?.id,
+            ...associatedWorlds.map((a) => a.world_id),
+          ].filter(Boolean) as string[]}
+          onSuccess={fetchClientData}
+        />
       </DialogContent>
     </Dialog>
   );
