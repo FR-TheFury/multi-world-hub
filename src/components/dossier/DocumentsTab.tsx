@@ -5,10 +5,33 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { FileText, Upload, Download, Trash2, FileIcon } from 'lucide-react';
+import { FileText, Upload, Download, Trash2, FileIcon, CheckSquare } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+
+const ADMIN_DOCUMENTS_CONFIG: Record<string, string[]> = {
+  locataire: ['CERFA', 'BAIL', 'QUITTANCE_LOYER', 'BANQUE', 'POUVOIR', 'AUTRE'],
+  proprietaire: ['CERFA', 'ATTEST_PROPRI', 'BANQUE', 'POUVOIR', 'AUTRE'],
+  proprietaire_non_occupant: ['CERFA', 'ATTEST_PROPRI', 'BANQUE', 'POUVOIR', 'AUTRE'],
+  professionnel: ['CERFA', 'STATUTS', 'CP_CG', 'KBIS', 'BILANS', 'BANQUE', 'POUVOIR', 'AUTRE'],
+};
+
+const DOCUMENT_LABELS: Record<string, string> = {
+  CERFA: 'CERFA',
+  BAIL: 'Bail',
+  QUITTANCE_LOYER: 'Quittance loyer',
+  ATTEST_PROPRI: 'Attest. Propri.',
+  STATUTS: 'Statuts',
+  CP_CG: 'CP/CG',
+  KBIS: 'KBIS',
+  BILANS: 'Bilans',
+  BANQUE: 'Banque',
+  POUVOIR: 'Pouvoir',
+  AUTRE: 'Autre',
+};
 
 interface DocumentsTabProps {
   dossierId: string;
@@ -34,9 +57,14 @@ const DocumentsTab = ({ dossierId }: DocumentsTabProps) => {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [clientType, setClientType] = useState<string | null>(null);
+  const [adminDocs, setAdminDocs] = useState<Record<string, { received: boolean; id?: string }>>({});
+  const [adminDocsLoading, setAdminDocsLoading] = useState(false);
 
   useEffect(() => {
     fetchAttachments();
+    fetchClientType();
+    fetchAdminDocuments();
   }, [dossierId]);
 
   const fetchAttachments = async () => {
@@ -57,6 +85,40 @@ const DocumentsTab = ({ dossierId }: DocumentsTabProps) => {
       toast.error('Erreur lors du chargement des documents');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchClientType = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('dossier_client_info')
+        .select('client_type')
+        .eq('dossier_id', dossierId)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      setClientType(data?.client_type || null);
+    } catch (error) {
+      console.error('Error fetching client type:', error);
+    }
+  };
+
+  const fetchAdminDocuments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('dossier_admin_documents')
+        .select('*')
+        .eq('dossier_id', dossierId);
+
+      if (error) throw error;
+
+      const docsMap: Record<string, { received: boolean; id: string }> = {};
+      data?.forEach(doc => {
+        docsMap[doc.document_type] = { received: doc.received, id: doc.id };
+      });
+      setAdminDocs(docsMap);
+    } catch (error) {
+      console.error('Error fetching admin documents:', error);
     }
   };
 
@@ -153,6 +215,56 @@ const DocumentsTab = ({ dossierId }: DocumentsTabProps) => {
     }
   };
 
+  const handleToggleDocument = async (docType: string, checked: boolean) => {
+    setAdminDocsLoading(true);
+    try {
+      const existingDoc = adminDocs[docType];
+
+      if (existingDoc?.id) {
+        // Update existing
+        const { error } = await supabase
+          .from('dossier_admin_documents')
+          .update({
+            received: checked,
+            received_at: checked ? new Date().toISOString() : null,
+          })
+          .eq('id', existingDoc.id);
+
+        if (error) throw error;
+      } else {
+        // Insert new
+        const { data, error } = await supabase
+          .from('dossier_admin_documents')
+          .insert({
+            dossier_id: dossierId,
+            document_type: docType,
+            received: checked,
+            received_at: checked ? new Date().toISOString() : null,
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        setAdminDocs(prev => ({
+          ...prev,
+          [docType]: { received: checked, id: data.id },
+        }));
+        return;
+      }
+
+      setAdminDocs(prev => ({
+        ...prev,
+        [docType]: { ...prev[docType], received: checked },
+      }));
+    } catch (error) {
+      console.error('Error toggling document:', error);
+      toast.error('Erreur lors de la mise à jour');
+    } finally {
+      setAdminDocsLoading(false);
+    }
+  };
+
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
@@ -165,6 +277,8 @@ const DocumentsTab = ({ dossierId }: DocumentsTabProps) => {
     acc[type].push(att);
     return acc;
   }, {} as Record<string, Attachment[]>);
+
+  const documentsForClientType = clientType ? ADMIN_DOCUMENTS_CONFIG[clientType] || [] : [];
 
   if (loading) {
     return (
@@ -270,6 +384,38 @@ const DocumentsTab = ({ dossierId }: DocumentsTabProps) => {
           )}
         </CardContent>
       </Card>
+
+      {/* Admin Documents Checklist */}
+      {clientType && documentsForClientType.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CheckSquare className="h-5 w-5" />
+              Documents administratifs
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {documentsForClientType.map(docType => (
+                <div key={docType} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-accent/50 transition-colors">
+                  <Checkbox
+                    id={`doc-${docType}`}
+                    checked={adminDocs[docType]?.received || false}
+                    onCheckedChange={(checked) => handleToggleDocument(docType, checked as boolean)}
+                    disabled={adminDocsLoading}
+                  />
+                  <Label
+                    htmlFor={`doc-${docType}`}
+                    className="cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {DOCUMENT_LABELS[docType]}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

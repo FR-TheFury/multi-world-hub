@@ -45,6 +45,11 @@ const CreateDossierDialog = ({ open, onOpenChange, worldId, onSuccess }: CreateD
     date_sinistre: '',
     compagnie_assurance: '',
     numero_police: '',
+    proprietaire_nom: '',
+    proprietaire_prenom: '',
+    proprietaire_telephone: '',
+    proprietaire_email: '',
+    proprietaire_adresse: '',
   });
 
   // Fetch existing clients when dialog opens
@@ -158,6 +163,11 @@ const CreateDossierDialog = ({ open, onOpenChange, worldId, onSuccess }: CreateD
           date_sinistre: clientInfo.date_sinistre || null,
           compagnie_assurance: clientInfo.compagnie_assurance || null,
           numero_police: clientInfo.numero_police || null,
+          proprietaire_nom: clientInfo.client_type === 'locataire' ? clientInfo.proprietaire_nom || null : null,
+          proprietaire_prenom: clientInfo.client_type === 'locataire' ? clientInfo.proprietaire_prenom || null : null,
+          proprietaire_telephone: clientInfo.client_type === 'locataire' ? clientInfo.proprietaire_telephone || null : null,
+          proprietaire_email: clientInfo.client_type === 'locataire' ? clientInfo.proprietaire_email || null : null,
+          proprietaire_adresse: clientInfo.client_type === 'locataire' ? clientInfo.proprietaire_adresse || null : null,
         });
       } else if (clientMode === 'existing' && selectedClientId) {
         // Copy existing client info to new dossier
@@ -199,6 +209,11 @@ const CreateDossierDialog = ({ open, onOpenChange, worldId, onSuccess }: CreateD
         date_sinistre: '',
         compagnie_assurance: '',
         numero_police: '',
+        proprietaire_nom: '',
+        proprietaire_prenom: '',
+        proprietaire_telephone: '',
+        proprietaire_email: '',
+        proprietaire_adresse: '',
       });
       onOpenChange(false);
       onSuccess();
@@ -434,6 +449,66 @@ const CreateDossierDialog = ({ open, onOpenChange, worldId, onSuccess }: CreateD
                     />
                   </div>
                 </div>
+
+                {/* Landlord Info - Only for Tenants */}
+                {clientInfo.client_type === 'locataire' && (
+                  <div className="border-t pt-4 bg-amber-50/50 dark:bg-amber-950/20 p-4 rounded-lg mt-4">
+                    <h4 className="font-semibold text-base mb-4">Coordonnées du propriétaire</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="proprietaire_nom">Nom</Label>
+                        <Input
+                          id="proprietaire_nom"
+                          value={clientInfo.proprietaire_nom}
+                          onChange={(e) => setClientInfo({ ...clientInfo, proprietaire_nom: e.target.value })}
+                          disabled={loading}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="proprietaire_prenom">Prénom</Label>
+                        <Input
+                          id="proprietaire_prenom"
+                          value={clientInfo.proprietaire_prenom}
+                          onChange={(e) => setClientInfo({ ...clientInfo, proprietaire_prenom: e.target.value })}
+                          disabled={loading}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="proprietaire_telephone">Téléphone</Label>
+                        <Input
+                          id="proprietaire_telephone"
+                          type="tel"
+                          value={clientInfo.proprietaire_telephone}
+                          onChange={(e) => setClientInfo({ ...clientInfo, proprietaire_telephone: e.target.value })}
+                          disabled={loading}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="proprietaire_email">Email</Label>
+                        <Input
+                          id="proprietaire_email"
+                          type="email"
+                          value={clientInfo.proprietaire_email}
+                          onChange={(e) => setClientInfo({ ...clientInfo, proprietaire_email: e.target.value })}
+                          disabled={loading}
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="proprietaire_adresse">Adresse</Label>
+                        <Input
+                          id="proprietaire_adresse"
+                          value={clientInfo.proprietaire_adresse}
+                          onChange={(e) => setClientInfo({ ...clientInfo, proprietaire_adresse: e.target.value })}
+                          disabled={loading}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
