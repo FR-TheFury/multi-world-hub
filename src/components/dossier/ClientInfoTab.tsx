@@ -26,6 +26,11 @@ interface ClientInfo {
   date_sinistre: string;
   compagnie_assurance: string;
   numero_police: string;
+  proprietaire_nom?: string;
+  proprietaire_prenom?: string;
+  proprietaire_telephone?: string;
+  proprietaire_email?: string;
+  proprietaire_adresse?: string;
 }
 
 const ClientInfoTab = ({ dossierId }: ClientInfoTabProps) => {
@@ -64,6 +69,11 @@ const ClientInfoTab = ({ dossierId }: ClientInfoTabProps) => {
           date_sinistre: '',
           compagnie_assurance: '',
           numero_police: '',
+          proprietaire_nom: '',
+          proprietaire_prenom: '',
+          proprietaire_telephone: '',
+          proprietaire_email: '',
+          proprietaire_adresse: '',
         });
         setIsEditing(true);
       }
@@ -323,6 +333,76 @@ const ClientInfoTab = ({ dossierId }: ClientInfoTabProps) => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Landlord Information - Only for Tenants */}
+      {clientInfo.client_type === 'locataire' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Coordonnées du propriétaire</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="proprietaire_nom">Nom</Label>
+                <Input
+                  id="proprietaire_nom"
+                  value={clientInfo.proprietaire_nom || ''}
+                  onChange={(e) =>
+                    setClientInfo({ ...clientInfo, proprietaire_nom: e.target.value })
+                  }
+                  disabled={!isEditing}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="proprietaire_prenom">Prénom</Label>
+                <Input
+                  id="proprietaire_prenom"
+                  value={clientInfo.proprietaire_prenom || ''}
+                  onChange={(e) =>
+                    setClientInfo({ ...clientInfo, proprietaire_prenom: e.target.value })
+                  }
+                  disabled={!isEditing}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="proprietaire_telephone">Téléphone</Label>
+                <Input
+                  id="proprietaire_telephone"
+                  type="tel"
+                  value={clientInfo.proprietaire_telephone || ''}
+                  onChange={(e) =>
+                    setClientInfo({ ...clientInfo, proprietaire_telephone: e.target.value })
+                  }
+                  disabled={!isEditing}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="proprietaire_email">Email</Label>
+                <Input
+                  id="proprietaire_email"
+                  type="email"
+                  value={clientInfo.proprietaire_email || ''}
+                  onChange={(e) =>
+                    setClientInfo({ ...clientInfo, proprietaire_email: e.target.value })
+                  }
+                  disabled={!isEditing}
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="proprietaire_adresse">Adresse</Label>
+                <Input
+                  id="proprietaire_adresse"
+                  value={clientInfo.proprietaire_adresse || ''}
+                  onChange={(e) =>
+                    setClientInfo({ ...clientInfo, proprietaire_adresse: e.target.value })
+                  }
+                  disabled={!isEditing}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

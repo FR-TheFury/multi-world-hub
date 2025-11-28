@@ -216,6 +216,47 @@ export type Database = {
           },
         ]
       }
+      dossier_admin_documents: {
+        Row: {
+          created_at: string | null
+          document_type: string
+          dossier_id: string
+          id: string
+          notes: string | null
+          received: boolean | null
+          received_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          document_type: string
+          dossier_id: string
+          id?: string
+          notes?: string | null
+          received?: boolean | null
+          received_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          document_type?: string
+          dossier_id?: string
+          id?: string
+          notes?: string | null
+          received?: boolean | null
+          received_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dossier_admin_documents_dossier_id_fkey"
+            columns: ["dossier_id"]
+            isOneToOne: false
+            referencedRelation: "dossiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dossier_attachments: {
         Row: {
           admin_doc_status: string | null
