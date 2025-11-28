@@ -49,28 +49,46 @@ const CreateDossierDialog = ({ open, onOpenChange, worldId, onSuccess }: CreateD
 
   // Fetch existing clients when dialog opens
   useEffect(() => {
-    if (open) {
+    if (open && worldId) {
       fetchExistingClients();
     }
-  }, [open]);
+  }, [open, worldId]);
 
   const fetchExistingClients = async () => {
     try {
-      const { data } = await supabase
+      // Récupérer les clients avec primary_world_id = worldId
+      const { data: primaryClients } = await supabase
         .from('dossier_client_info')
-        .select('id, nom, prenom, email, telephone, dossier_id')
+        .select('id, nom, prenom, email, telephone, dossier_id, primary_world_id')
+        .eq('primary_world_id', worldId)
+        .is('dossier_id', null)
         .order('nom');
-      
-      // Group by unique clients (nom + prenom)
-      const uniqueClients = data?.reduce((acc: any[], client) => {
-        const exists = acc.find(c => c.nom === client.nom && c.prenom === client.prenom);
-        if (!exists) {
+
+      // Récupérer les clients associés via client_world_associations
+      const { data: associatedClients } = await supabase
+        .from('client_world_associations')
+        .select(`
+          client_id,
+          dossier_client_info!inner(id, nom, prenom, email, telephone, dossier_id)
+        `)
+        .eq('world_id', worldId);
+
+      // Fusionner et dédupliquer les résultats
+      const associatedClientData = associatedClients?.map(a => a.dossier_client_info).filter(Boolean) || [];
+      const allClients = [
+        ...(primaryClients || []),
+        ...associatedClientData
+      ];
+
+      // Dédupliquer par ID et filtrer les fiches sans dossier_id (fiches client indépendantes)
+      const uniqueClients = allClients.reduce((acc: any[], client: any) => {
+        if (!acc.find(c => c.id === client.id) && !client.dossier_id) {
           acc.push(client);
         }
         return acc;
       }, []);
-      
-      setExistingClients(uniqueClients || []);
+
+      setExistingClients(uniqueClients);
     } catch (error) {
       console.error('Error fetching clients:', error);
     }
@@ -270,22 +288,28 @@ const CreateDossierDialog = ({ open, onOpenChange, worldId, onSuccess }: CreateD
             {clientMode === 'existing' && (
               <div className="space-y-3 p-4 border rounded-lg bg-accent/5">
                 <Label htmlFor="existing-client">Sélectionner un client existant</Label>
-                <Select
-                  value={selectedClientId}
-                  onValueChange={setSelectedClientId}
-                  disabled={loading}
-                >
-                  <SelectTrigger id="existing-client">
-                    <SelectValue placeholder="Choisir un client..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {existingClients.map((client) => (
-                      <SelectItem key={client.id} value={client.id}>
-                        {client.prenom} {client.nom} {client.email && `(${client.email})`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {existingClients.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-4 text-center">
+                    Aucune fiche client associée à ce monde. Créez d'abord une fiche dans "Fiches Clients".
+                  </p>
+                ) : (
+                  <Select
+                    value={selectedClientId}
+                    onValueChange={setSelectedClientId}
+                    disabled={loading}
+                  >
+                    <SelectTrigger id="existing-client">
+                      <SelectValue placeholder="Choisir un client..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {existingClients.map((client) => (
+                        <SelectItem key={client.id} value={client.id}>
+                          {client.prenom} {client.nom} {client.email && `(${client.email})`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
             )}
 
