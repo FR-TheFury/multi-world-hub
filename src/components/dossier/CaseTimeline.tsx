@@ -400,7 +400,7 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
           createdById: c.user_id,
           fromUser: c.profiles?.display_name || "Utilisateur",
           fromUserAvatar: c.profiles?.avatar_url || undefined,
-          afterStepId: findAfterStepId(c.created_at!, enrichedSteps),
+          afterStepId: c.workflow_step_id || enrichedSteps[0]?.id || "",
         });
       });
 
@@ -414,7 +414,7 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
           createdById: d.uploaded_by,
           fromUser: d.profiles?.display_name || "Utilisateur",
           fromUserAvatar: d.profiles?.avatar_url || undefined,
-          afterStepId: findAfterStepId(d.created_at!, enrichedSteps),
+          afterStepId: d.workflow_step_id || findAfterStepId(d.created_at!, enrichedSteps),
         });
       });
 
@@ -432,7 +432,7 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
           fromUserAvatar: fromProfile?.avatar || undefined,
           toUser: toProfile?.name,
           toUserAvatar: toProfile?.avatar || undefined,
-          afterStepId: findAfterStepId(t.created_at!, enrichedSteps),
+          afterStepId: t.workflow_step_id || enrichedSteps[0]?.id || "",
         });
       });
 
@@ -447,7 +447,7 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
           createdById: a.user_id,
           fromUser: profile?.name || "Système",
           fromUserAvatar: profile?.avatar || undefined,
-          afterStepId: findAfterStepId(a.created_at!, enrichedSteps),
+          afterStepId: a.workflow_step_id || enrichedSteps[0]?.id || "",
         });
       });
 
@@ -462,7 +462,7 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
           createdById: a.created_by,
           fromUser: profile?.name || "Utilisateur",
           fromUserAvatar: profile?.avatar || undefined,
-          afterStepId: findAfterStepId(a.created_at!, enrichedSteps),
+          afterStepId: a.workflow_step_id || enrichedSteps[0]?.id || "",
         });
       });
 
@@ -648,6 +648,7 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
         open={showCommentDialog}
         onOpenChange={setShowCommentDialog}
         dossierId={dossierId}
+        workflowStepId={activeStepForAction || undefined}
         onCommentCreated={() => {
           fetchTimelineItems();
           onUpdate();

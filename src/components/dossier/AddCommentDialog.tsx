@@ -10,10 +10,11 @@ interface AddCommentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   dossierId: string;
+  workflowStepId?: string;
   onCommentCreated?: () => void;
 }
 
-export function AddCommentDialog({ open, onOpenChange, dossierId, onCommentCreated }: AddCommentDialogProps) {
+export function AddCommentDialog({ open, onOpenChange, dossierId, workflowStepId, onCommentCreated }: AddCommentDialogProps) {
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -36,6 +37,7 @@ export function AddCommentDialog({ open, onOpenChange, dossierId, onCommentCreat
           user_id: user.id,
           content,
           comment_type: "comment",
+          workflow_step_id: workflowStepId || null,
         });
 
       if (commentError) throw commentError;
