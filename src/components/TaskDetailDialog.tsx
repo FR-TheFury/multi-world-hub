@@ -62,10 +62,10 @@ export const TaskDetailDialog = ({ task, open, onOpenChange, onTaskUpdated }: Ta
   }, [task]);
 
   useEffect(() => {
-    if (isSuperAdmin() && open) {
+    if (open) {
       fetchUsers();
     }
-  }, [isSuperAdmin, open]);
+  }, [open]);
 
   const fetchUsers = async () => {
     const { data } = await supabase
@@ -162,7 +162,7 @@ export const TaskDetailDialog = ({ task, open, onOpenChange, onTaskUpdated }: Ta
         </DialogHeader>
 
         <div className="space-y-4">
-          {isEditing && isSuperAdmin() ? (
+          {isEditing && canEdit ? (
             <>
               <div className="space-y-2">
                 <Label>Titre</Label>
@@ -269,7 +269,7 @@ export const TaskDetailDialog = ({ task, open, onOpenChange, onTaskUpdated }: Ta
         </div>
 
         <DialogFooter className="gap-2">
-          {isEditing && isSuperAdmin() ? (
+          {isEditing && canEdit ? (
             <>
               <Button variant="outline" onClick={() => setIsEditing(false)} disabled={loading}>
                 Annuler
@@ -289,7 +289,7 @@ export const TaskDetailDialog = ({ task, open, onOpenChange, onTaskUpdated }: Ta
                   Valider la tâche
                 </Button>
               )}
-              {isSuperAdmin() && (
+              {canEdit && (
                 <Button onClick={() => setIsEditing(true)} disabled={loading}>
                   Modifier
                 </Button>
