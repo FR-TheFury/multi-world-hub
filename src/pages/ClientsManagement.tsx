@@ -36,6 +36,7 @@ interface ClientInfo {
   montant_dommage_batiment: number | null;
   created_at: string;
   primary_world?: World;
+  associatedWorlds?: any[];
 }
 
 const ClientsManagement = () => {
@@ -65,8 +66,20 @@ const ClientsManagement = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setClients(data || []);
-      setFilteredClients(data || []);
+
+      // Récupérer toutes les associations de mondes
+      const { data: associations } = await supabase
+        .from('client_world_associations')
+        .select('client_id, world_id, worlds(id, code, name)');
+
+      // Fusionner les associations avec les clients
+      const clientsWithAssociations = (data || []).map(client => ({
+        ...client,
+        associatedWorlds: (associations || []).filter((a: any) => a.client_id === client.id)
+      }));
+
+      setClients(clientsWithAssociations);
+      setFilteredClients(clientsWithAssociations);
     } catch (error) {
       console.error('Error fetching clients:', error);
       toast.error('Erreur lors du chargement des fiches clients');
@@ -81,8 +94,10 @@ const ClientsManagement = () => {
     // Filter by world first
     if (worldFilter !== 'all') {
       filtered = filtered.filter((client) => {
-        // Check if primary world matches
+        // Vérifier le monde principal
         if (client.primary_world?.code === worldFilter) return true;
+        // Vérifier les mondes associés
+        if (client.associatedWorlds?.some((a: any) => a.worlds?.code === worldFilter)) return true;
         return false;
       });
     }
@@ -290,9 +305,9 @@ const ClientsManagement = () => {
           {filteredClients.map((client) => (
             <Card key={client.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
                       <CardTitle className="text-xl">
                         {client.nom} {client.prenom}
                       </CardTitle>
@@ -306,6 +321,18 @@ const ClientsManagement = () => {
                           {client.primary_world.code}
                         </Badge>
                       )}
+                      {client.associatedWorlds?.map((assoc: any) => (
+                        <Badge
+                          key={assoc.world_id}
+                          variant="outline"
+                          style={{
+                            borderColor: getWorldColor(assoc.worlds?.code),
+                            color: getWorldColor(assoc.worlds?.code),
+                          }}
+                        >
+                          {assoc.worlds?.code}
+                        </Badge>
+                      ))}
                     </div>
                     <Badge className={`${getClientTypeColor(client.client_type)}`}>
                       {getClientTypeLabel(client.client_type)}

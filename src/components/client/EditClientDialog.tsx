@@ -10,6 +10,10 @@ import { toast } from 'sonner';
 import { Loader2, Plus, X } from 'lucide-react';
 import AddWorldAssociationDialog from './AddWorldAssociationDialog';
 
+import JDELogo from '@/assets/JDE.png';
+import JDMOLogo from '@/assets/JDMO.png';
+import DBCSLogo from '@/assets/DBCS.png';
+
 interface ClientInfo {
   id: string;
   nom: string;
@@ -27,6 +31,7 @@ interface ClientInfo {
   montant_dommage_batiment: number | null;
   montant_demolition_deblayage: number | null;
   montant_mise_conformite: number | null;
+  primary_world_id: string | null;
 }
 
 interface World {
@@ -59,12 +64,28 @@ const EditClientDialog = ({ open, onOpenChange, clientId, onSuccess }: EditClien
   const [primaryWorld, setPrimaryWorld] = useState<World | null>(null);
   const [associatedWorlds, setAssociatedWorlds] = useState<WorldAssociation[]>([]);
   const [showAddWorldDialog, setShowAddWorldDialog] = useState(false);
+  const [worlds, setWorlds] = useState<World[]>([]);
 
   useEffect(() => {
     if (open && clientId) {
       fetchClientData();
+      fetchWorlds();
     }
   }, [open, clientId]);
+
+  const fetchWorlds = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('worlds')
+        .select('id, code, name')
+        .order('code');
+
+      if (error) throw error;
+      setWorlds(data || []);
+    } catch (error) {
+      console.error('Error fetching worlds:', error);
+    }
+  };
 
   const fetchClientData = async () => {
     if (!clientId) return;
@@ -94,6 +115,25 @@ const EditClientDialog = ({ open, onOpenChange, clientId, onSuccess }: EditClien
       toast.error('Erreur lors du chargement des données client');
     } finally {
       setFetching(false);
+    }
+  };
+
+  const handlePrimaryWorldChange = async (newWorldId: string) => {
+    if (!clientId || !newWorldId) return;
+
+    try {
+      const { error } = await supabase
+        .from('dossier_client_info')
+        .update({ primary_world_id: newWorldId })
+        .eq('id', clientId);
+
+      if (error) throw error;
+
+      toast.success('Monde principal mis à jour');
+      fetchClientData();
+    } catch (error) {
+      console.error('Error updating primary world:', error);
+      toast.error('Erreur lors de la mise à jour du monde principal');
     }
   };
 
@@ -334,14 +374,47 @@ const EditClientDialog = ({ open, onOpenChange, clientId, onSuccess }: EditClien
           <div className="space-y-4 pt-4 border-t">
             <h3 className="font-semibold">Mondes associés</h3>
             
-            {primaryWorld && (
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Monde principal</Label>
-                <Badge className="bg-primary text-primary-foreground">
-                  {primaryWorld.name} ({primaryWorld.code})
-                </Badge>
+            <div className="space-y-2">
+              <Label>Monde principal</Label>
+              <div className="flex gap-4 justify-center">
+                <button
+                  type="button"
+                  onClick={() => handlePrimaryWorldChange(worlds.find(w => w.code === 'JDE')?.id || '')}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
+                    formData.primary_world_id === worlds.find(w => w.code === 'JDE')?.id
+                      ? 'border-red-500 bg-red-50'
+                      : 'border-gray-200 grayscale opacity-50 hover:opacity-75'
+                  }`}
+                >
+                  <img src={JDELogo} alt="JDE" className="w-16 h-16 object-contain" />
+                  <span className="text-sm font-medium">JDE</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handlePrimaryWorldChange(worlds.find(w => w.code === 'JDMO')?.id || '')}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
+                    formData.primary_world_id === worlds.find(w => w.code === 'JDMO')?.id
+                      ? 'border-orange-500 bg-orange-50'
+                      : 'border-gray-200 grayscale opacity-50 hover:opacity-75'
+                  }`}
+                >
+                  <img src={JDMOLogo} alt="JDMO" className="w-16 h-16 object-contain" />
+                  <span className="text-sm font-medium">JDMO</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handlePrimaryWorldChange(worlds.find(w => w.code === 'DBCS')?.id || '')}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
+                    formData.primary_world_id === worlds.find(w => w.code === 'DBCS')?.id
+                      ? 'border-green-500 bg-green-50'
+                      : 'border-gray-200 grayscale opacity-50 hover:opacity-75'
+                  }`}
+                >
+                  <img src={DBCSLogo} alt="DBCS" className="w-16 h-16 object-contain" />
+                  <span className="text-sm font-medium">DBCS</span>
+                </button>
               </div>
-            )}
+            </div>
 
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">Mondes additionnels</Label>
