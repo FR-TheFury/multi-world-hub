@@ -410,6 +410,7 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
               dossierId={dossierId}
               steps={workflowSteps}
               progress={progress}
+              world={dossierDetails?.worlds?.name}
               onUpdate={() => {
                 fetchOverviewData();
                 fetchWorkflowData();

@@ -60,6 +60,7 @@ interface CaseTimelineProps {
   steps: any[];
   progress: any[];
   onUpdate: () => void;
+  world?: string;
 }
 
 /**
@@ -100,6 +101,19 @@ function getStepColors(status: StepStatus) {
         chipBg: "bg-slate-50",
         chipText: "text-slate-600",
       };
+  }
+}
+
+function getWorldBackgroundClass(world?: string) {
+  switch (world?.toLowerCase()) {
+    case 'jde':
+      return 'bg-red-50/50 dark:bg-red-950/20';
+    case 'jdmo':
+      return 'bg-orange-50/50 dark:bg-orange-950/20';
+    case 'dbcs':
+      return 'bg-green-50/50 dark:bg-green-950/20';
+    default:
+      return 'bg-slate-50/50 dark:bg-slate-950/20';
   }
 }
 
@@ -176,7 +190,7 @@ function getItemTypeLabel(type: TimelineItemType) {
 // Composants
 // -----------------
 
-export default function CaseTimeline({ dossierId, steps, progress, onUpdate }: CaseTimelineProps) {
+export default function CaseTimeline({ dossierId, steps, progress, onUpdate, world }: CaseTimelineProps) {
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedStep, setSelectedStep] = useState<any | null>(null);
@@ -568,7 +582,7 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate }: C
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-4 py-6 md:py-8">
+    <div className={`w-full max-w-5xl mx-auto px-4 py-6 md:py-8 rounded-xl ${getWorldBackgroundClass(world)}`}>
       <AddCommentDialog
         open={showCommentDialog}
         onOpenChange={setShowCommentDialog}
