@@ -108,7 +108,8 @@ const UnifiedTasksPanel = ({ accessibleWorlds }: UnifiedTasksPanelProps) => {
       let query = supabase
         .from('tasks')
         .select('*')
-        .in('world_id', accessibleWorlds.map(w => w.id));
+        .in('world_id', accessibleWorlds.map(w => w.id))
+        .neq('status', 'done'); // Filtrer les tâches terminées
 
       if (!isSuperAdmin()) {
         // Les utilisateurs non super admin voient les tâches assignées à eux OU non assignées
