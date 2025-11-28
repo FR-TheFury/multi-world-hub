@@ -695,7 +695,15 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
 
         <div className="space-y-10">
           {/* Inverser l'ordre pour l'affichage (étape 1 en bas, dernière en haut) */}
-          {[...enrichedSteps].reverse().map((step, index) => {
+          {/* Filtrer pour ne garder que les étapes visibles (complétées, en cours ou bloquées) */}
+          {[...enrichedSteps]
+            .filter((step) => 
+              step.status === "completed" || 
+              step.status === "in_progress" || 
+              step.status === "blocked"
+            )
+            .reverse()
+            .map((step, index) => {
             const stepItems = itemsByStep[step.id] || [];
 
             return (
