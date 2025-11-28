@@ -183,7 +183,7 @@ const Home = () => {
             onClick={() => navigate('/dashboard')}
             className="group px-8 py-6 text-lg"
           >
-            Accéder au Dashboard
+            Accéder au Tableau de bord
             <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-2 transition-transform" />
           </Button>
         </motion.div>
