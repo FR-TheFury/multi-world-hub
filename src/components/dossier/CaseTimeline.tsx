@@ -944,7 +944,10 @@ function SideItemCard({
             {item.fromUser && (
               <div className="absolute -top-3 -right-3 z-30">
                 <Avatar className="h-10 w-10 ring-2 ring-background shadow-md">
-                  <AvatarImage src={item.fromUserAvatar} alt={item.fromUser} />
+                  <AvatarImage 
+                    src={item.type === 'task' && item.toUserAvatar ? item.toUserAvatar : item.fromUserAvatar} 
+                    alt={item.type === 'task' && item.toUser ? item.toUser : item.fromUser} 
+                  />
                   <AvatarFallback className="text-xs bg-muted">
                     <User className="h-5 w-5" />
                   </AvatarFallback>
@@ -1005,17 +1008,20 @@ function SideItemCard({
         <div
           className={`relative overflow-visible bg-card border ${colors.border} rounded-xl shadow-sm px-3 py-2.5 md:px-4 md:py-3 hover:shadow-md transition-shadow`}
         >
-          {/* Photo de profil débordante en haut à droite */}
-          {item.fromUser && (
-            <div className="absolute -top-3 -right-3 z-30">
-              <Avatar className="h-10 w-10 ring-2 ring-background shadow-md">
-                <AvatarImage src={item.fromUserAvatar} alt={item.fromUser} />
-                <AvatarFallback className="text-xs bg-muted">
-                  <User className="h-5 w-5" />
-                </AvatarFallback>
-              </Avatar>
-            </div>
-          )}
+            {/* Photo de profil débordante en haut à droite */}
+            {item.fromUser && (
+              <div className="absolute -top-3 -right-3 z-30">
+                <Avatar className="h-10 w-10 ring-2 ring-background shadow-md">
+                  <AvatarImage 
+                    src={item.type === 'task' && item.toUserAvatar ? item.toUserAvatar : item.fromUserAvatar} 
+                    alt={item.type === 'task' && item.toUser ? item.toUser : item.fromUser} 
+                  />
+                  <AvatarFallback className="text-xs bg-muted">
+                    <User className="h-5 w-5" />
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+            )}
 
           {/* Header : Badge type et nom */}
           <div className="flex items-start justify-between gap-2 mb-2">
