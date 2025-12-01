@@ -735,7 +735,41 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-4 py-6 md:py-8">
+    <div className="w-full max-w-5xl mx-auto px-4 pt-14 pb-6 md:pt-16 md:pb-8 relative">
+      {/* Boutons d'actions rapides en haut à droite (position absolue) */}
+      <div className="absolute top-0 right-4 flex gap-2 z-10">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => handleOpenCommentDialog(currentInProgressStep?.id || enrichedSteps[0]?.id)}
+          disabled={!currentInProgressStep && enrichedSteps.length === 0}
+          className="gap-1.5"
+        >
+          <MessageSquare className="w-4 h-4" />
+          Commentaire
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => handleOpenAppointmentDialog(currentInProgressStep?.id || enrichedSteps[0]?.id)}
+          disabled={!currentInProgressStep && enrichedSteps.length === 0}
+          className="gap-1.5"
+        >
+          <Calendar className="w-4 h-4" />
+          RDV
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => handleOpenTaskDialog(currentInProgressStep?.id || enrichedSteps[0]?.id)}
+          disabled={!currentInProgressStep && enrichedSteps.length === 0}
+          className="gap-1.5"
+        >
+          <ListTodo className="w-4 h-4" />
+          Tâche
+        </Button>
+      </div>
+
       <AddCommentDialog
         open={showCommentDialog}
         onOpenChange={setShowCommentDialog}
@@ -768,40 +802,6 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
           onUpdate();
         }}
       />
-
-      {/* Boutons d'actions rapides en haut */}
-      <div className="flex justify-end gap-2 mb-6">
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => handleOpenCommentDialog(currentInProgressStep?.id || enrichedSteps[0]?.id)}
-          disabled={!currentInProgressStep && enrichedSteps.length === 0}
-          className="gap-1.5"
-        >
-          <MessageSquare className="w-4 h-4" />
-          Commentaire
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => handleOpenAppointmentDialog(currentInProgressStep?.id || enrichedSteps[0]?.id)}
-          disabled={!currentInProgressStep && enrichedSteps.length === 0}
-          className="gap-1.5"
-        >
-          <Calendar className="w-4 h-4" />
-          RDV
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => handleOpenTaskDialog(currentInProgressStep?.id || enrichedSteps[0]?.id)}
-          disabled={!currentInProgressStep && enrichedSteps.length === 0}
-          className="gap-1.5"
-        >
-          <ListTodo className="w-4 h-4" />
-          Tâche
-        </Button>
-      </div>
 
       <div className="relative">
         {/* Ligne verticale principale */}
