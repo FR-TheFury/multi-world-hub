@@ -190,11 +190,16 @@ export function UnifiedItemDialog({
           };
           break;
         case "appointment":
+          // Si la date est dans le futur et le RDV était terminé, repasser en "scheduled"
+          const isFuture = new Date(editedStartTime) > new Date();
+          const shouldResetStatus = isFuture && item.status === 'completed';
+          
           updateData = { 
             title: editedTitle, 
             description: editedDescription,
             start_time: editedStartTime,
-            end_time: editedEndTime || null
+            end_time: editedEndTime || null,
+            status: shouldResetStatus ? 'scheduled' : item.status
           };
           break;
       }

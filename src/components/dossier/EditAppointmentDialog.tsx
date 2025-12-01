@@ -63,6 +63,10 @@ const EditAppointmentDialog = ({
     setLoading(true);
 
     try {
+      // Si la date est dans le futur et le RDV était terminé, repasser en "scheduled"
+      const isFuture = new Date(startTime) > new Date();
+      const shouldResetStatus = isFuture && appointment.status === 'completed';
+
       const { error } = await supabase
         .from('appointments')
         .update({
@@ -70,6 +74,7 @@ const EditAppointmentDialog = ({
           description: description.trim(),
           start_time: startTime,
           end_time: endTime || null,
+          status: shouldResetStatus ? 'scheduled' : appointment.status,
           updated_at: new Date().toISOString(),
         })
         .eq('id', appointment.id);
