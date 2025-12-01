@@ -90,6 +90,25 @@ const DocumentsTab = ({ dossierId }: DocumentsTabProps) => {
 
   const fetchClientType = async () => {
     try {
+      // Méthode 1: Via client_info_id (nouveau système)
+      const { data: dossier } = await supabase
+        .from('dossiers')
+        .select('client_info_id')
+        .eq('id', dossierId)
+        .single();
+
+      if (dossier?.client_info_id) {
+        const { data: clientInfo } = await supabase
+          .from('dossier_client_info')
+          .select('client_type')
+          .eq('id', dossier.client_info_id)
+          .single();
+        
+        setClientType(clientInfo?.client_type || null);
+        return;
+      }
+
+      // Méthode 2: Fallback via dossier_id (ancien système)
       const { data, error } = await supabase
         .from('dossier_client_info')
         .select('client_type')
