@@ -20,11 +20,16 @@ interface Comment {
   content: string;
   comment_type: string;
   created_at: string;
+  workflow_step_id: string | null;
   metadata: any;
   user: {
     display_name: string;
     email: string;
   };
+  workflow_step: {
+    name: string;
+    step_number: number;
+  } | null;
 }
 
 const CommentsTab = ({ dossierId }: CommentsTabProps) => {
@@ -65,7 +70,8 @@ const CommentsTab = ({ dossierId }: CommentsTabProps) => {
         .from('dossier_comments')
         .select(`
           *,
-          user:profiles(display_name, email)
+          user:profiles(display_name, email),
+          workflow_step:workflow_steps(name, step_number)
         `)
         .eq('dossier_id', dossierId)
         .order('created_at', { ascending: false });
@@ -185,13 +191,18 @@ const CommentsTab = ({ dossierId }: CommentsTabProps) => {
                       {comment.user?.display_name?.charAt(0) || '?'}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex-1 space-y-2">
+                   <div className="flex-1 space-y-2">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium">{comment.user?.display_name}</span>
                         <Badge variant={getCommentTypeBadgeVariant(comment.comment_type)}>
                           {getCommentTypeLabel(comment.comment_type)}
                         </Badge>
+                        {comment.workflow_step && (
+                          <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/30">
+                            Étape {comment.workflow_step.step_number}: {comment.workflow_step.name}
+                          </Badge>
+                        )}
                       </div>
                       <span className="text-xs text-muted-foreground">
                         {format(new Date(comment.created_at), 'dd MMM yyyy à HH:mm', { locale: fr })}
