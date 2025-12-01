@@ -1012,6 +1012,14 @@ function SideItemCard({
   onCardClick: (item: TimelineItem) => void;
 }) {
   const colors = getItemColors(item.type);
+  
+  // Déterminer si l'item est terminé
+  const isCompleted = 
+    (item.type === 'task' && item.metadata?.status === 'done') ||
+    (item.type === 'appointment' && (
+      item.metadata?.status !== 'scheduled' || 
+      new Date(item.metadata?.start_time) < new Date()
+    ));
 
   if (side === "left") {
     return (
@@ -1019,7 +1027,7 @@ function SideItemCard({
         <div className="relative pr-8 md:pr-12 max-w-md w-full md:w-[calc(50%-2rem)]">
           <div
             onClick={() => onCardClick(item)}
-            className={`relative overflow-visible bg-card border ${colors.border} rounded-xl shadow-sm px-3 py-2.5 md:px-4 md:py-3 hover:shadow-md transition-all cursor-pointer hover:scale-[1.02]`}
+            className={`relative overflow-visible bg-card border ${colors.border} rounded-xl shadow-sm px-3 py-2.5 md:px-4 md:py-3 hover:shadow-md transition-all cursor-pointer hover:scale-[1.02] ${isCompleted ? 'opacity-60' : ''}`}
           >
             {/* Photo de profil débordante en haut à droite */}
             {item.fromUser && (
@@ -1036,14 +1044,22 @@ function SideItemCard({
               </div>
             )}
 
-            {/* Header : Badge type et nom */}
+            {/* Header : Badge type et nom + Badge "Terminé" */}
             <div className="flex items-start justify-between gap-2 mb-2">
-              <span
-                className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full ${colors.bg} ${colors.text} text-[11px] font-medium`}
-              >
-                {getItemIcon(item.type)}
-                <span>{getItemTypeLabel(item.type)}</span>
-              </span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span
+                  className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full ${colors.bg} ${colors.text} text-[11px] font-medium`}
+                >
+                  {getItemIcon(item.type)}
+                  <span>{getItemTypeLabel(item.type)}</span>
+                </span>
+                {isCompleted && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-[10px] font-medium">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Terminé
+                  </span>
+                )}
+              </div>
               {item.fromUser && (
                 <div className="text-[10px] font-medium text-muted-foreground flex items-center gap-1 pr-8">
                   <span className="truncate max-w-[120px]">{item.fromUser}</span>
@@ -1082,7 +1098,7 @@ function SideItemCard({
       <div className="relative pl-8 md:pl-12 max-w-md w-full md:w-[calc(50%-2rem)]">
         <div
           onClick={() => onCardClick(item)}
-          className={`relative overflow-visible bg-card border ${colors.border} rounded-xl shadow-sm px-3 py-2.5 md:px-4 md:py-3 hover:shadow-md transition-all cursor-pointer hover:scale-[1.02]`}
+          className={`relative overflow-visible bg-card border ${colors.border} rounded-xl shadow-sm px-3 py-2.5 md:px-4 md:py-3 hover:shadow-md transition-all cursor-pointer hover:scale-[1.02] ${isCompleted ? 'opacity-60' : ''}`}
         >
             {/* Photo de profil débordante en haut à droite */}
             {item.fromUser && (
@@ -1099,14 +1115,22 @@ function SideItemCard({
               </div>
             )}
 
-          {/* Header : Badge type et nom */}
+          {/* Header : Badge type et nom + Badge "Terminé" */}
           <div className="flex items-start justify-between gap-2 mb-2">
-            <span
-              className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full ${colors.bg} ${colors.text} text-[11px] font-medium`}
-            >
-              {getItemIcon(item.type)}
-              <span>{getItemTypeLabel(item.type)}</span>
-            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span
+                className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full ${colors.bg} ${colors.text} text-[11px] font-medium`}
+              >
+                {getItemIcon(item.type)}
+                <span>{getItemTypeLabel(item.type)}</span>
+              </span>
+              {isCompleted && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-[10px] font-medium">
+                  <CheckCircle2 className="h-3 w-3" />
+                  Terminé
+                </span>
+              )}
+            </div>
             {item.fromUser && (
               <div className="text-[10px] font-medium text-muted-foreground flex items-center gap-1 pr-8">
                 <span className="truncate max-w-[120px]">{item.fromUser}</span>
