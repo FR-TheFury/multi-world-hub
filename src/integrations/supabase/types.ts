@@ -20,7 +20,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           dossier_id: string | null
-          end_time: string
+          end_time: string | null
           google_calendar_id: string | null
           google_event_id: string | null
           id: string
@@ -38,7 +38,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           dossier_id?: string | null
-          end_time: string
+          end_time?: string | null
           google_calendar_id?: string | null
           google_event_id?: string | null
           id?: string
@@ -56,7 +56,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           dossier_id?: string | null
-          end_time?: string
+          end_time?: string | null
           google_calendar_id?: string | null
           google_event_id?: string | null
           id?: string

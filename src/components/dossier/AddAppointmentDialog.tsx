@@ -77,12 +77,12 @@ export function AddAppointmentDialog({
       return;
     }
 
-    if (!startTime || !endTime) {
-      toast.error("Les dates de début et fin sont requises");
+    if (!startTime) {
+      toast.error("La date de début est requise");
       return;
     }
 
-    if (new Date(endTime) <= new Date(startTime)) {
+    if (endTime && new Date(endTime) <= new Date(startTime)) {
       toast.error("La date de fin doit être après la date de début");
       return;
     }
@@ -104,7 +104,7 @@ export function AddAppointmentDialog({
         title,
         description: description || null,
         start_time: new Date(startTime).toISOString(),
-        end_time: new Date(endTime).toISOString(),
+        end_time: endTime ? new Date(endTime).toISOString() : null,
         dossier_id: dossierId,
         user_id: assignedTo || user.id,
         world_id: dossier.world_id,
@@ -217,7 +217,7 @@ export function AddAppointmentDialog({
           </div>
 
           <div>
-            <Label htmlFor="endTime">Date et heure de fin *</Label>
+            <Label htmlFor="endTime">Date et heure de fin</Label>
             <Input
               id="endTime"
               type="datetime-local"

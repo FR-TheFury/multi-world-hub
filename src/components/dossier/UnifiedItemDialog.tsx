@@ -194,7 +194,7 @@ export function UnifiedItemDialog({
             title: editedTitle, 
             description: editedDescription,
             start_time: editedStartTime,
-            end_time: editedEndTime
+            end_time: editedEndTime || null
           };
           break;
       }
@@ -442,12 +442,13 @@ export function UnifiedItemDialog({
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Début</Label>
+                    <Label>Début *</Label>
                     {isEditing ? (
                       <Input
                         type="datetime-local"
                         value={editedStartTime}
                         onChange={(e) => setEditedStartTime(e.target.value)}
+                        required
                       />
                     ) : (
                       <div className="p-2 rounded-md bg-muted text-sm">
@@ -466,7 +467,7 @@ export function UnifiedItemDialog({
                       />
                     ) : (
                       <div className="p-2 rounded-md bg-muted text-sm">
-                        {item.endTime ? format(new Date(item.endTime), "PPP 'à' HH:mm", { locale: fr }) : "Non défini"}
+                        {item.endTime ? format(new Date(item.endTime), "PPP 'à' HH:mm", { locale: fr }) : "Non définie"}
                       </div>
                     )}
                   </div>

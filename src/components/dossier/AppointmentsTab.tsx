@@ -25,7 +25,7 @@ interface Appointment {
   title: string;
   description: string;
   start_time: string;
-  end_time: string;
+  end_time: string | null;
   status: string;
   appointment_type: string;
 }
@@ -226,8 +226,8 @@ const AppointmentsTab = ({ dossierId, worldId }: AppointmentsTabProps) => {
                         </span>
                         <span className="flex items-center gap-1">
                           <Clock className="h-3.5 w-3.5" />
-                          {format(new Date(appointment.start_time), 'HH:mm', { locale: fr })} -{' '}
-                          {format(new Date(appointment.end_time), 'HH:mm', { locale: fr })}
+                          {format(new Date(appointment.start_time), 'HH:mm', { locale: fr })}
+                          {appointment.end_time && ` - ${format(new Date(appointment.end_time), 'HH:mm', { locale: fr })}`}
                         </span>
                       </div>
                     </div>

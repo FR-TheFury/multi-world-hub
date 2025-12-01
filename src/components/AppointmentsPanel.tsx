@@ -12,7 +12,7 @@ interface Appointment {
   title: string;
   description: string | null;
   start_time: string;
-  end_time: string;
+  end_time: string | null;
   status: string;
   world?: { code: string; name: string; theme_colors: any };
 }
@@ -135,9 +135,11 @@ const AppointmentsPanel = () => {
                     <span className="text-xs font-medium text-primary">
                       {format(new Date(appointment.start_time), 'HH:mm')}
                     </span>
-                    <span className="text-xs text-muted-foreground">
-                      {format(new Date(appointment.end_time), 'HH:mm')}
-                    </span>
+                    {appointment.end_time && (
+                      <span className="text-xs text-muted-foreground">
+                        {format(new Date(appointment.end_time), 'HH:mm')}
+                      </span>
+                    )}
                   </div>
                   <div className="flex-1 space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
