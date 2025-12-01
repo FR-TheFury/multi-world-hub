@@ -2,10 +2,18 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Calendar, CheckCircle2, XCircle, Clock, Edit, MoreVertical } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
+import EditAppointmentDialog from './EditAppointmentDialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface AppointmentsTabProps {
   dossierId: string;
@@ -25,6 +33,8 @@ interface Appointment {
 const AppointmentsTab = ({ dossierId, worldId }: AppointmentsTabProps) => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchAppointments();
@@ -58,13 +68,61 @@ const AppointmentsTab = ({ dossierId, worldId }: AppointmentsTabProps) => {
     return labels[type] || type;
   };
 
-  const getStatusBadgeVariant = (status: string): "default" | "secondary" | "outline" => {
-    const variants: Record<string, "default" | "secondary" | "outline"> = {
-      scheduled: 'secondary',
-      completed: 'outline',
-      cancelled: 'outline',
+  const getStatusInfo = (status: string, startTime: string) => {
+    const isPast = new Date(startTime) < new Date();
+    
+    if (status === 'completed') {
+      return { 
+        label: 'Terminé', 
+        icon: CheckCircle2, 
+        className: 'bg-emerald-100 text-emerald-700 border-emerald-300' 
+      };
+    }
+    if (status === 'cancelled') {
+      return { 
+        label: 'Annulé', 
+        icon: XCircle, 
+        className: 'bg-gray-100 text-gray-500 border-gray-300' 
+      };
+    }
+    if (isPast && status === 'scheduled') {
+      return { 
+        label: 'Passé', 
+        icon: Clock, 
+        className: 'bg-amber-100 text-amber-700 border-amber-300' 
+      };
+    }
+    return { 
+      label: 'Planifié', 
+      icon: Calendar, 
+      className: 'bg-blue-100 text-blue-700 border-blue-300' 
     };
-    return variants[status] || 'secondary';
+  };
+
+  const handleEditAppointment = (appointment: Appointment) => {
+    setEditingAppointment(appointment);
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdateStatus = async (appointmentId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('appointments')
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq('id', appointmentId);
+
+      if (error) throw error;
+
+      toast.success(
+        newStatus === 'completed' 
+          ? 'Rendez-vous marqué comme terminé' 
+          : 'Rendez-vous annulé'
+      );
+      fetchAppointments();
+    } catch (error) {
+      console.error('Error updating appointment status:', error);
+      toast.error('Erreur lors de la mise à jour du statut');
+    }
   };
 
   if (loading) {
@@ -81,61 +139,113 @@ const AppointmentsTab = ({ dossierId, worldId }: AppointmentsTabProps) => {
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Rendez-vous liés au dossier
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {appointments.length === 0 ? (
-            <div className="text-center py-12">
-              <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Aucun rendez-vous planifié</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {appointments.map((appointment) => (
-                <div
-                  key={appointment.id}
-                  className="p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h4 className="font-semibold">{appointment.title}</h4>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {appointment.description}
-                      </p>
+    <>
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Rendez-vous liés au dossier
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {appointments.length === 0 ? (
+              <div className="text-center py-12">
+                <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">Aucun rendez-vous planifié</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {appointments.map((appointment) => {
+                  const statusInfo = getStatusInfo(appointment.status, appointment.start_time);
+                  const StatusIcon = statusInfo.icon;
+                  const isCompleted = appointment.status === 'completed' || appointment.status === 'cancelled';
+
+                  return (
+                    <div
+                      key={appointment.id}
+                      className={`p-4 border rounded-lg transition-all ${
+                        isCompleted ? 'opacity-60' : 'hover:shadow-md'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-base">{appointment.title}</h4>
+                          {appointment.description && (
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {appointment.description}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge className={`${statusInfo.className} flex items-center gap-1`}>
+                            <StatusIcon className="h-3 w-3" />
+                            {statusInfo.label}
+                          </Badge>
+                          {appointment.appointment_type && (
+                            <Badge variant="outline">
+                              {getAppointmentTypeLabel(appointment.appointment_type)}
+                            </Badge>
+                          )}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEditAppointment(appointment)}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Modifier
+                              </DropdownMenuItem>
+                              {appointment.status !== 'completed' && (
+                                <DropdownMenuItem 
+                                  onClick={() => handleUpdateStatus(appointment.id, 'completed')}
+                                >
+                                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                                  Marquer comme terminé
+                                </DropdownMenuItem>
+                              )}
+                              {appointment.status !== 'cancelled' && (
+                                <DropdownMenuItem 
+                                  onClick={() => handleUpdateStatus(appointment.id, 'cancelled')}
+                                  className="text-destructive"
+                                >
+                                  <XCircle className="h-4 w-4 mr-2" />
+                                  Annuler
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3.5 w-3.5" />
+                          {format(new Date(appointment.start_time), 'dd MMMM yyyy', { locale: fr })}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3.5 w-3.5" />
+                          {format(new Date(appointment.start_time), 'HH:mm', { locale: fr })} -{' '}
+                          {format(new Date(appointment.end_time), 'HH:mm', { locale: fr })}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Badge variant={getStatusBadgeVariant(appointment.status)}>
-                        {appointment.status}
-                      </Badge>
-                      {appointment.appointment_type && (
-                        <Badge variant="outline">
-                          {getAppointmentTypeLabel(appointment.appointment_type)}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span>
-                      📅 {format(new Date(appointment.start_time), 'dd MMMM yyyy', { locale: fr })}
-                    </span>
-                    <span>
-                      🕐 {format(new Date(appointment.start_time), 'HH:mm', { locale: fr })} -{' '}
-                      {format(new Date(appointment.end_time), 'HH:mm', { locale: fr })}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <EditAppointmentDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        appointment={editingAppointment}
+        onAppointmentUpdated={fetchAppointments}
+      />
+    </>
   );
 };
 
