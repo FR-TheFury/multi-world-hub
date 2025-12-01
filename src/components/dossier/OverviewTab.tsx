@@ -53,7 +53,7 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
       // Fetch dossier details with client_info_id
       const { data: dossier } = await supabase
         .from('dossiers')
-        .select('*, worlds(name), client_info_id')
+        .select('*, worlds(name, code), client_info_id')
         .eq('id', dossierId)
         .single();
       
@@ -476,7 +476,7 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
               dossierId={dossierId}
               steps={workflowSteps}
               progress={progress}
-              world={dossierDetails?.worlds?.name}
+              world={dossierDetails?.worlds?.code}
               onUpdate={() => {
                 fetchOverviewData();
                 fetchWorkflowData();
