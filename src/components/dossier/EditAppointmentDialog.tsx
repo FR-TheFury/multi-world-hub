@@ -48,12 +48,12 @@ const EditAppointmentDialog = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!title.trim() || !startTime || !endTime) {
+    if (!title.trim() || !startTime) {
       toast.error('Veuillez remplir tous les champs obligatoires');
       return;
     }
 
-    if (new Date(endTime) <= new Date(startTime)) {
+    if (endTime && new Date(endTime) <= new Date(startTime)) {
       toast.error('L\'heure de fin doit être après l\'heure de début');
       return;
     }
@@ -69,7 +69,7 @@ const EditAppointmentDialog = ({
           title: title.trim(),
           description: description.trim(),
           start_time: startTime,
-          end_time: endTime,
+          end_time: endTime || null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', appointment.id);
@@ -130,13 +130,12 @@ const EditAppointmentDialog = ({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="endTime">Date et heure de fin *</Label>
+                <Label htmlFor="endTime">Date et heure de fin</Label>
                 <Input
                   id="endTime"
                   type="datetime-local"
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
-                  required
                 />
               </div>
             </div>
