@@ -845,6 +845,7 @@ export type Database = {
       dossiers: {
         Row: {
           chiffre_affaires: number | null
+          client_info_id: string | null
           created_at: string | null
           date_cloture: string | null
           id: string
@@ -859,6 +860,7 @@ export type Database = {
         }
         Insert: {
           chiffre_affaires?: number | null
+          client_info_id?: string | null
           created_at?: string | null
           date_cloture?: string | null
           id?: string
@@ -873,6 +875,7 @@ export type Database = {
         }
         Update: {
           chiffre_affaires?: number | null
+          client_info_id?: string | null
           created_at?: string | null
           date_cloture?: string | null
           id?: string
@@ -886,6 +889,13 @@ export type Database = {
           world_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "dossiers_client_info_id_fkey"
+            columns: ["client_info_id"]
+            isOneToOne: false
+            referencedRelation: "dossier_client_info"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "dossiers_owner_id_fkey"
             columns: ["owner_id"]

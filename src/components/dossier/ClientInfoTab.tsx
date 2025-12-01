@@ -46,16 +46,35 @@ const ClientInfoTab = ({ dossierId }: ClientInfoTabProps) => {
 
   const fetchClientInfo = async () => {
     try {
-      const { data, error } = await supabase
-        .from('dossier_client_info')
-        .select('*')
-        .eq('dossier_id', dossierId)
-        .maybeSingle();
+      // First, get dossier to check if it has a client_info_id reference
+      const { data: dossier } = await supabase
+        .from('dossiers')
+        .select('client_info_id')
+        .eq('id', dossierId)
+        .single();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      let clientData = null;
+
+      if (dossier?.client_info_id) {
+        // Use the referenced client file
+        const { data } = await supabase
+          .from('dossier_client_info')
+          .select('*')
+          .eq('id', dossier.client_info_id)
+          .single();
+        clientData = data;
+      } else {
+        // Fallback to old method (for existing dossiers created before migration)
+        const { data } = await supabase
+          .from('dossier_client_info')
+          .select('*')
+          .eq('dossier_id', dossierId)
+          .maybeSingle();
+        clientData = data;
+      }
       
-      if (data) {
-        setClientInfo(data);
+      if (clientData) {
+        setClientInfo(clientData);
       } else {
         // Initialize empty form
         setClientInfo({
