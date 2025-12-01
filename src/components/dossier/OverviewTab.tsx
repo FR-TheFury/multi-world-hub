@@ -50,23 +50,36 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
 
   const fetchOverviewData = async () => {
     try {
-      // Fetch dossier details
+      // Fetch dossier details with client_info_id
       const { data: dossier } = await supabase
         .from('dossiers')
-        .select('*, worlds(name)')
+        .select('*, worlds(name), client_info_id')
         .eq('id', dossierId)
         .single();
       
       setDossierDetails(dossier);
 
-      // Fetch client info
-      const { data: client } = await supabase
-        .from('dossier_client_info')
-        .select('*')
-        .eq('dossier_id', dossierId)
-        .maybeSingle();
+      // Fetch client info - check if dossier has client_info_id reference first
+      let clientData = null;
+      if (dossier?.client_info_id) {
+        // Use the referenced client file
+        const { data } = await supabase
+          .from('dossier_client_info')
+          .select('*')
+          .eq('id', dossier.client_info_id)
+          .single();
+        clientData = data;
+      } else {
+        // Fallback to old method (for existing dossiers)
+        const { data } = await supabase
+          .from('dossier_client_info')
+          .select('*')
+          .eq('dossier_id', dossierId)
+          .maybeSingle();
+        clientData = data;
+      }
       
-      setClientInfo(client);
+      setClientInfo(clientData);
 
       // Fetch workflow progress
       const { data: workflowData } = await supabase

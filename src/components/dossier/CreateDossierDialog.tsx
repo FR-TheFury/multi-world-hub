@@ -105,7 +105,7 @@ const CreateDossierDialog = ({ open, onOpenChange, worldId, onSuccess }: CreateD
 
     setLoading(true);
     try {
-      // Create dossier
+      // Create dossier with client reference if existing client selected
       const { data: dossierData, error: dossierError } = await supabase
         .from('dossiers')
         .insert({
@@ -116,6 +116,7 @@ const CreateDossierDialog = ({ open, onOpenChange, worldId, onSuccess }: CreateD
           tags: formData.tags
             ? formData.tags.split(',').map((tag) => tag.trim()).filter(Boolean)
             : [],
+          client_info_id: clientMode === 'existing' && selectedClientId ? selectedClientId : null,
         })
         .select()
         .single();
@@ -150,6 +151,7 @@ const CreateDossierDialog = ({ open, onOpenChange, worldId, onSuccess }: CreateD
       }
 
       // Handle client info based on mode
+      // Only create new client info if user chose to create new client
       if (clientMode === 'new') {
         await supabase.from('dossier_client_info').insert({
           dossier_id: dossierData.id,
@@ -169,30 +171,8 @@ const CreateDossierDialog = ({ open, onOpenChange, worldId, onSuccess }: CreateD
           proprietaire_email: clientInfo.client_type === 'locataire' ? clientInfo.proprietaire_email || null : null,
           proprietaire_adresse: clientInfo.client_type === 'locataire' ? clientInfo.proprietaire_adresse || null : null,
         });
-      } else if (clientMode === 'existing' && selectedClientId) {
-        // Copy existing client info to new dossier
-        const { data: existingClient } = await supabase
-          .from('dossier_client_info')
-          .select('*')
-          .eq('id', selectedClientId)
-          .single();
-        
-        if (existingClient) {
-          await supabase.from('dossier_client_info').insert({
-            dossier_id: dossierData.id,
-            client_type: existingClient.client_type,
-            nom: existingClient.nom,
-            prenom: existingClient.prenom,
-            telephone: existingClient.telephone,
-            email: existingClient.email,
-            adresse_sinistre: existingClient.adresse_sinistre,
-            type_sinistre: existingClient.type_sinistre,
-            date_sinistre: existingClient.date_sinistre,
-            compagnie_assurance: existingClient.compagnie_assurance,
-            numero_police: existingClient.numero_police,
-          });
-        }
       }
+      // If existing client selected, reference is already set in dossier.client_info_id
 
       toast.success('Dossier créé avec succès');
       setFormData({ title: '', tags: '' });
