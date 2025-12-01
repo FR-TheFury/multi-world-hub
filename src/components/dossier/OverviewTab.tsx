@@ -471,7 +471,7 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
               Historique complet avec tableau blanc interactif - Étapes, documents, rendez-vous, annotations
             </CardDescription>
           </CardHeader>
-          <CardContent className="pt-6">
+          <CardContent className="pt-0">
             <CaseTimeline
               dossierId={dossierId}
               steps={workflowSteps}
