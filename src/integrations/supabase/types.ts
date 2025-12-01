@@ -218,6 +218,7 @@ export type Database = {
       }
       dossier_admin_documents: {
         Row: {
+          attachment_id: string | null
           created_at: string | null
           document_type: string
           dossier_id: string
@@ -228,6 +229,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          attachment_id?: string | null
           created_at?: string | null
           document_type: string
           dossier_id: string
@@ -238,6 +240,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          attachment_id?: string | null
           created_at?: string | null
           document_type?: string
           dossier_id?: string
@@ -248,6 +251,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "dossier_admin_documents_attachment_id_fkey"
+            columns: ["attachment_id"]
+            isOneToOne: false
+            referencedRelation: "dossier_attachments"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "dossier_admin_documents_dossier_id_fkey"
             columns: ["dossier_id"]

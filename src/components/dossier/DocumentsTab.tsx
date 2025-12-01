@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { FileText, Upload, Download, Trash2, FileIcon, CheckSquare } from 'lucide-react';
+import { FileText, Upload, Download, Trash2, FileIcon, CheckSquare, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -58,7 +58,7 @@ const DocumentsTab = ({ dossierId }: DocumentsTabProps) => {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [clientType, setClientType] = useState<string | null>(null);
-  const [adminDocs, setAdminDocs] = useState<Record<string, { received: boolean; id?: string }>>({});
+  const [adminDocs, setAdminDocs] = useState<Record<string, { received: boolean; id?: string; attachment_id?: string }>>({});
   const [adminDocsLoading, setAdminDocsLoading] = useState(false);
 
   useEffect(() => {
@@ -112,9 +112,13 @@ const DocumentsTab = ({ dossierId }: DocumentsTabProps) => {
 
       if (error) throw error;
 
-      const docsMap: Record<string, { received: boolean; id: string }> = {};
+      const docsMap: Record<string, { received: boolean; id: string; attachment_id?: string }> = {};
       data?.forEach(doc => {
-        docsMap[doc.document_type] = { received: doc.received, id: doc.id };
+        docsMap[doc.document_type] = { 
+          received: doc.received, 
+          id: doc.id, 
+          attachment_id: doc.attachment_id 
+        };
       });
       setAdminDocs(docsMap);
     } catch (error) {
@@ -215,53 +219,121 @@ const DocumentsTab = ({ dossierId }: DocumentsTabProps) => {
     }
   };
 
-  const handleToggleDocument = async (docType: string, checked: boolean) => {
+  const handleAdminDocUpload = async (docType: string, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
     setAdminDocsLoading(true);
     try {
-      const existingDoc = adminDocs[docType];
+      // 1. Upload to storage
+      const fileExt = file.name.split('.').pop();
+      const storagePath = `${dossierId}/admin/${docType}_${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('dossier-attachments')
+        .upload(storagePath, file);
+      if (uploadError) throw uploadError;
 
+      // 2. Create attachment record
+      const { data: attachment, error: attachmentError } = await supabase
+        .from('dossier_attachments')
+        .insert({
+          dossier_id: dossierId,
+          file_name: file.name,
+          file_type: file.type,
+          file_size: file.size,
+          storage_path: storagePath,
+          document_type: docType,
+          uploaded_by: user?.id,
+          is_admin_document: true,
+        })
+        .select()
+        .single();
+      if (attachmentError) throw attachmentError;
+
+      // 3. Update or insert admin document record
+      const existingDoc = adminDocs[docType];
       if (existingDoc?.id) {
-        // Update existing
-        const { error } = await supabase
+        await supabase
           .from('dossier_admin_documents')
           .update({
-            received: checked,
-            received_at: checked ? new Date().toISOString() : null,
+            received: true,
+            received_at: new Date().toISOString(),
+            attachment_id: attachment.id,
           })
           .eq('id', existingDoc.id);
-
-        if (error) throw error;
       } else {
-        // Insert new
-        const { data, error } = await supabase
+        const { data: newDoc } = await supabase
           .from('dossier_admin_documents')
           .insert({
             dossier_id: dossierId,
             document_type: docType,
-            received: checked,
-            received_at: checked ? new Date().toISOString() : null,
+            received: true,
+            received_at: new Date().toISOString(),
+            attachment_id: attachment.id,
           })
           .select()
           .single();
-
-        if (error) throw error;
-
-        setAdminDocs(prev => ({
-          ...prev,
-          [docType]: { received: checked, id: data.id },
-        }));
-        return;
+        
+        if (newDoc) {
+          setAdminDocs(prev => ({
+            ...prev,
+            [docType]: { received: true, id: newDoc.id, attachment_id: attachment.id },
+          }));
+        }
       }
 
-      setAdminDocs(prev => ({
-        ...prev,
-        [docType]: { ...prev[docType], received: checked },
-      }));
+      toast.success(`${DOCUMENT_LABELS[docType]} téléversé avec succès`);
+      await fetchAdminDocuments();
+      await fetchAttachments();
     } catch (error) {
-      console.error('Error toggling document:', error);
-      toast.error('Erreur lors de la mise à jour');
+      console.error('Error uploading admin document:', error);
+      toast.error('Erreur lors du téléversement');
     } finally {
       setAdminDocsLoading(false);
+      event.target.value = '';
+    }
+  };
+
+  const handleRemoveAdminDoc = async (docType: string) => {
+    if (!confirm(`Supprimer le document ${DOCUMENT_LABELS[docType]} ?`)) return;
+
+    const doc = adminDocs[docType];
+    if (!doc?.attachment_id) return;
+
+    try {
+      // Find the attachment
+      const attachment = attachments.find(a => a.id === doc.attachment_id);
+      
+      if (attachment) {
+        // Delete from storage
+        await supabase.storage
+          .from('dossier-attachments')
+          .remove([attachment.storage_path]);
+        
+        // Delete attachment record
+        await supabase
+          .from('dossier_attachments')
+          .delete()
+          .eq('id', attachment.id);
+      }
+
+      // Update admin document record
+      await supabase
+        .from('dossier_admin_documents')
+        .update({
+          received: false,
+          received_at: null,
+          attachment_id: null,
+        })
+        .eq('id', doc.id);
+
+      toast.success('Document supprimé');
+      await fetchAdminDocuments();
+      await fetchAttachments();
+    } catch (error) {
+      console.error('Error removing admin document:', error);
+      toast.error('Erreur lors de la suppression');
     }
   };
 
@@ -395,23 +467,63 @@ const DocumentsTab = ({ dossierId }: DocumentsTabProps) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {documentsForClientType.map(docType => (
-                <div key={docType} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-accent/50 transition-colors">
-                  <Checkbox
-                    id={`doc-${docType}`}
-                    checked={adminDocs[docType]?.received || false}
-                    onCheckedChange={(checked) => handleToggleDocument(docType, checked as boolean)}
-                    disabled={adminDocsLoading}
-                  />
-                  <Label
-                    htmlFor={`doc-${docType}`}
-                    className="cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    {DOCUMENT_LABELS[docType]}
-                  </Label>
-                </div>
-              ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {documentsForClientType.map(docType => {
+                const doc = adminDocs[docType];
+                const uploadedFile = doc?.attachment_id 
+                  ? attachments.find(a => a.id === doc.attachment_id)
+                  : null;
+
+                return (
+                  <div key={docType} className="border rounded-lg p-3 transition-colors">
+                    {uploadedFile ? (
+                      // Document uploaded - show validated state
+                      <div className="flex items-center gap-3">
+                        <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm">{DOCUMENT_LABELS[docType]}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {uploadedFile.file_name}
+                          </p>
+                        </div>
+                        <div className="flex gap-1 flex-shrink-0">
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            onClick={() => handleDownload(uploadedFile)}
+                            title="Télécharger"
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            onClick={() => handleRemoveAdminDoc(docType)}
+                            title="Supprimer"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      // Document not uploaded - show upload zone
+                      <label className="flex items-center gap-3 cursor-pointer hover:bg-accent/50 rounded p-1 transition-colors">
+                        <div className="h-5 w-5 border-2 border-dashed border-muted-foreground/50 rounded flex items-center justify-center flex-shrink-0">
+                          <Upload className="h-3 w-3 text-muted-foreground" />
+                        </div>
+                        <span className="font-medium text-sm">{DOCUMENT_LABELS[docType]}</span>
+                        <span className="text-xs text-muted-foreground ml-auto">(cliquer pour uploader)</span>
+                        <input 
+                          type="file" 
+                          className="hidden" 
+                          onChange={(e) => handleAdminDocUpload(docType, e)}
+                          disabled={adminDocsLoading}
+                        />
+                      </label>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
