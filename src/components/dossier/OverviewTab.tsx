@@ -212,6 +212,46 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
     }
   };
 
+  const getClientCardColors = (world?: string, cardType?: string) => {
+    const worldCode = world?.toUpperCase();
+    
+    // Carte "Info Client"
+    if (cardType === 'info-client') {
+      if (worldCode === 'JDE') {
+        return { border: 'border-l-fuchsia-500', icon: 'bg-fuchsia-500/10', iconText: 'text-fuchsia-500' };
+      } else if (worldCode === 'JDMO') {
+        return { border: 'border-l-teal-500', icon: 'bg-teal-500/10', iconText: 'text-teal-500' };
+      } else if (worldCode === 'DBCS') {
+        return { border: 'border-l-cyan-500', icon: 'bg-cyan-500/10', iconText: 'text-cyan-500' };
+      }
+      return { border: 'border-l-green-500', icon: 'bg-green-500/10', iconText: 'text-green-500' };
+    }
+    
+    // Carte "Sinistre"
+    if (cardType === 'sinistre') {
+      if (worldCode === 'JDE') {
+        return { border: 'border-l-rose-500', icon: 'bg-rose-500/10', iconText: 'text-rose-500' };
+      } else if (worldCode === 'JDMO') {
+        return { border: 'border-l-amber-500', icon: 'bg-amber-500/10', iconText: 'text-amber-500' };
+      } else if (worldCode === 'DBCS') {
+        return { border: 'border-l-violet-500', icon: 'bg-violet-500/10', iconText: 'text-violet-500' };
+      }
+      return { border: 'border-l-orange-500', icon: 'bg-orange-500/10', iconText: 'text-orange-500' };
+    }
+    
+    // Carte "Assurance" (identique pour tous)
+    if (cardType === 'assurance') {
+      return { border: 'border-l-sky-500', icon: 'bg-sky-500/10', iconText: 'text-sky-500' };
+    }
+    
+    // Carte "Infos Générales" (identique pour tous)
+    if (cardType === 'general') {
+      return { border: 'border-l-pink-500', icon: 'bg-pink-500/10', iconText: 'text-pink-500' };
+    }
+    
+    return { border: 'border-l-gray-500', icon: 'bg-gray-500/10', iconText: 'text-gray-500' };
+  };
+
   return (
     <div className="space-y-6 p-4">{/* Removed max-w-7xl for full width */}
       {/* En-tête du dossier avec informations client */}
@@ -277,11 +317,11 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
       {clientInfo && (
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
           {/* Informations Client */}
-          <Card className="border-l-4 border-l-green-500">
+          <Card className={`border-l-4 ${getClientCardColors(dossierDetails?.worlds?.name, 'info-client').border}`}>
             <CardHeader className="pb-3">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                  <User className="h-4 w-4 text-green-500" />
+                <div className={`w-8 h-8 rounded-lg ${getClientCardColors(dossierDetails?.worlds?.name, 'info-client').icon} flex items-center justify-center flex-shrink-0`}>
+                  <User className={`h-4 w-4 ${getClientCardColors(dossierDetails?.worlds?.name, 'info-client').iconText}`} />
                 </div>
                 <div className="flex-1">
                   <CardTitle className="text-sm mb-1">Informations Client</CardTitle>
@@ -301,11 +341,11 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
           </Card>
 
           {/* Informations Sinistre */}
-          <Card className="border-l-4 border-l-orange-500">
+          <Card className={`border-l-4 ${getClientCardColors(dossierDetails?.worlds?.name, 'sinistre').border}`}>
             <CardHeader className="pb-3">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center flex-shrink-0">
-                  <AlertCircle className="h-4 w-4 text-orange-500" />
+                <div className={`w-8 h-8 rounded-lg ${getClientCardColors(dossierDetails?.worlds?.name, 'sinistre').icon} flex items-center justify-center flex-shrink-0`}>
+                  <AlertCircle className={`h-4 w-4 ${getClientCardColors(dossierDetails?.worlds?.name, 'sinistre').iconText}`} />
                 </div>
                 <div className="flex-1">
                   <CardTitle className="text-sm mb-1">Détails Sinistre</CardTitle>
@@ -327,11 +367,11 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
           </Card>
 
           {/* Informations Assurance */}
-          <Card className="border-l-4 border-l-cyan-500">
+          <Card className={`border-l-4 ${getClientCardColors(dossierDetails?.worlds?.name, 'assurance').border}`}>
             <CardHeader className="pb-3">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center flex-shrink-0">
-                  <Shield className="h-4 w-4 text-cyan-500" />
+                <div className={`w-8 h-8 rounded-lg ${getClientCardColors(dossierDetails?.worlds?.name, 'assurance').icon} flex items-center justify-center flex-shrink-0`}>
+                  <Shield className={`h-4 w-4 ${getClientCardColors(dossierDetails?.worlds?.name, 'assurance').iconText}`} />
                 </div>
                 <div className="flex-1">
                   <CardTitle className="text-sm mb-1">Assurance</CardTitle>
@@ -351,11 +391,11 @@ const OverviewTab = ({ dossierId, worldId }: OverviewTabProps) => {
           </Card>
 
           {/* Informations Générales */}
-          <Card className="border-l-4 border-l-pink-500">
+          <Card className={`border-l-4 ${getClientCardColors(dossierDetails?.worlds?.name, 'general').border}`}>
             <CardHeader className="pb-3">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-pink-500/10 flex items-center justify-center flex-shrink-0">
-                  <Clock className="h-4 w-4 text-pink-500" />
+                <div className={`w-8 h-8 rounded-lg ${getClientCardColors(dossierDetails?.worlds?.name, 'general').icon} flex items-center justify-center flex-shrink-0`}>
+                  <Clock className={`h-4 w-4 ${getClientCardColors(dossierDetails?.worlds?.name, 'general').iconText}`} />
                 </div>
                 <div className="flex-1">
                   <CardTitle className="text-sm mb-1">Infos Générales</CardTitle>

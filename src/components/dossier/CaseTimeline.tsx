@@ -82,9 +82,34 @@ function formatDate(dateString: string) {
   return format(d, "d MMM yyyy, HH:mm", { locale: fr });
 }
 
-function getStepColors(status: StepStatus) {
+function getStepColors(status: StepStatus, world?: string) {
+  const worldCode = world?.toUpperCase();
+  
   switch (status) {
     case "completed":
+      // JDE: fuchsia, JDMO: teal, DBCS: cyan
+      if (worldCode === "JDE") {
+        return {
+          badgeBg: "bg-fuchsia-500",
+          badgeRing: "ring-fuchsia-100",
+          chipBg: "bg-fuchsia-50",
+          chipText: "text-fuchsia-700",
+        };
+      } else if (worldCode === "JDMO") {
+        return {
+          badgeBg: "bg-teal-500",
+          badgeRing: "ring-teal-100",
+          chipBg: "bg-teal-50",
+          chipText: "text-teal-700",
+        };
+      } else if (worldCode === "DBCS") {
+        return {
+          badgeBg: "bg-cyan-500",
+          badgeRing: "ring-cyan-100",
+          chipBg: "bg-cyan-50",
+          chipText: "text-cyan-700",
+        };
+      }
       return {
         badgeBg: "bg-emerald-500",
         badgeRing: "ring-emerald-100",
@@ -92,18 +117,28 @@ function getStepColors(status: StepStatus) {
         chipText: "text-emerald-700",
       };
     case "in_progress":
+      // Indigo pour tous les mondes
       return {
-        badgeBg: "bg-sky-500",
-        badgeRing: "ring-sky-100",
-        chipBg: "bg-sky-50",
-        chipText: "text-sky-700",
+        badgeBg: "bg-indigo-500",
+        badgeRing: "ring-indigo-100",
+        chipBg: "bg-indigo-50",
+        chipText: "text-indigo-700",
       };
     case "blocked":
+      // JDE: amber, JDMO/DBCS: rose
+      if (worldCode === "JDE") {
+        return {
+          badgeBg: "bg-amber-600",
+          badgeRing: "ring-amber-100",
+          chipBg: "bg-amber-50",
+          chipText: "text-amber-700",
+        };
+      }
       return {
-        badgeBg: "bg-red-500",
-        badgeRing: "ring-red-100",
-        chipBg: "bg-red-50",
-        chipText: "text-red-700",
+        badgeBg: "bg-rose-600",
+        badgeRing: "ring-rose-100",
+        chipBg: "bg-rose-50",
+        chipText: "text-rose-700",
       };
     default:
       return {
@@ -145,9 +180,31 @@ function getItemIcon(type: TimelineItemType) {
   }
 }
 
-function getItemColors(type: TimelineItemType) {
+function getItemColors(type: TimelineItemType, world?: string) {
+  const worldCode = world?.toUpperCase();
+  
   switch (type) {
     case "comment":
+      // JDE: rose, JDMO: amber, DBCS: violet
+      if (worldCode === "JDE") {
+        return {
+          bg: "bg-rose-50",
+          text: "text-rose-700",
+          border: "border-rose-200",
+        };
+      } else if (worldCode === "JDMO") {
+        return {
+          bg: "bg-amber-50",
+          text: "text-amber-700",
+          border: "border-amber-200",
+        };
+      } else if (worldCode === "DBCS") {
+        return {
+          bg: "bg-violet-50",
+          text: "text-violet-700",
+          border: "border-violet-200",
+        };
+      }
       return {
         bg: "bg-orange-50",
         text: "text-orange-700",
@@ -166,6 +223,26 @@ function getItemColors(type: TimelineItemType) {
         border: "border-blue-200",
       };
     case "appointment":
+      // JDE: violet, JDMO: teal, DBCS: cyan
+      if (worldCode === "JDE") {
+        return {
+          bg: "bg-violet-50",
+          text: "text-violet-700",
+          border: "border-violet-200",
+        };
+      } else if (worldCode === "JDMO") {
+        return {
+          bg: "bg-teal-50",
+          text: "text-teal-700",
+          border: "border-teal-200",
+        };
+      } else if (worldCode === "DBCS") {
+        return {
+          bg: "bg-cyan-50",
+          text: "text-cyan-700",
+          border: "border-cyan-200",
+        };
+      }
       return {
         bg: "bg-green-50",
         text: "text-green-700",
@@ -729,7 +806,8 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
                     key={`segment-${step.id}-${stepItems.map(i => i.id).join('-')}`}
                     items={stepItems} 
                     onCardClick={handleCardClick} 
-                    currentUserId={currentUserId} 
+                    currentUserId={currentUserId}
+                    world={world}
                   />
                 )}
 
@@ -752,6 +830,7 @@ export default function CaseTimeline({ dossierId, steps, progress, onUpdate, wor
                   onAddComment={() => handleOpenCommentDialog(step.id)}
                   onAddTask={() => handleOpenTaskDialog(step.id)}
                   onAddAppointment={() => handleOpenAppointmentDialog(step.id)}
+                  world={world}
                 />
               </div>
             );
@@ -781,7 +860,8 @@ function StepCard({
   onClick, 
   onAddComment, 
   onAddTask, 
-  onAddAppointment 
+  onAddAppointment,
+  world
 }: { 
   step: Step;
   stepId: string;
@@ -789,8 +869,9 @@ function StepCard({
   onAddComment: () => void;
   onAddTask: () => void;
   onAddAppointment: () => void;
+  world?: string;
 }) {
-  const colors = getStepColors(step.status);
+  const colors = getStepColors(step.status, world);
 
   const getStatusLabel = (status: StepStatus) => {
     switch (status) {
@@ -907,7 +988,7 @@ function StepCard({
  * Segment intermédiaire entre deux étapes :
  * Affiche les événements en escalier selon leur timestamp
  */
-function BetweenSegment({ items, onCardClick, currentUserId }: { items: TimelineItem[]; onCardClick: (item: TimelineItem) => void; currentUserId?: string }) {
+function BetweenSegment({ items, onCardClick, currentUserId, world }: { items: TimelineItem[]; onCardClick: (item: TimelineItem) => void; currentUserId?: string; world?: string }) {
   const [expanded, setExpanded] = useState(() => false);
   const MAX_VISIBLE = 6;
 
@@ -974,6 +1055,7 @@ function BetweenSegment({ items, onCardClick, currentUserId }: { items: Timeline
                 positionIndex={idx}
                 side={side}
                 onCardClick={onCardClick}
+                world={world}
               />
             </div>
           );
@@ -1005,13 +1087,15 @@ function SideItemCard({
   positionIndex,
   side,
   onCardClick,
+  world,
 }: {
   item: TimelineItem;
   positionIndex: number;
   side: "left" | "right";
   onCardClick: (item: TimelineItem) => void;
+  world?: string;
 }) {
-  const colors = getItemColors(item.type);
+  const colors = getItemColors(item.type, world);
   
   // Déterminer si l'item est terminé
   const isCompleted = 
